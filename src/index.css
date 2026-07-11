@@ -1,0 +1,23 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: dracula
+}
+@plugin "@danielfgray/tw-heropatterns";
+
+html,
+body,
+#root {
+  font-family: "Outfit", sans-serif;
+}
+
+body {
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+#root {
+  background-color: var(--color-base-100);
+}
+
+
+
