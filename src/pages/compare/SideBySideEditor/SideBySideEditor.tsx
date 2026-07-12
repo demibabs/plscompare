@@ -1,44 +1,48 @@
-import { get } from "idb-keyval";
-import { useEffect, useState } from "react";
+import { set } from "idb-keyval";
+import { useNavigate, useOutletContext } from "react-router-dom";
+import { cn } from "../../../utils/cn";
 import { ScrubbableVideo } from "./ScrubbableVideo";
-import { getVideoFramerate } from "../../../utils/getVideoFramerate";
 
-type Part = "first" | "last"
+export type Part = "start" | "end"
 export type FileData = { id: number, url: string, framerate: number }
+export type VideoData = {
+    label: string | null
+    startTime: number | null
+    endTime: number | null
+}
 
 export function SideBySideEditor({ part }: { part: Part }) {
+    const { filesData, videosDataRef, isLoading } = useOutletContext<{ filesData: FileData[], videosDataRef: React.RefObject<VideoData[]>, isLoading: boolean }>()
+    const navigate = useNavigate()
 
-    const [filesData, setFilesData] = useState<FileData[]>([])
-    const [isLoading, setIsLoading] = useState(true);
+    let nextStep
+    if (part === "start") {
+        nextStep = "Next"
+    }
+    if (part === "end") {
+        nextStep = "Preview & download"
+    }
 
-    useEffect(() => {
-        // Fetch the files from IndexedDB
-        get('user-files').then(async (storedFiles: File[]) => {
-            if (storedFiles) {
-                try {
-                    setFilesData(await Promise.all(storedFiles.map(async (file, index) => {
-                        return {
-                            id: index,
-                            url: URL.createObjectURL(file),
-                            framerate: await getVideoFramerate(file),
-                        }
-                    })));
-                }
-                catch (error) {
-                    console.log(error)
-                }
-            }
-            setIsLoading(false);
-        });
-        return () => filesData.forEach(fileData => URL.revokeObjectURL(fileData.url))
-    }, []);
+    return <main className="flex flex-col items-center w-full">
+        <div className={cn("grid grid-cols-3 pt-7 pb-4 pr-15 w-full", { "bgp-boxes-base-100/8": part === "start" }, { "bgp-diagonalStripes-base-100/8": part === "end" })}>
+            <h1 className="col-start-2 col-span-1 text-4xl text-center">Select <b className={cn("underline decoration-info", { "decoration-secondary": part === "end" })}>{part}ing</b> frames</h1>
+            <div className="flex justify-end">
+                <button
+                    onClick={async () => {
+                        await set('videos-data', videosDataRef.current)
+                        if (part === "start") navigate("/compare/end-frame")
+                        if (part === "end") navigate("/compare/preview")
+                    }}
+                    className="btn btn-accent btn-xl btn-soft border-3 border-accent">
+                    {nextStep}
+                </button>
+            </div>
+        </div>
 
-    const heading = part === "first" ? "starting" : "ending"
-
-    return <main>
-        <h1 className="text-4xl my-10 text-center">Select <b className="underline decoration-info">{heading}</b> frames</h1>
         <section className="w-full mt-15 flex gap-10 justify-center items-center h-116">
-            {filesData.map(fileData => <ScrubbableVideo isLoading={isLoading} fileData={fileData}></ScrubbableVideo>)}
+            {isLoading ? <div className="loading loading-xl size-24"></div>
+                : filesData.map(fileData => <ScrubbableVideo key={fileData.id} fileData={fileData} videosDataRef={videosDataRef} part={part}></ScrubbableVideo>)
+            }
         </section>
     </main>
 }

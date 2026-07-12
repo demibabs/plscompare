@@ -33,7 +33,7 @@ export function StepsShowcase() {
         )
     }
 
-    return <div onClick={() => setCurrentStep(nextStep())} className="card card-side card-xl bg-base-300 h-96 w-6xl my-10 overflow-hidden border-5 border-base-300">
+    return <div onClick={() => setCurrentStep(nextStep())} className="card card-side card-xl bg-base-300 h-96 w-6xl my-10 overflow-hidden border-3 border-neutral">
         <div className={cn("card-body",
             { "bg-warning text-warning-content bgp-ticTacToe-base-200/3": currentStep === 1 },
             { "bg-info text-info-content bgp-diagonalLines-base-200/3 bg-size-[1rem_auto]": currentStep === 2 },
@@ -44,7 +44,7 @@ export function StepsShowcase() {
                 {stepButtons}
             </div>
         </div>
-        <div className="bg-base-200 aspect-video">
+        <div className="bg-base-100 aspect-video">
             <figure className="size-full flex justify-center items-center">Placeholder</figure>
         </div>
     </div>
@@ -59,5 +59,4 @@ function StepButton({ step, currentStep, setCurrentStep }: { step: number, curre
         className={cn("join-item btn btn-lg border-3 border-base-100", { "btn-primary": step === currentStep })}>
         {step}
     </button>
-
 }

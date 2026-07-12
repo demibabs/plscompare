@@ -1,39 +1,56 @@
 import { useEffect, useRef, useState } from "react"
 import { cn } from "../../../utils/cn"
-import type { FileData } from "./SideBySideEditor"
+import type { FileData, Part, VideoData } from "./SideBySideEditor"
 
-export function ScrubbableVideo({ fileData, isLoading }: { fileData: FileData, isLoading: boolean }) {
-    
-
+export function ScrubbableVideo({ fileData, videosDataRef, part }: { fileData: FileData, videosDataRef: React.RefObject<VideoData[]>, part: Part }) {
     const videoRef = useRef<HTMLVideoElement>(null)
     const [isPlaying, setIsPlaying] = useState(false)
     const [videoProgress, setVideoProgress] = useState(0)
     const [isDragging, setIsDragging] = useState(false)
-
-    function videoPercent(time?: number) {
-        return (time || videoRef.current?.currentTime || 0) * 100 / (videoRef.current?.duration || 1)
-    }
+    const [wasPlaying, setWasPlaying] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
+    const [hasLoadedMetadata, setHasLoadedMetadata] = useState(false)
+    const [duration, setDuration] = useState(1)
 
     function handleTimeUpdate() {
-        setVideoProgress(videoPercent())
+        if (videoRef.current) {
+            const currentTime = videoRef.current.currentTime
+            setVideoProgress(currentTime)
+            videoRef.current.requestVideoFrameCallback((_, metadata) => {
+                videosDataRef.current[id][`${part}Time`] = metadata.mediaTime
+            })
+        }
     }
 
     const handleScrubberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newPercent = parseFloat(e.target.value);
-        setVideoProgress(newPercent);
+        const newTime = parseFloat(e.target.value)
+        setVideoProgress(newTime)
         if (videoRef.current) {
-            videoRef.current.currentTime = (newPercent / 100) * videoRef.current.duration || 0;
+            videoRef.current.currentTime = newTime
+            videoRef.current.requestVideoFrameCallback((_, metadata) => {
+                videosDataRef.current[id][`${part}Time`] = metadata.mediaTime
+            })
         }
-    };
+    }
 
     useEffect(() => {
         if (isPlaying) videoRef.current?.play()
         else videoRef.current?.pause()
     }, [isPlaying])
 
-    function scrub(numFrames: number) {
+    useEffect(() => {
+        if (isDragging) videoRef.current?.pause()
+        if (!isDragging && wasPlaying) videoRef.current?.play()
+    }, [isDragging, wasPlaying])
+
+    function scrub(numSeconds: number) {
         if (!videoRef.current) return
-        videoRef.current.currentTime += (numFrames / framerate)
+        videoRef.current.currentTime += numSeconds
+    }
+
+    function handleLoadedMetadata() {
+        setHasLoadedMetadata(true)
+        if (videoRef.current) setDuration(videoRef.current.duration)
     }
 
     const { id, url, framerate } = fileData
@@ -42,14 +59,15 @@ export function ScrubbableVideo({ fileData, isLoading }: { fileData: FileData, i
 
     return <div className="flex flex-col items-center">
         <input type="text" className="input border-3" placeholder="Label?" />
-        <div className="w-xl my-5 aspect-video flex justify-center items-center rounded-box bg-base-200">
-            {isLoading ? "Loading..." : <video onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} onTimeUpdate={handleTimeUpdate} ref={videoRef} src={url} className="size-full object-contain border-3 border-base-300 rounded-box"></video>}
+        <div className="skeleton indicator w-xl my-5 aspect-video flex justify-center items-center rounded-box bg-base-200">
+            {isLoading && <div className="size-12 indicator-item indicator-center indicator-middle loading" />}
+            <video onLoadedMetadata={handleLoadedMetadata} onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} onCanPlay={() => setIsLoading(false)} onTimeUpdate={handleTimeUpdate} ref={videoRef} src={url} className="size-full object-contain border-3 border-base-300 rounded-box">j</video>
         </div>
-        <input type="range" className="range range-xs w-lg" min={0} max="100" value={videoProgress} onChange={handleScrubberChange} step="any" onMouseDown={() => setIsDragging(true)} onMouseUp={() => setIsDragging(false)}></input>
+        <input type="range" className="range range-xs w-lg" min={0} max={duration || 1} value={videoProgress} onChange={handleScrubberChange} step="any" onMouseDown={() => { setIsDragging(true); setWasPlaying(isPlaying) }} onMouseUp={() => setIsDragging(false)}></input>
         <menu className="join gap-1">
-            <li><button onClick={() => scrub(framerate * -1)} className={cn(menuLiButtonClassName, "btn-info")}>-1s</button></li>
-            <li><button onClick={() => scrub(framerate * -0.1)} className={cn(menuLiButtonClassName, "btn-secondary")}>-0.1s</button></li>
-            <li><button onClick={() => scrub(-1)} className={cn(menuLiButtonClassName, "btn-primary")}>-1f</button></li>
+            <li><button onClick={() => scrub(-1)} className={cn(menuLiButtonClassName, "btn-info")}>-1s</button></li>
+            <li><button onClick={() => scrub(-0.1)} className={cn(menuLiButtonClassName, "btn-secondary")}>-0.1s</button></li>
+            <li><button onClick={() => scrub(-1 / framerate)} className={cn(menuLiButtonClassName, "btn-primary")}>-1f</button></li>
             <li>
                 <button onClick={() => setIsPlaying(!isPlaying)} className={cn(menuLiButtonClassName, "btn-accent")}>
                     {isPlaying ?
@@ -62,9 +80,9 @@ export function ScrubbableVideo({ fileData, isLoading }: { fileData: FileData, i
                         </svg>
                     }
                 </button></li>
-            <li><button onClick={() => scrub(1)} className={cn(menuLiButtonClassName, "btn-primary")}>+1f</button></li>
-            <li><button onClick={() => scrub(framerate * 0.1)} className={cn(menuLiButtonClassName, "btn-secondary")}>+0.1s</button></li>
-            <li><button onClick={() => scrub(framerate)} className={cn(menuLiButtonClassName, "btn-info")}>+1s</button></li>
+            <li><button onClick={() => scrub(1 / framerate)} className={cn(menuLiButtonClassName, "btn-primary")}>+1f</button></li>
+            <li><button onClick={() => scrub(0.1)} className={cn(menuLiButtonClassName, "btn-secondary")}>+0.1s</button></li>
+            <li><button onClick={() => scrub(1)} className={cn(menuLiButtonClassName, "btn-info")}>+1s</button></li>
         </menu>
     </div>
 }

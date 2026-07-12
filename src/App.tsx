@@ -2,10 +2,10 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import './App.css'
 import { Landing } from './landing/Landing'
 import { Compare } from './pages/compare/Compare'
-import { FirstFrame } from './pages/compare/FirstFrame'
-import { LastFrame } from './pages/compare/LastFrame'
-import { Preview } from './pages/compare/Preview'
-import { Layout } from './pages/Layout/Layout'
+import { StartFrame } from './pages/compare/StartFrame'
+import { EndFrame } from './pages/compare/EndFrame'
+import { Preview } from './pages/compare/preview/Preview'
+import { Layout } from './pages/layout/Layout'
 
 const router = createBrowserRouter([
   {
@@ -19,12 +19,12 @@ const router = createBrowserRouter([
       element: <Compare />,
       children: [
         {
-          path: "first-frame",
-          element: <FirstFrame />
+          path: "start-frame",
+          element: <StartFrame />
         },
         {
-          path: "last-frame",
-          element: <LastFrame />
+          path: "end-frame",
+          element: <EndFrame />
         },
         {
           path: "preview",
