@@ -28,8 +28,10 @@ export function FileUploadButton() {
             const videosData: VideoData[] = filesArray.map(() => {
                 return {
                     label: null,
-                    startTime: null,
-                    endTime: null
+                    times: {
+                        start: null,
+                        end: null
+                    }
                 }
             })
             await set('videos-data', videosData)
