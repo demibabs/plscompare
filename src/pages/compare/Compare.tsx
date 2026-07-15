@@ -1,5 +1,5 @@
 import { get } from "idb-keyval";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import type { FileData, VideoData } from "./sideBySideEditor/SideBySideEditor";
 import { getVideoFramerate } from "../../utils/getVideoFramerate";

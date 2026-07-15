@@ -16,6 +16,7 @@
     "@tailwindcss/vite": "^4.3.2",
     "clsx": "^2.1.1",
     "idb-keyval": "^6.3.0",
+    "mediabunny": "^1.50.8",
     "mp4box": "^2.4.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",

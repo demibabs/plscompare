@@ -22,8 +22,7 @@ export function SideBySideEditor({ part }: { part: Part }) {
     isLoading: boolean;
   }>();
   const navigate = useNavigate();
-  const times = videosData.map((vData) => vData.times[part]);
-  const unsavedTimes = useRef<(number | null)[]>(times);
+  const unsavedVideosData = useRef<VideoData[]>([...videosData]);
 
   let nextStep;
   if (part === "start") {
@@ -56,15 +55,8 @@ export function SideBySideEditor({ part }: { part: Part }) {
         <div className="flex justify-end">
           <button
             onClick={async () => {
-              const newVideosData = videosData.map((vData, index) => ({
-                ...vData,
-                times: {
-                  ...vData.times,
-                  [part]: unsavedTimes.current[index],
-                },
-              }));
-              await set("videos-data", newVideosData);
-              setVideosData(newVideosData);
+              await set("videos-data", unsavedVideosData.current);
+              setVideosData(unsavedVideosData.current);
               if (part === "start") navigate("/compare/end-frame");
               if (part === "end") navigate("/compare/preview");
             }}
@@ -83,8 +75,8 @@ export function SideBySideEditor({ part }: { part: Part }) {
             <ScrubbableVideo
               key={filesData[index].id}
               fileData={filesData[index]}
-              videoData={videosData[index]}
-              unsavedTimes={unsavedTimes}
+              part={part}
+              unsavedVideosData={unsavedVideosData}
             />
           ))
         )}

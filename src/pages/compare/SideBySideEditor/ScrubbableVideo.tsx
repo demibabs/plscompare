@@ -1,14 +1,15 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type RefObject } from "react";
 import { cn } from "../../../utils/cn";
 import type { FileData, Part, VideoData } from "./SideBySideEditor";
 
 export function ScrubbableVideo({
   fileData,
-  unsavedTimes,
+  unsavedVideosData,
+  part,
 }: {
   fileData: FileData;
-  videoData: VideoData;
-  unsavedTimes: RefObject<(number | null)[]>;
+  unsavedVideosData: RefObject<VideoData[]>;
+  part: Part;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -16,31 +17,52 @@ export function ScrubbableVideo({
   const [isDragging, setIsDragging] = useState(false);
   const [wasPlaying, setWasPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasLoadedMetadata, setHasLoadedMetadata] = useState(false);
   const [duration, setDuration] = useState(1);
 
   const { id, url, framerate } = fileData;
 
+  const startTime = unsavedVideosData.current[id].times.start;
+
   function handleTimeUpdate() {
     if (videoRef.current) {
       const currentTime = videoRef.current.currentTime;
-      setVideoProgress(currentTime);
-      videoRef.current.requestVideoFrameCallback((_, metadata) => {
-        unsavedTimes.current[id] = metadata.mediaTime;
-      });
+      const newTime = part === "start" ? currentTime : Math.max(currentTime, startTime || 0)
+      setVideoProgress(newTime);
     }
   }
 
-  const handleScrubberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTime = parseFloat(e.target.value);
+  const handleScrubberChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const scrubberTime = parseFloat(e.target.value);
+    const newTime = part === "start" ? scrubberTime : Math.max(scrubberTime, startTime || 0)
     setVideoProgress(newTime);
     if (videoRef.current) {
       videoRef.current.currentTime = newTime;
-      videoRef.current.requestVideoFrameCallback((_, metadata) => {
-        unsavedTimes.current[id] = metadata.mediaTime;
-      });
     }
   };
+
+  function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
+    unsavedVideosData.current[id].label = e.currentTarget.value;
+  }
+
+  function getMediaTime(id: number) {
+    if (videoRef.current) {
+      videoRef.current.requestVideoFrameCallback((_, metadata) => {
+        unsavedVideosData.current[id].times[part] = metadata.mediaTime;
+      });
+      videoRef.current.requestVideoFrameCallback(() => getMediaTime(id));
+    }
+  }
+
+  useEffect(() => {
+    let request: number;
+    const vElement = videoRef.current;
+    if (vElement) {
+      request = vElement.requestVideoFrameCallback(() => getMediaTime(id));
+    }
+    return () => {
+      if (vElement) vElement.cancelVideoFrameCallback(request);
+    };
+  }, []);
 
   useEffect(() => {
     if (isPlaying) videoRef.current?.play();
@@ -54,19 +76,34 @@ export function ScrubbableVideo({
 
   function scrub(numSeconds: number) {
     if (!videoRef.current) return;
-    videoRef.current.currentTime += numSeconds;
+    const newTime = part === "start" ? videoRef.current.currentTime + numSeconds : Math.max(videoRef.current.currentTime + numSeconds, startTime || 0)
+    videoRef.current.currentTime = newTime
   }
 
   function handleLoadedMetadata() {
-    setHasLoadedMetadata(true);
-    if (videoRef.current) setDuration(videoRef.current.duration);
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration);
+      if (part === "end" && startTime){
+        videoRef.current.currentTime = startTime
+      }
+      const thisTime = unsavedVideosData.current[id].times[part];
+      if (thisTime) {
+        videoRef.current.currentTime = thisTime;
+      }
+    }
   }
 
   const menuLiButtonClassName = "btn btn-xl px-3 mt-5 mb-2 join-item border-3 border-base-300";
 
   return (
     <div className="flex flex-col items-center">
-      <input type="text" className="input border-3" placeholder="Label?" />
+      <input
+        type="text"
+        className="input border-3"
+        placeholder="Label?"
+        onChange={handleInputChange}
+        defaultValue={unsavedVideosData.current[id].label || undefined}
+      />
       <div className="skeleton indicator rounded-box bg-base-200 my-5 flex aspect-video w-xl items-center justify-center">
         {isLoading && <div className="indicator-item indicator-center indicator-middle loading size-12" />}
         <video

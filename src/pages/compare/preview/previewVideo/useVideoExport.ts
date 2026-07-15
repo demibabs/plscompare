@@ -1,0 +1,76 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { Dimensions, Layout } from "./renderFrame";
+
+export type ExportConfig = {
+  videos: { url: string; times: { start: number; end: number }; label: string | null }[];
+  canvasDimensions: Dimensions;
+  fileName: string;
+  freezeFrameTime: number;
+  layout: Layout;
+};
+
+export type WorkerMessage =
+  { type: "PROGRESS"; progress: number } | { type: "SUCCESS"; buffer: ArrayBuffer } | { type: "ERROR"; error: string };
+
+export function useVideoExport() {
+  const [isExporting, setIsExporting] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+
+  const workerRef = useRef<Worker | null>(null);
+
+  const cleanupWorker = useCallback(() => {
+    if (workerRef.current) {
+      workerRef.current.terminate();
+      workerRef.current = null;
+    }
+  }, []);
+
+  const startExport = useCallback(
+    (config: ExportConfig) => {
+      if (workerRef.current) {
+        return;
+      }
+      setIsExporting(true);
+      setProgress(0);
+      setError(null);
+      workerRef.current = new Worker(new URL("./exportWorker.ts", import.meta.url), {
+        type: "module",
+      });
+      workerRef.current.onmessage = (e: MessageEvent<WorkerMessage>) => {
+        const message = e.data;
+        if (message.type === "PROGRESS") setProgress(message.progress);
+        if (message.type === "SUCCESS") {
+          setIsExporting(false);
+          setProgress(100);
+          const blob = new Blob([message.buffer], { type: "video/mp4" });
+          const downloadUrl = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = downloadUrl;
+          a.download = config.fileName + ".mp4";
+          a.click();
+          URL.revokeObjectURL(downloadUrl);
+          cleanupWorker();
+        }
+        if (message.type === "ERROR") {
+          setError(message.error);
+          setIsExporting(false);
+          cleanupWorker();
+        }
+      };
+      workerRef.current?.postMessage({ type: "START_EXPORT", payload: config });
+    },
+    [cleanupWorker],
+  );
+
+  useEffect(() => {
+    return cleanupWorker;
+  }, [cleanupWorker]);
+
+  return {
+    startExport,
+    isExporting,
+    progress,
+    error,
+  };
+}

@@ -2,8 +2,7 @@ import { useRef, useState } from "react"
 import { cn } from "../utils/cn"
 import { set } from "idb-keyval"
 import { useNavigate } from "react-router-dom"
-import type { FileData, VideoData } from "../pages/compare/sideBySideEditor/SideBySideEditor"
-import { getVideoFramerate } from "../utils/getVideoFramerate"
+import type { VideoData } from "../pages/compare/sideBySideEditor/SideBySideEditor"
 
 export function FileUploadButton() {
 
