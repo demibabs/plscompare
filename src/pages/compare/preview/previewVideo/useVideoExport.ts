@@ -72,5 +72,6 @@ export function useVideoExport() {
     isExporting,
     progress,
     error,
+    cancelExport: cleanupWorker
   };
 }

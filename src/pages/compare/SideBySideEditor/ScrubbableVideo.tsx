@@ -1,18 +1,23 @@
-import { useEffect, useRef, useState, type ChangeEvent, type RefObject } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type Dispatch, type SetStateAction } from "react";
 import { cn } from "../../../utils/cn";
 import type { FileData, Part, VideoData } from "./SideBySideEditor";
 
 export function ScrubbableVideo({
   fileData,
   unsavedVideosData,
+  setUnsavedVideosData,
+  arePlaying,
+  setArePlaying,
   part,
 }: {
   fileData: FileData;
-  unsavedVideosData: RefObject<VideoData[]>;
+  unsavedVideosData: VideoData[];
+  setUnsavedVideosData: Dispatch<SetStateAction<VideoData[]>>;
+  arePlaying: boolean[];
+  setArePlaying: Dispatch<SetStateAction<boolean[]>>;
   part: Part;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [videoProgress, setVideoProgress] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [wasPlaying, setWasPlaying] = useState(false);
@@ -21,19 +26,19 @@ export function ScrubbableVideo({
 
   const { id, url, framerate } = fileData;
 
-  const startTime = unsavedVideosData.current[id].times.start;
+  const startTime = unsavedVideosData[id].times.start;
 
   function handleTimeUpdate() {
     if (videoRef.current) {
       const currentTime = videoRef.current.currentTime;
-      const newTime = part === "start" ? currentTime : Math.max(currentTime, startTime || 0)
+      const newTime = part === "start" ? currentTime : Math.max(currentTime, startTime || 0);
       setVideoProgress(newTime);
     }
   }
 
   const handleScrubberChange = (e: ChangeEvent<HTMLInputElement>) => {
     const scrubberTime = parseFloat(e.target.value);
-    const newTime = part === "start" ? scrubberTime : Math.max(scrubberTime, startTime || 0)
+    const newTime = part === "start" ? scrubberTime : Math.max(scrubberTime, startTime || 0);
     setVideoProgress(newTime);
     if (videoRef.current) {
       videoRef.current.currentTime = newTime;
@@ -41,13 +46,22 @@ export function ScrubbableVideo({
   };
 
   function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
-    unsavedVideosData.current[id].label = e.currentTarget.value;
+    const label = e.currentTarget.value
+    setUnsavedVideosData((uSVsD) => uSVsD.with(id, { ...uSVsD[id], label }));
   }
 
   function getMediaTime(id: number) {
     if (videoRef.current) {
       videoRef.current.requestVideoFrameCallback((_, metadata) => {
-        unsavedVideosData.current[id].times[part] = metadata.mediaTime;
+        setUnsavedVideosData((uSVsD) =>
+          uSVsD.with(id, {
+            ...uSVsD[id],
+            times: {
+              ...uSVsD[id].times,
+              [part]: metadata.mediaTime,
+            },
+          }),
+        );
       });
       videoRef.current.requestVideoFrameCallback(() => getMediaTime(id));
     }
@@ -62,12 +76,12 @@ export function ScrubbableVideo({
     return () => {
       if (vElement) vElement.cancelVideoFrameCallback(request);
     };
-  }, []);
+  }, [id]);
 
   useEffect(() => {
-    if (isPlaying) videoRef.current?.play();
+    if (arePlaying[id]) videoRef.current?.play();
     else videoRef.current?.pause();
-  }, [isPlaying]);
+  }, [arePlaying, id]);
 
   useEffect(() => {
     if (isDragging) videoRef.current?.pause();
@@ -76,40 +90,43 @@ export function ScrubbableVideo({
 
   function scrub(numSeconds: number) {
     if (!videoRef.current) return;
-    const newTime = part === "start" ? videoRef.current.currentTime + numSeconds : Math.max(videoRef.current.currentTime + numSeconds, startTime || 0)
-    videoRef.current.currentTime = newTime
+    const newTime =
+      part === "start"
+        ? videoRef.current.currentTime + numSeconds
+        : Math.max(videoRef.current.currentTime + numSeconds, startTime || 0);
+    videoRef.current.currentTime = newTime;
   }
 
   function handleLoadedMetadata() {
     if (videoRef.current) {
       setDuration(videoRef.current.duration);
-      if (part === "end" && startTime){
-        videoRef.current.currentTime = startTime
+      if (part === "end" && startTime) {
+        videoRef.current.currentTime = startTime;
       }
-      const thisTime = unsavedVideosData.current[id].times[part];
+      const thisTime = unsavedVideosData[id].times[part];
       if (thisTime) {
         videoRef.current.currentTime = thisTime;
       }
     }
   }
 
-  const menuLiButtonClassName = "btn btn-xl px-3 mt-5 mb-2 join-item border-3 border-base-300";
+  const menuLiButtonClassName = "btn btn-xl btn-soft px-3 mt-5 mb-2 join-item border-3";
 
   return (
     <div className="flex flex-col items-center">
       <input
         type="text"
-        className="input border-3"
+        className="input input-ghost bg-base-200 border-base-300 border-3 text-lg"
         placeholder="Label?"
         onChange={handleInputChange}
-        defaultValue={unsavedVideosData.current[id].label || undefined}
+        defaultValue={unsavedVideosData[id].label || undefined}
       />
       <div className="skeleton indicator rounded-box bg-base-200 my-5 flex aspect-video w-xl items-center justify-center">
         {isLoading && <div className="indicator-item indicator-center indicator-middle loading size-12" />}
         <video
           onLoadedMetadata={handleLoadedMetadata}
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
+          onPlay={() => setArePlaying((aP) => aP.with(id, true))}
+          onPause={() => setArePlaying((aP) => aP.with(id, false))}
           onCanPlay={() => setIsLoading(false)}
           onTimeUpdate={handleTimeUpdate}
           ref={videoRef}
@@ -127,29 +144,29 @@ export function ScrubbableVideo({
         step="any"
         onMouseDown={() => {
           setIsDragging(true);
-          setWasPlaying(isPlaying);
+          setWasPlaying(arePlaying[id]);
         }}
         onMouseUp={() => setIsDragging(false)}
       ></input>
       <menu className="join gap-1">
         <li>
-          <button onClick={() => scrub(-1)} className={cn(menuLiButtonClassName, "btn-info")}>
+          <button onClick={() => scrub(-1)} className={cn(menuLiButtonClassName, "btn-success border-success")}>
             -1s
           </button>
         </li>
         <li>
-          <button onClick={() => scrub(-0.1)} className={cn(menuLiButtonClassName, "btn-secondary")}>
+          <button onClick={() => scrub(-0.1)} className={cn(menuLiButtonClassName, "btn-warning border-warning")}>
             -0.1s
           </button>
         </li>
         <li>
-          <button onClick={() => scrub(-1 / framerate)} className={cn(menuLiButtonClassName, "btn-primary")}>
+          <button onClick={() => scrub(-1 / framerate)} className={cn(menuLiButtonClassName, "btn-primary border-primary")}>
             -1f
           </button>
         </li>
         <li>
-          <button onClick={() => setIsPlaying(!isPlaying)} className={cn(menuLiButtonClassName, "btn-accent")}>
-            {isPlaying ? (
+          <button onClick={() => setArePlaying((aP) => aP.with(id, !aP[id]))} className={cn(menuLiButtonClassName, "btn-error border-error")}>
+            {arePlaying[id] ? (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -179,17 +196,17 @@ export function ScrubbableVideo({
           </button>
         </li>
         <li>
-          <button onClick={() => scrub(1 / framerate)} className={cn(menuLiButtonClassName, "btn-primary")}>
+          <button onClick={() => scrub(1 / framerate)} className={cn(menuLiButtonClassName, "btn-primary border-primary")}>
             +1f
           </button>
         </li>
         <li>
-          <button onClick={() => scrub(0.1)} className={cn(menuLiButtonClassName, "btn-secondary")}>
+          <button onClick={() => scrub(0.1)} className={cn(menuLiButtonClassName, "btn-warning border-warning")}>
             +0.1s
           </button>
         </li>
         <li>
-          <button onClick={() => scrub(1)} className={cn(menuLiButtonClassName, "btn-info")}>
+          <button onClick={() => scrub(1)} className={cn(menuLiButtonClassName, "btn-success border-success")}>
             +1s
           </button>
         </li>

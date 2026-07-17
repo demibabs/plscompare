@@ -25,7 +25,7 @@ self.onmessage = async (e: MessageEvent) => {
 
 async function runMediabunnyPipeline(config: ExportConfig) {
   const { canvasDimensions, videos, freezeFrameTime, layout } = config;
-  const fps = 30;
+  const fps = 60;
   const frameDurationSec = 1 / fps;
 
   try {
@@ -69,7 +69,7 @@ async function runMediabunnyPipeline(config: ExportConfig) {
 
   const outVideoSource = new CanvasSource(canvas, {
     codec: "avc",
-    bitrate: 5_000_000,
+    bitrate: 15_000_000,
   });
 
   output.addVideoTrack(outVideoSource, { frameRate: fps });

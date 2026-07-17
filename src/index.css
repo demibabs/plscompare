@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @plugin "daisyui" {
-  themes: dracula
+  themes: coffee
 }
 
 @plugin "@danielfgray/tw-heropatterns";
@@ -26,4 +26,9 @@ body {
 html, body {
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
+}
+
+@theme {
+  --color-main-text: #fff4b5;
+  --color-nice-purple: #bfa8e6;
 }

@@ -2,7 +2,8 @@ import { set } from "idb-keyval";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { cn } from "../../../utils/cn";
 import { ScrubbableVideo } from "./ScrubbableVideo";
-import { useRef, type Dispatch, type SetStateAction } from "react";
+import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { hasTimes } from "../../../utils/hasTimes";
 
 export type Part = "start" | "end";
 export type FileData = { id: number; url: string; framerate: number };
@@ -22,52 +23,82 @@ export function SideBySideEditor({ part }: { part: Part }) {
     isLoading: boolean;
   }>();
   const navigate = useNavigate();
-  const unsavedVideosData = useRef<VideoData[]>([...videosData]);
+  const defaultUnsavedVideosData = useMemo(
+    () =>
+      videosData.map((vData) => {
+        const newVData = { ...vData };
+        newVData.times.start = vData.times.start || 0;
+        return newVData;
+      }),
+    [videosData],
+  );
+  const [unsavedVideosData, setUnsavedVideosData] = useState<VideoData[]>(defaultUnsavedVideosData);
+  const [arePlaying, setArePlaying] = useState<boolean[]>(Array(filesData.length).fill(false));
 
   let nextStep;
   if (part === "start") {
     nextStep = "Next";
   }
   if (part === "end") {
-    nextStep = "Preview & download";
+    nextStep = "Preview & export";
   }
 
   return (
     <main className="flex w-full flex-col items-center">
       <div
         className={cn(
-          "grid w-full grid-cols-3 pt-7 pr-15 pb-4",
+          "grid w-full grid-cols-[20rem_auto_20rem] place-items-center px-16 py-5 border-b-3 border-base-300/50",
           { "bgp-boxes-base-100/8": part === "start" },
           { "bgp-diagonalStripes-base-100/8": part === "end" },
         )}
       >
-        <h1 className="col-span-1 col-start-2 text-center text-4xl">
+        <div className="col-span-1 col-start-1 flex w-full justify-start">
+          <button
+            onClick={async () => {
+              await set("videos-data", unsavedVideosData);
+              setVideosData(unsavedVideosData);
+              if (part === "start") navigate("/");
+              if (part === "end") navigate("/compare/start-frame");
+            }}
+            className="btn btn-base-100 text-error btn-xl border-3"
+          >
+            Back
+          </button>
+        </div>
+
+        <h1 className="text-main-text col-span-1 col-start-2 text-center text-4xl">
           Select{" "}
           <b
-            className={cn("decoration-info underline", {
-              "decoration-secondary": part === "end",
+            className={cn("decoration-primary underline", {
+              "decoration-success": part === "end",
             })}
           >
             {part}ing
           </b>{" "}
           frames
         </h1>
-        <div className="flex justify-end">
+        <div className="col-span-1 col-start-3 flex w-full justify-end">
           <button
             onClick={async () => {
-              await set("videos-data", unsavedVideosData.current);
-              setVideosData(unsavedVideosData.current);
+              await set("videos-data", unsavedVideosData);
+              setVideosData(unsavedVideosData);
               if (part === "start") navigate("/compare/end-frame");
               if (part === "end") navigate("/compare/preview");
             }}
-            className="btn btn-accent btn-xl btn-soft border-accent border-3"
+            className={cn("btn btn-error btn-xl btn-soft border-error border-3", {
+              "btn-disabled border-0":
+                unsavedVideosData.some((vData) => {
+                  if (part === "start" && vData.times.start === null) return true;
+                  if (part === "end" && (!hasTimes(vData) || !(vData.times.end > vData.times.start))) return true;
+                }) || arePlaying.some((isPlaying) => isPlaying),
+            })}
           >
             {nextStep}
           </button>
         </div>
       </div>
 
-      <section className="mt-15 flex h-116 w-full items-center justify-center gap-10">
+      <section className="my-10 flex h-fit w-full items-center justify-center gap-10">
         {isLoading ? (
           <div className="loading loading-xl size-24"></div>
         ) : (
@@ -77,6 +108,9 @@ export function SideBySideEditor({ part }: { part: Part }) {
               fileData={filesData[index]}
               part={part}
               unsavedVideosData={unsavedVideosData}
+              setUnsavedVideosData={setUnsavedVideosData}
+              arePlaying={arePlaying}
+              setArePlaying={setArePlaying}
             />
           ))
         )}

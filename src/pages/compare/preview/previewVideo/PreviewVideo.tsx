@@ -4,18 +4,9 @@ import { cn } from "../../../../utils/cn";
 import { renderFrame, type Dimensions, type Layout } from "./renderFrame";
 import { formatSecondsToSSMS } from "../../../../utils/formatMsToSSMS";
 import { useVideoExport } from "./useVideoExport";
-
-type VideoDataReady = {
-  label: string | null;
-  times: {
-    start: number;
-    end: number;
-  };
-};
-
-function hasTimes(vData: VideoData): vData is VideoDataReady {
-  return vData.times.start !== null && vData.times.end !== null;
-}
+import { hasTimes } from "../../../../utils/hasTimes";
+import { clear } from "idb-keyval";
+import { useNavigate } from "react-router-dom";
 
 export function PreviewVideo({ filesData, videosData }: { filesData: FileData[]; videosData: VideoData[] }) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -23,7 +14,7 @@ export function PreviewVideo({ filesData, videosData }: { filesData: FileData[];
   const videosRef = useRef<HTMLVideoElement[]>(Array(filesData.length).fill(null));
   const [isInFreezeFrame, setIsInFreezeFrame] = useState(false);
   const timerRef = useRef<number>(undefined);
-  const freezeFrameTime = 2;
+  const freezeFrameTime = 1;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const request = useRef<number>(0);
   const requests = useRef<number[]>(Array(videosData.length).fill(undefined));
@@ -31,7 +22,11 @@ export function PreviewVideo({ filesData, videosData }: { filesData: FileData[];
   const timerStartTimes = useRef<number[]>(Array(videosData.length).fill(-1));
   const longestVideoIndex = useRef(-1);
   const [layout] = useState<Layout>("default");
-  const { startExport, progress, error } = useVideoExport();
+  const { startExport, progress, error, cancelExport } = useVideoExport();
+  const [exportModal, setExportModal] = useState(false);
+  const exportModalRef = useRef<HTMLDialogElement>(null);
+  const navigate = useNavigate();
+  const [unsavedFileName, setUnsavedFileName] = useState("");
 
   console.log(error, progress);
 
@@ -82,10 +77,25 @@ export function PreviewVideo({ filesData, videosData }: { filesData: FileData[];
         times: vData.times,
         label: vData.label,
       }));
-      const fileName = "video";
+      const fileName = unsavedFileName || "plscompare";
       startExport({ videos, canvasDimensions, fileName, freezeFrameTime, layout });
     }
+    if (exportModalRef.current) {
+      exportModalRef.current?.showModal();
+      setExportModal(true);
+    }
   }
+
+  useEffect(() => {
+    if (exportModalRef.current) {
+      if (exportModal) {
+        exportModalRef.current.showModal();
+      } else {
+        exportModalRef.current.close();
+        cancelExport();
+      }
+    }
+  }, [exportModal]);
 
   useEffect(() => {
     const videos = videosRef.current;
@@ -127,15 +137,21 @@ export function PreviewVideo({ filesData, videosData }: { filesData: FileData[];
   return (
     videosData.every((vData) => hasTimes(vData)) && (
       <div className="flex flex-col items-center">
+        <input
+          className="input input-ghost bg-base-200 border-base-300 my-5 border-3 text-lg"
+          placeholder="File name?"
+          value={unsavedFileName}
+          onChange={(e) => setUnsavedFileName(e.currentTarget.value)}
+        ></input>
         <canvas
           ref={canvasRef}
-          className="skeleton border-base-300 rounded-box mt-5 aspect-video w-2xl border-3"
+          className="skeleton border-base-300 rounded-box aspect-video w-2xl border-3"
           width={canvasDimensions.width}
           height={canvasDimensions.height}
         ></canvas>{" "}
         {[...Array(videosData.length)].map((_, index) => (
           <video
-            className="opacity absolute size-0"
+            className="hidden"
             preload="auto"
             key={index}
             src={filesData[index].url}
@@ -171,60 +187,100 @@ export function PreviewVideo({ filesData, videosData }: { filesData: FileData[];
             }}
           />
         ))}
-        <button
-          onClick={() => {
-            if (timerRef.current) clearTimeout(timerRef.current);
+        <div className="card-actions my-5">
+          <button className="btn btn-primary border-base-300 btn-xl border-3">Options</button>
+          <button
+            onClick={() => {
+              if (timerRef.current) clearTimeout(timerRef.current);
 
-            if (isPlaying) setIsPlaying(false);
-            else {
-              if (videosRef.current[0].currentTime <= videosData[0].times.start + 0.02) {
-                playFreezeFrame();
-              } else if (
-                videosRef.current.every((_, index) => {
-                  return mediaTimes.current[index] >= videosData[index].times.end;
-                })
-              ) {
-                videosRef.current.forEach((vElement, index) => (vElement.currentTime = videosData[index].times.start));
-                timerStartTimes.current.fill(-1);
-                playFreezeFrame();
-              } else setIsPlaying(true);
-            }
-          }}
-          className={cn("btn btn-xl border-base-300 btn-accent mt-5 mb-2 border-3 px-3", {
-            "btn-disabled": !canPlay || isInFreezeFrame,
-          })}
-        >
-          {isPlaying || isInFreezeFrame ? (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2.5}
-              stroke="currentColor"
-              className="size-6"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
-            </svg>
-          ) : (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2.5}
-              stroke="currentColor"
-              className="size-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
-              />
-            </svg>
-          )}
-        </button>
-        <button className="btn btn-xl btn-primary my-3" onClick={handleExport}>
-          Export
-        </button>
+              if (isPlaying) setIsPlaying(false);
+              else {
+                if (videosRef.current[0].currentTime <= videosData[0].times.start + 0.02) {
+                  playFreezeFrame();
+                } else if (
+                  videosRef.current.every((_, index) => {
+                    return mediaTimes.current[index] >= videosData[index].times.end;
+                  })
+                ) {
+                  videosRef.current.forEach(
+                    (vElement, index) => (vElement.currentTime = videosData[index].times.start),
+                  );
+                  timerStartTimes.current.fill(-1);
+                  playFreezeFrame();
+                } else setIsPlaying(true);
+              }
+            }}
+            className={cn("btn btn-xl border-base-300 btn-error border-3 px-3", {
+              "btn-disabled": !canPlay || isInFreezeFrame,
+            })}
+          >
+            {isPlaying || isInFreezeFrame ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2.5}
+                stroke="currentColor"
+                className="size-6"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
+              </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2.5}
+                stroke="currentColor"
+                className="size-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
+                />
+              </svg>
+            )}
+          </button>
+
+          <button className="btn btn-xl btn-warning border-base-300 border-3" onClick={handleExport}>
+            Export
+          </button>
+          <dialog
+            ref={exportModalRef}
+            className="modal"
+            onClose={() => {
+              setExportModal(false);
+            }}
+          >
+            <div className="modal-box">
+              <h1 className="pb-3 text-3xl">
+                {progress === 100 ? "Video exported!" : `Exporting video... (${Math.round(progress)}%)`}
+              </h1>
+              <progress className="progress" value={progress} max={100}></progress>
+              <div className="modal-action">
+                <form method="dialog" className="flex gap-3">
+                  <button className="btn btn-error btn-soft btn-lg" value="cancel">
+                    {progress === 100 ? "Close" : "Cancel"}
+                  </button>
+                  <button
+                    className={cn("btn btn-lg btn-soft btn-success", { "btn-disabled": progress !== 100 })}
+                    value="cancel"
+                    onClick={async () => {
+                      await clear();
+                      navigate("/");
+                    }}
+                  >
+                    Home
+                  </button>
+                </form>
+              </div>
+            </div>
+            <form method="dialog" className="modal-backdrop">
+              <button value="cancel"></button>
+            </form>
+          </dialog>
+        </div>
       </div>
     )
   );
