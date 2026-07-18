@@ -14,7 +14,7 @@ export function SomethingWentWrong({ data }: { data: Part | "files" | "error" | 
   };
   const partTitleText = "I think you skipped a step.";
   const titleTexts = {
-    files: "Hey, you forgot your files...",
+    files: "Hey, you forgot your files.",
     start: partTitleText,
     end: partTitleText,
     error: "Everything just went wrong.",
@@ -32,9 +32,9 @@ export function SomethingWentWrong({ data }: { data: Part | "files" | "error" | 
     end: partBodyText,
     error: (
       <>
-        <p>There was an error that caused the app to crash.</p>
+        <p>There was an error that caused the site to crash.</p>
         <p>
-          This should never happen, so consider contacting me (@crashwy on Discord) so I can fix whatever happened here.
+          This should never happen. Consider contacting me (@crashwy on Discord) so I can fix whatever happened here.
         </p>
       </>
     ),
@@ -63,16 +63,19 @@ export function SomethingWentWrong({ data }: { data: Part | "files" | "error" | 
     "404": homeButton,
   };
 
+
   return (
-    <main className="card card-side card-xl bg-base-300 my-40 w-4xl">
-      <figure className="w-lg">
-        <img src={`/images/error_images/error_image_${imageIndices[data]}.webp`} />
-      </figure>
-      <div className="card-body">
-        <h1 className="card-title mb-3 text-5xl">{titleTexts[data]}</h1>
-        <div className="text-lg">{bodyTexts[data]}</div>
-        <div className="card-actions justify-center pt-3">{buttons[data]}</div>
-      </div>
-    </main>
+    <div className="flex w-full grow items-center justify-center p-10">
+      <main className="card lg:card-side card-xl bg-base-300 w-full max-w-xl lg:max-w-4xl border-3 border-base-300">
+        <figure className="w-full lg:w-lg">
+          <img src={`/images/error_images/error_image_${imageIndices[data]}.webp`} />
+        </figure>
+        <div className="card-body not-lg:items-center">
+          <h1 className="card-title mb-3 text-5xl">{titleTexts[data]}</h1>
+          <div className="text-lg">{bodyTexts[data]}</div>
+          <div className="card-actions w-[calc(100%+2.5rem)] justify-center pt-3">{buttons[data]}</div>
+        </div>
+      </main>
+    </div>
   );
 }

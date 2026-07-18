@@ -23,10 +23,13 @@ export function ScrubbableVideo({
   const [wasPlaying, setWasPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [duration, setDuration] = useState(1);
+  const [hasLoadedMetadata, setHasLoadedMetadata] = useState(false);
 
   const { id, url, framerate } = fileData;
 
   const startTime = unsavedVideosData[id].times.start;
+  let markerProgress =
+    hasLoadedMetadata && startTime !== null && duration && part === "end" ? (startTime * 100) / duration : null;
 
   function handleTimeUpdate() {
     if (videoRef.current) {
@@ -46,8 +49,23 @@ export function ScrubbableVideo({
   };
 
   function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
-    const label = e.currentTarget.value
+    const label = e.currentTarget.value;
     setUnsavedVideosData((uSVsD) => uSVsD.with(id, { ...uSVsD[id], label }));
+  }
+
+  function handleLoadedMetadata() {
+    setHasLoadedMetadata(true);
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration);
+      if (part === "end" && startTime) {
+        videoRef.current.currentTime = startTime;
+        markerProgress = (startTime / duration) * 100;
+      }
+      const thisTime = unsavedVideosData[id].times[part];
+      if (thisTime) {
+        videoRef.current.currentTime = thisTime;
+      }
+    }
   }
 
   function getMediaTime(id: number) {
@@ -88,32 +106,33 @@ export function ScrubbableVideo({
     if (!isDragging && wasPlaying) videoRef.current?.play();
   }, [isDragging, wasPlaying]);
 
-  function scrub(numSeconds: number) {
+  function scrub(numSeconds: number | "1frame") {
     if (!videoRef.current) return;
-    const newTime =
-      part === "start"
-        ? videoRef.current.currentTime + numSeconds
-        : Math.max(videoRef.current.currentTime + numSeconds, startTime || 0);
-    videoRef.current.currentTime = newTime;
-  }
-
-  function handleLoadedMetadata() {
-    if (videoRef.current) {
-      setDuration(videoRef.current.duration);
-      if (part === "end" && startTime) {
-        videoRef.current.currentTime = startTime;
-      }
-      const thisTime = unsavedVideosData[id].times[part];
-      if (thisTime) {
-        videoRef.current.currentTime = thisTime;
-      }
+    if (typeof numSeconds === "number") {
+      const newTime =
+        part === "start"
+          ? videoRef.current.currentTime + numSeconds
+          : Math.max(videoRef.current.currentTime + numSeconds, startTime || 0);
+      videoRef.current.currentTime = newTime;
+    }
+    // This allows for accurate *forward* frame stepping, even if the video has an inconsistent framerate.
+    // There's no easy way to do this backwards, so the backwards 1/framerate scrub will miss frames occasionally.
+    if (numSeconds === "1frame") {
+      if (videoRef.current.ended) return;
+      videoRef.current.play();
+      videoRef.current.requestVideoFrameCallback(() => {
+        videoRef.current?.pause();
+      });
     }
   }
 
-  const menuLiButtonClassName = "btn btn-xl btn-soft px-3 mt-5 mb-2 join-item border-3";
+  const menuLiButtonClassName =
+    "btn w-full btn-xs px-1 py-3 @min-sm:btn-md @min-sm:px-2 @min-md:btn-lg @min-md:px-3 btn-soft mt-5 mb-2 join-item border-3";
+  
+  const liClassName = "flex grow"
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex max-w-xl grow basis-md flex-col items-center">
       <input
         type="text"
         className="input input-ghost bg-base-200 border-base-300 border-3 text-lg"
@@ -121,12 +140,11 @@ export function ScrubbableVideo({
         onChange={handleInputChange}
         defaultValue={unsavedVideosData[id].label || undefined}
       />
-      <div className="skeleton indicator rounded-box bg-base-200 my-5 flex aspect-video w-xl items-center justify-center">
+      <div className="skeleton indicator rounded-box bg-base-200 my-5 flex aspect-video w-full items-center justify-center">
         {isLoading && <div className="indicator-item indicator-center indicator-middle loading size-12" />}
         <video
           onLoadedMetadata={handleLoadedMetadata}
-          onPlay={() => setArePlaying((aP) => aP.with(id, true))}
-          onPause={() => setArePlaying((aP) => aP.with(id, false))}
+          onEnded={() => setArePlaying((aP) => aP.with(id, false))}
           onCanPlay={() => setIsLoading(false)}
           onTimeUpdate={handleTimeUpdate}
           ref={videoRef}
@@ -134,38 +152,49 @@ export function ScrubbableVideo({
           className="border-base-300 rounded-box size-full border-3 object-contain"
         ></video>
       </div>
-      <input
-        type="range"
-        className="range range-xs w-lg"
-        min={0}
-        max={duration || 1}
-        value={videoProgress}
-        onChange={handleScrubberChange}
-        step="any"
-        onMouseDown={() => {
-          setIsDragging(true);
-          setWasPlaying(arePlaying[id]);
-        }}
-        onMouseUp={() => setIsDragging(false)}
-      ></input>
-      <menu className="join gap-1">
-        <li>
+      <div className="relative flex w-[calc(100%-1rem)] items-center" style={{ "--marker-progress": markerProgress }}>
+        <input
+          type="range"
+          className="range range-xs w-full"
+          min={0}
+          max={duration || 1}
+          value={videoProgress}
+          onChange={handleScrubberChange}
+          step="any"
+          onMouseDown={() => {
+            setIsDragging(true);
+            setWasPlaying(arePlaying[id]);
+          }}
+          onMouseUp={() => setIsDragging(false)}
+        ></input>
+        {markerProgress !== null && (
+          <div className="bg-main-text mask mask-triangle-2 pointer-events-none absolute top-0 left-[calc(var(--marker-progress)*1%+(0.5-var(--marker-progress)/100)*1rem)] size-2.5 -translate-x-1/2 -translate-y-[calc(100%+0.3rem)]"></div>
+        )}
+      </div>
+      <menu className="join @container flex w-[calc(100%-2rem)] justify-center gap-1">
+        <li className={liClassName}>
           <button onClick={() => scrub(-1)} className={cn(menuLiButtonClassName, "btn-success border-success")}>
             -1s
           </button>
         </li>
-        <li>
+        <li className={liClassName}>
           <button onClick={() => scrub(-0.1)} className={cn(menuLiButtonClassName, "btn-warning border-warning")}>
             -0.1s
           </button>
         </li>
-        <li>
-          <button onClick={() => scrub(-1 / framerate)} className={cn(menuLiButtonClassName, "btn-primary border-primary")}>
+        <li className={liClassName}>
+          <button
+            onClick={() => scrub(-1 / framerate)}
+            className={cn(menuLiButtonClassName, "btn-primary border-primary")}
+          >
             -1f
           </button>
         </li>
-        <li>
-          <button onClick={() => setArePlaying((aP) => aP.with(id, !aP[id]))} className={cn(menuLiButtonClassName, "btn-error border-error")}>
+        <li className={liClassName}>
+          <button
+            onClick={() => setArePlaying((aP) => aP.with(id, !aP[id]))}
+            className={cn(menuLiButtonClassName, "btn-error border-error")}
+          >
             {arePlaying[id] ? (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -195,17 +224,17 @@ export function ScrubbableVideo({
             )}
           </button>
         </li>
-        <li>
-          <button onClick={() => scrub(1 / framerate)} className={cn(menuLiButtonClassName, "btn-primary border-primary")}>
+        <li className={liClassName}>
+          <button onClick={() => scrub("1frame")} className={cn(menuLiButtonClassName, "btn-primary border-primary")}>
             +1f
           </button>
         </li>
-        <li>
+        <li className={liClassName}>
           <button onClick={() => scrub(0.1)} className={cn(menuLiButtonClassName, "btn-warning border-warning")}>
             +0.1s
           </button>
         </li>
-        <li>
+        <li className={liClassName}>
           <button onClick={() => scrub(1)} className={cn(menuLiButtonClassName, "btn-success border-success")}>
             +1s
           </button>

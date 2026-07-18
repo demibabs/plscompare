@@ -136,16 +136,18 @@ export function PreviewVideo({ filesData, videosData }: { filesData: FileData[];
   }
   return (
     videosData.every((vData) => hasTimes(vData)) && (
-      <div className="flex flex-col items-center">
-        <input
-          className="input input-ghost bg-base-200 border-base-300 my-5 border-3 text-lg"
-          placeholder="File name?"
-          value={unsavedFileName}
-          onChange={(e) => setUnsavedFileName(e.currentTarget.value)}
-        ></input>
+      <div className="flex grow flex-col items-center px-10 py-5">
+        <label className="input input-ghost bg-base-200 border-base-300 mb-5 border-3 text-lg">
+          <input
+            placeholder="File name?"
+            value={unsavedFileName}
+            onChange={(e) => setUnsavedFileName(e.currentTarget.value)}
+          ></input>
+          <span className="label bg-base-100 h-full rounded-r-field">.mp4</span>
+        </label>
         <canvas
           ref={canvasRef}
-          className="skeleton border-base-300 rounded-box aspect-video w-2xl border-3"
+          className="skeleton border-base-300 rounded-box aspect-video w-full max-w-2xl border-3"
           width={canvasDimensions.width}
           height={canvasDimensions.height}
         ></canvas>{" "}
@@ -187,8 +189,7 @@ export function PreviewVideo({ filesData, videosData }: { filesData: FileData[];
             }}
           />
         ))}
-        <div className="card-actions my-5">
-          <button className="btn btn-primary border-base-300 btn-xl border-3">Options</button>
+        <div className="flex flex-col items-center justify-center my-2 gap-2">
           <button
             onClick={() => {
               if (timerRef.current) clearTimeout(timerRef.current);
@@ -210,7 +211,7 @@ export function PreviewVideo({ filesData, videosData }: { filesData: FileData[];
                 } else setIsPlaying(true);
               }
             }}
-            className={cn("btn btn-xl border-base-300 btn-error border-3 px-3", {
+            className={cn("btn btn-lg border-base-300 btn-error border-3 px-3", {
               "btn-disabled": !canPlay || isInFreezeFrame,
             })}
           >
@@ -242,44 +243,52 @@ export function PreviewVideo({ filesData, videosData }: { filesData: FileData[];
               </svg>
             )}
           </button>
-
-          <button className="btn btn-xl btn-warning border-base-300 border-3" onClick={handleExport}>
-            Export
-          </button>
-          <dialog
-            ref={exportModalRef}
-            className="modal"
-            onClose={() => {
-              setExportModal(false);
-            }}
-          >
-            <div className="modal-box">
-              <h1 className="pb-3 text-3xl">
-                {progress === 100 ? "Video exported!" : `Exporting video... (${Math.round(progress)}%)`}
-              </h1>
-              <progress className="progress" value={progress} max={100}></progress>
-              <div className="modal-action">
-                <form method="dialog" className="flex gap-3">
-                  <button className="btn btn-error btn-soft btn-lg" value="cancel">
-                    {progress === 100 ? "Close" : "Cancel"}
-                  </button>
-                  <button
-                    className={cn("btn btn-lg btn-soft btn-success", { "btn-disabled": progress !== 100 })}
-                    value="cancel"
-                    onClick={async () => {
-                      await clear();
-                      navigate("/");
-                    }}
-                  >
-                    Home
-                  </button>
-                </form>
+          <div className="card-actions items-center justify-center">
+            <button className="btn btn-primary border-base-300 btn-lg border-3">Options</button>
+            <button className="btn btn-lg btn-warning border-base-300 border-3" onClick={handleExport}>
+              Export
+            </button>
+            <dialog
+              ref={exportModalRef}
+              className="modal"
+              onClose={() => {
+                setExportModal(false);
+              }}
+            >
+              <div className="modal-box">
+                <h1 className="pb-3 text-3xl">
+                  {progress === 100 ? (
+                    "Video exported!"
+                  ) : (
+                    <span>
+                      Exporting video... <span className="ml-1 text-2xl">({Math.round(progress)}%)</span>
+                    </span>
+                  )}
+                </h1>
+                <progress className="progress" value={progress} max={100}></progress>
+                <div className="modal-action">
+                  <form method="dialog" className="flex gap-3">
+                    <button className="btn btn-error btn-soft btn-lg" value="cancel">
+                      {progress === 100 ? "Close" : "Cancel"}
+                    </button>
+                    <button
+                      className={cn("btn btn-lg btn-soft btn-success", { "btn-disabled": progress !== 100 })}
+                      value="cancel"
+                      onClick={async () => {
+                        await clear();
+                        navigate("/");
+                      }}
+                    >
+                      Home
+                    </button>
+                  </form>
+                </div>
               </div>
-            </div>
-            <form method="dialog" className="modal-backdrop">
-              <button value="cancel"></button>
-            </form>
-          </dialog>
+              <form method="dialog" className="modal-backdrop">
+                <button value="cancel"></button>
+              </form>
+            </dialog>
+          </div>
         </div>
       </div>
     )

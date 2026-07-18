@@ -3,9 +3,9 @@ import { Nav } from "./Nav";
 import { Footer } from "./Footer";
 
 export function Layout(){
-    return <div className="max-w-lvw">
+    return <div className="max-w-lvw min-h-dvh flex flex-col">
         <Nav/>
-        <main className="min-h-172 flex flex-col items-center">
+        <main className="grow flex flex-col items-center">
             <Outlet/>
         </main>
         <Footer/>

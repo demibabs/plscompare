@@ -59,7 +59,7 @@ export function FileUploadButton() {
   return (
     <div
       className={cn(
-        "relative",
+        "flex gap-3 justify-center",
         { "tooltip tooltip-bottom tooltip-open tooltip-neutral before:text-lg": statusMessage },
         { indicator: userFiles.length > 0 },
       )}
@@ -70,7 +70,7 @@ export function FileUploadButton() {
           <span className="badge badge-error border-3 border-base-100"><b>{userFiles.length}</b></span>
         </span>
       )}
-      <button onClick={() => inputRef.current?.click()} className="btn btn-xl btn-warning">
+      <button onClick={() => inputRef.current?.click()} className="btn btn-lg md:btn-xl btn-warning">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -90,7 +90,7 @@ export function FileUploadButton() {
       <input accept="video/quicktime, video/mp4, .mp4, .mov" type="file" multiple ref={inputRef} className="hidden" onChange={handleFileChange}></input>
       {userFiles.length >= 2 && (
         <button
-          className="btn btn-xl btn-warning btn-soft absolute top-0 right-0 translate-x-[calc(100%+1.5rem)]"
+          className="btn btn-lg md:btn-xl btn-warning btn-soft"
           onClick={() => {
             window.dispatchEvent(new Event("files-ready-for-compare"));
             navigate("/compare/start-frame")

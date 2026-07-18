@@ -7,8 +7,7 @@ import { EndFrame } from "./pages/compare/EndFrame";
 import { Preview } from "./pages/compare/preview/Preview";
 import { Layout } from "./pages/layout/Layout";
 import { useEffect, useState } from "react";
-import { clear, get } from "idb-keyval";
-import type { FileData } from "./pages/compare/sideBySideEditor/SideBySideEditor";
+import { clear } from "idb-keyval";
 import { SomethingWentWrong } from "./pages/compare/SomethingWentWrong";
 
 const router = createBrowserRouter([
@@ -16,32 +15,36 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
       {
-        path: "/",
-        element: <Landing />,
-        errorElement: <SomethingWentWrong data="error"></SomethingWentWrong>
-      },
-      {
-        path: "/compare",
-        element: <Compare />,
+        errorElement: <SomethingWentWrong data="error"></SomethingWentWrong>,
         children: [
           {
-            path: "start-frame",
-            element: <StartFrame />,
+            path: "/",
+            element: <Landing />,
           },
           {
-            path: "end-frame",
-            element: <EndFrame />,
+            path: "/compare",
+            element: <Compare />,
+            children: [
+              {
+                path: "start-frame",
+                element: <StartFrame />,
+              },
+              {
+                path: "end-frame",
+                element: <EndFrame />,
+              },
+              {
+                path: "preview",
+                element: <Preview />,
+              },
+            ],
           },
           {
-            path: "preview",
-            element: <Preview />,
+            path: "*",
+            element: <SomethingWentWrong data="404"></SomethingWentWrong>,
           },
         ],
       },
-      {
-        path:"*",
-        element: <SomethingWentWrong data="404"></SomethingWentWrong>
-      }
     ],
   },
 ]);

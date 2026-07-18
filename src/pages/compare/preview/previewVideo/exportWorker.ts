@@ -69,7 +69,7 @@ async function runMediabunnyPipeline(config: ExportConfig) {
 
   const outVideoSource = new CanvasSource(canvas, {
     codec: "avc",
-    bitrate: 15_000_000,
+    bitrate: 5_000_000,
   });
 
   output.addVideoTrack(outVideoSource, { frameRate: fps });
