@@ -1,28 +1,32 @@
-import { get } from "idb-keyval";
+import { get, set } from "idb-keyval";
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import type { FileData, VideoData } from "./sideBySideEditor/SideBySideEditor";
 import { getVideoFramerate } from "../../utils/getVideoFramerate";
 import { SomethingWentWrong } from "./SomethingWentWrong";
+import type { Options } from "./preview/previewVideo/PreviewVideo";
 
 export function Compare() {
   const [isLoading, setIsLoading] = useState(true);
   const [filesData, setFilesData] = useState<FileData[]>([]);
   const [videosData, setVideosData] = useState<VideoData[]>([]);
+  const [fileName, setFileName] = useState("");
+  const defaultOptions: Options = { layout: "default", freezeFrameTime: 1 };
+  const [options, setOptions] = useState<Options>(defaultOptions);
 
   useEffect(() => {
     let activeUrls: string[] = [];
 
-    function loadFromIDB() {
+    async function loadFromIDB() {
       setIsLoading(true);
       activeUrls.forEach((url) => URL.revokeObjectURL(url));
       activeUrls = [];
 
-      get("videos-data").then((vData) => {
+      await get("videos-data").then((vData) => {
         if (vData) setVideosData(vData);
       });
       // Fetch the files from IndexedDB
-      get("user-files").then(async (storedFiles: File[]) => {
+      await get("user-files").then(async (storedFiles: File[]) => {
         if (storedFiles) {
           storedFiles.forEach((file) => activeUrls.push(URL.createObjectURL(file)));
           setFilesData(
@@ -37,8 +41,14 @@ export function Compare() {
             ),
           );
         }
-        setIsLoading(false);
       });
+      await get("file-name").then((fName) => {
+        if (fName) setFileName(fName);
+      });
+      await get("options").then((ops) => {
+        if (ops) setOptions(ops);
+      });
+      setIsLoading(false);
     }
     loadFromIDB();
     window.addEventListener("files-ready-for-compare", loadFromIDB);
@@ -48,11 +58,21 @@ export function Compare() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isLoading) {
+      set("videos-data", videosData);
+    }
+  }, [videosData, isLoading]);
+
   if (!isLoading) {
     if (!filesData || filesData.length < 2) {
       return <SomethingWentWrong data="files"></SomethingWentWrong>;
     }
   }
 
-  return <Outlet context={{ filesData, videosData, setVideosData, isLoading }} />;
+  return isLoading ? (
+    <div className="h-dvh w-full opacity-0"></div>
+  ) : (
+    <Outlet context={{ filesData, videosData, setVideosData, fileName, setFileName, options, setOptions }} />
+  );
 }

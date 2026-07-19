@@ -3,9 +3,9 @@ import { SideBySideEditor, type VideoData } from "./sideBySideEditor/SideBySideE
 import { SomethingWentWrong } from "./SomethingWentWrong";
 
 export function EndFrame() {
-  const { videosData, isLoading } = useOutletContext<{ videosData: VideoData[]; isLoading: boolean }>();
+  const { videosData } = useOutletContext<{ videosData: VideoData[]; }>();
   if (!videosData || videosData.some((vData) => vData.times.start === null)) {
     return <SomethingWentWrong data="start"></SomethingWentWrong>;
   }
-  return !isLoading && <SideBySideEditor part="end" />;
+  return <SideBySideEditor part="end" />;
 }

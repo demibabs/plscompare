@@ -1,9 +1,10 @@
-export type Layout = "default";
+import { getCanvasDimensions } from "../../../../utils/getCanvasDimensions";
+
+export type Layout = "default" | "vertical" | "horizontal";
 export type Dimensions = { width: number; height: number };
 
 export function renderFrame(
   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
-  canvasDimensions: Dimensions,
   layout: Layout,
   sources: (CanvasImageSource | null)[],
   sourcesDimensions: Dimensions[],
@@ -19,18 +20,26 @@ export function renderFrame(
     let destY: number;
     let destWidth: number;
     let destHeight: number;
+    const canvasDimensions = getCanvasDimensions(layout, sources.length)
     const fontSize = 72;
     ctx.font = fontSize + "px Outfit";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     sourcesDimensions.forEach((sDims, index) => {
+      let containerX;
+      let containerY;
+      let containerWidth;
+      let containerHeight;
+
       if (layout === "default") {
         // 1. Define our destination dimensions
-        destWidth = canvasDimensions.width / sourcesDimensions.length;
-        destHeight = canvasDimensions.height;
+        containerWidth = canvasDimensions.width / sourcesDimensions.length;
+        containerHeight = canvasDimensions.height;
+        containerX = containerWidth * index;
+        containerY = 0;
 
         // 2. Calculate aspect ratios
-        const targetAspectRatio = destWidth / destHeight;
+        const targetAspectRatio = containerWidth / containerHeight;
         const videoAspectRatio = sDims.width / sDims.height;
         // 3. Determine how to crop based on ratios
         if (videoAspectRatio > targetAspectRatio) {
@@ -46,28 +55,63 @@ export function renderFrame(
           sourceX = 0;
           sourceY = (sDims.height - sourceHeight) / 2;
         }
-        destX = destWidth * index;
-        destY = 0;
-        // 4. Draw to canvas
-        ctx.drawImage(
-          sources[index] as CanvasImageSource,
-          sourceX,
-          sourceY,
-          sourceWidth,
-          sourceHeight,
-          destX,
-          destY,
-          destWidth,
-          destHeight,
-        );
+        destX = containerX;
+        destY = containerY;
+        destWidth = containerWidth;
+        destHeight = containerHeight;
+      } else {
+        if (layout === "vertical") {
+          containerWidth = canvasDimensions.width;
+          containerHeight = canvasDimensions.height / sourcesDimensions.length;
+          containerX = 0;
+          containerY = containerHeight * index;
+        } else { // horizontal
+          containerWidth = canvasDimensions.width / sourcesDimensions.length;
+          containerHeight = canvasDimensions.height;
+          containerX = containerWidth * index;
+          containerY = 0;
+        }
+
+        const targetAspectRatio = containerWidth / containerHeight;
+        const videoAspectRatio = sDims.width / sDims.height;
+
+        sourceX = 0;
+        sourceY = 0;
+        sourceWidth = sDims.width;
+        sourceHeight = sDims.height;
+
+        if (videoAspectRatio > targetAspectRatio) {
+          destWidth = containerWidth;
+          destHeight = containerWidth / videoAspectRatio;
+        } else {
+          destHeight = containerHeight;
+          destWidth = containerHeight * videoAspectRatio;
+        }
+
+        destX = containerX + (containerWidth - destWidth) / 2;
+        destY = containerY + (containerHeight - destHeight) / 2;
       }
+
+      // 4. Draw to canvas
+      ctx.drawImage(
+        sources[index] as CanvasImageSource,
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight,
+        destX,
+        destY,
+        destWidth,
+        destHeight,
+      );
+
       if (timersText[index].length > 0) {
         const timerText = timersText[index];
         const textWidth = ctx.measureText(timerText).width;
         const timerWidth = textWidth + 60;
         const timerHeight = fontSize + 60;
-        const timerX = index * destWidth + (destWidth - timerWidth) / 2;
-        const timerY = destY;
+        const timerX = containerX + (containerWidth - timerWidth) / 2;
+        const timerY = containerY;
         ctx.fillStyle = "#000000";
         ctx.beginPath();
         ctx.roundRect(timerX, timerY, timerWidth, timerHeight, [0, 0, 20, 20]);
@@ -82,8 +126,8 @@ export function renderFrame(
         const labelTextWidth = ctx.measureText(labelText).width;
         const labelWidth = labelTextWidth + 60;
         const labelHeight = fontSize + 60;
-        const labelX = index * destWidth + (destWidth - labelWidth) / 2;
-        const labelY = destY + destHeight - labelHeight;
+        const labelX = containerX + (containerWidth - labelWidth) / 2;
+        const labelY = containerY + containerHeight - labelHeight;
         ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
         ctx.beginPath();
         ctx.roundRect(labelX, labelY, labelWidth, labelHeight, [20, 20, 0, 0]);

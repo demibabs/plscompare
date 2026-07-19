@@ -9,7 +9,6 @@ export function CompareHeader({
   rightButton,
   rightButtonIsDisabled,
   nextPage,
-  save,
 }: {
   prevPage: string;
   bgp: string;
@@ -17,18 +16,19 @@ export function CompareHeader({
   rightButton?: boolean;
   rightButtonIsDisabled?: boolean;
   nextPage?: string;
-  save: () => Promise<void>;
 }) {
   const navigate = useNavigate();
   const buttonClassName = "btn btn-md md:btn-xl border-3";
   return (
     <div
-      className={cn("border-base-300/50 grid w-full grid-cols-[1fr_auto_1fr] place-items-center border-b-3 px-6 py-5 md:px-16", bgp)}
+      className={cn(
+        "border-base-300/50 grid w-full grid-cols-[1fr_auto_1fr] place-items-center border-b-3 px-6 py-5 md:px-16",
+        bgp,
+      )}
     >
       <div className="col-span-1 col-start-1 flex w-full justify-start">
         <button
-          onClick={async () => {
-            await save();
+          onClick={() => {
             navigate(prevPage);
           }}
           className={cn(buttonClassName, "btn-base-100 border-error/40 text-error")}
@@ -36,12 +36,13 @@ export function CompareHeader({
           Back
         </button>
       </div>
-      <h1 className="text-main-text col-span-1 col-start-2 w-full text-center px-5 text-2xl md:text-4xl">{headerText}</h1>
+      <h1 className="text-main-text col-span-1 col-start-2 w-full px-5 text-center text-2xl md:text-4xl">
+        {headerText}
+      </h1>
       <div className="col-span-1 col-start-3 flex w-full justify-end">
         {rightButton && nextPage ? (
           <button
-            onClick={async () => {
-              await save();
+            onClick={() => {
               navigate(nextPage);
             }}
             className={cn(buttonClassName, "btn-error btn-soft border-error", {
@@ -50,7 +51,9 @@ export function CompareHeader({
           >
             Next
           </button>
-        ) : <button className={cn(buttonClassName, "opacity-0 pointer-events-none")}></button>}
+        ) : (
+          <button className={cn(buttonClassName, "pointer-events-none opacity-0")}></button>
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, redirect, RouterProvider } from "react-router-dom";
 import "./App.css";
 import { Landing } from "./landing/Landing";
 import { Compare } from "./pages/compare/Compare";
@@ -25,6 +25,10 @@ const router = createBrowserRouter([
             path: "/compare",
             element: <Compare />,
             children: [
+              {
+                index: true,
+                loader: () => redirect("start-frame")
+              },
               {
                 path: "start-frame",
                 element: <StartFrame />,

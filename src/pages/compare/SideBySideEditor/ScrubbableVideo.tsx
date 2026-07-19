@@ -1,93 +1,113 @@
-import { useEffect, useRef, useState, type ChangeEvent, type Dispatch, type SetStateAction } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type Dispatch,
+  type RefObject,
+  type SetStateAction,
+} from "react";
 import { cn } from "../../../utils/cn";
 import type { FileData, Part, VideoData } from "./SideBySideEditor";
 
 export function ScrubbableVideo({
   fileData,
-  unsavedVideosData,
-  setUnsavedVideosData,
+  videosData,
+  setVideosData,
+  videosRef,
   arePlaying,
   setArePlaying,
+  durations,
+  setDurations,
   part,
 }: {
   fileData: FileData;
-  unsavedVideosData: VideoData[];
-  setUnsavedVideosData: Dispatch<SetStateAction<VideoData[]>>;
+  videosData: VideoData[];
+  setVideosData: Dispatch<SetStateAction<VideoData[]>>;
+  videosRef: RefObject<HTMLVideoElement[]>;
   arePlaying: boolean[];
   setArePlaying: Dispatch<SetStateAction<boolean[]>>;
+  durations: number[];
+  setDurations: Dispatch<SetStateAction<number[]>>;
   part: Part;
 }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [videoProgress, setVideoProgress] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [wasPlaying, setWasPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [duration, setDuration] = useState(1);
-  const [hasLoadedMetadata, setHasLoadedMetadata] = useState(false);
-
   const { id, url, framerate } = fileData;
 
-  const startTime = unsavedVideosData[id].times.start;
-  let markerProgress =
-    hasLoadedMetadata && startTime !== null && duration && part === "end" ? (startTime * 100) / duration : null;
+  const [isDragging, setIsDragging] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasLoadedMetadata, setHasLoadedMetadata] = useState(false);
+  const wasPlaying = useRef(false);
+  const scrubberRef = useRef<HTMLInputElement>(null);
 
-  function handleTimeUpdate() {
-    if (videoRef.current) {
-      const currentTime = videoRef.current.currentTime;
-      const newTime = part === "start" ? currentTime : Math.max(currentTime, startTime || 0);
-      setVideoProgress(newTime);
+  const startTime = videosData[id]?.times.start || null;
+  const markerProgress =
+    hasLoadedMetadata && startTime !== null && durations[id] && part === "end"
+      ? (startTime * 100) / durations[id]
+      : null;
+
+  function handleTimeUpdate(e: React.SyntheticEvent<HTMLVideoElement, Event>) {
+    const currentTime = e.currentTarget.currentTime;
+    if (part === "end" && startTime && currentTime < startTime) {
+      e.currentTarget.currentTime = startTime;
     }
   }
 
   const handleScrubberChange = (e: ChangeEvent<HTMLInputElement>) => {
     const scrubberTime = parseFloat(e.target.value);
     const newTime = part === "start" ? scrubberTime : Math.max(scrubberTime, startTime || 0);
-    setVideoProgress(newTime);
-    if (videoRef.current) {
-      videoRef.current.currentTime = newTime;
+    if (videosRef.current[id]) {
+      videosRef.current[id].currentTime = newTime;
     }
+    setVideosData((vsData) =>
+      vsData.with(id, {
+        ...vsData[id],
+        times: {
+          ...vsData[id].times,
+          [part]: newTime,
+        },
+      }),
+    );
   };
 
   function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
     const label = e.currentTarget.value;
-    setUnsavedVideosData((uSVsD) => uSVsD.with(id, { ...uSVsD[id], label }));
+    setVideosData((vsData) => vsData.with(id, { ...vsData[id], label }));
   }
 
   function handleLoadedMetadata() {
     setHasLoadedMetadata(true);
-    if (videoRef.current) {
-      setDuration(videoRef.current.duration);
+    if (videosRef.current[id]) {
+      setDurations((durs) => durs.with(id, videosRef.current[id].duration));
       if (part === "end" && startTime) {
-        videoRef.current.currentTime = startTime;
-        markerProgress = (startTime / duration) * 100;
+        videosRef.current[id].currentTime = startTime;
       }
-      const thisTime = unsavedVideosData[id].times[part];
+      const thisTime = videosData[id].times[part];
       if (thisTime) {
-        videoRef.current.currentTime = thisTime;
+        videosRef.current[id].currentTime = thisTime;
       }
     }
   }
 
   function getMediaTime(id: number) {
-    if (videoRef.current) {
-      videoRef.current.requestVideoFrameCallback((_, metadata) => {
-        setUnsavedVideosData((uSVsD) =>
-          uSVsD.with(id, {
-            ...uSVsD[id],
+    if (videosRef.current[id]) {
+      videosRef.current[id].requestVideoFrameCallback((_, metadata) => {
+        setVideosData((vsData) =>
+          vsData.with(id, {
+            ...vsData[id],
             times: {
-              ...uSVsD[id].times,
+              ...vsData[id].times,
               [part]: metadata.mediaTime,
             },
           }),
         );
       });
-      videoRef.current.requestVideoFrameCallback(() => getMediaTime(id));
+      videosRef.current[id].requestVideoFrameCallback(() => getMediaTime(id));
     }
   }
 
   useEffect(() => {
     let request: number;
-    const vElement = videoRef.current;
+    const vElement = videosRef.current[id];
     if (vElement) {
       request = vElement.requestVideoFrameCallback(() => getMediaTime(id));
     }
@@ -97,39 +117,43 @@ export function ScrubbableVideo({
   }, [id]);
 
   useEffect(() => {
-    if (arePlaying[id]) videoRef.current?.play();
-    else videoRef.current?.pause();
+    if (arePlaying[id]) videosRef.current[id]?.play();
+    else videosRef.current[id]?.pause();
   }, [arePlaying, id]);
 
   useEffect(() => {
-    if (isDragging) videoRef.current?.pause();
-    if (!isDragging && wasPlaying) videoRef.current?.play();
-  }, [isDragging, wasPlaying]);
+    if (isDragging) {
+      videosRef.current[id]?.pause();
+    }
+    if (!isDragging && wasPlaying.current) videosRef.current[id]?.play();
+  }, [isDragging, id, videosRef]);
 
   function scrub(numSeconds: number | "1frame") {
-    if (!videoRef.current) return;
+    if (!videosRef.current[id]) return;
     if (typeof numSeconds === "number") {
       const newTime =
         part === "start"
-          ? videoRef.current.currentTime + numSeconds
-          : Math.max(videoRef.current.currentTime + numSeconds, startTime || 0);
-      videoRef.current.currentTime = newTime;
+          ? videosRef.current[id].currentTime + numSeconds
+          : Math.max(videosRef.current[id].currentTime + numSeconds, startTime || 0);
+      videosRef.current[id].currentTime = newTime;
     }
     // This allows for accurate *forward* frame stepping, even if the video has an inconsistent framerate.
     // There's no easy way to do this backwards, so the backwards 1/framerate scrub will miss frames occasionally.
     if (numSeconds === "1frame") {
-      if (videoRef.current.ended) return;
-      videoRef.current.play();
-      videoRef.current.requestVideoFrameCallback(() => {
-        videoRef.current?.pause();
+      if (videosRef.current[id].ended || !videosRef.current[id].paused) return;
+      videosRef.current[id].play();
+      videosRef.current[id].requestVideoFrameCallback(() => {
+        videosRef.current[id]?.pause();
       });
     }
   }
 
-  const menuLiButtonClassName =
-    "btn w-full btn-xs px-1 py-3 @min-sm:btn-md @min-sm:px-2 @min-md:btn-lg @min-md:px-3 btn-soft mt-5 mb-2 join-item border-3";
-  
-  const liClassName = "flex grow"
+  const menuLiButtonClassName = cn(
+    "btn w-full btn-xs px-1 py-3 @min-sm:btn-md @min-sm:px-2 @min-md:btn-lg @min-md:px-3 btn-soft mt-5 mb-2 join-item border-3",
+    { "btn-disabled border-none": isLoading },
+  );
+
+  const liClassName = "flex grow";
 
   return (
     <div className="flex max-w-xl grow basis-md flex-col items-center">
@@ -138,7 +162,7 @@ export function ScrubbableVideo({
         className="input input-ghost bg-base-200 border-base-300 border-3 text-lg"
         placeholder="Label?"
         onChange={handleInputChange}
-        defaultValue={unsavedVideosData[id].label || undefined}
+        defaultValue={videosData[id].label || undefined}
       />
       <div className="skeleton indicator rounded-box bg-base-200 my-5 flex aspect-video w-full items-center justify-center">
         {isLoading && <div className="indicator-item indicator-center indicator-middle loading size-12" />}
@@ -147,23 +171,27 @@ export function ScrubbableVideo({
           onEnded={() => setArePlaying((aP) => aP.with(id, false))}
           onCanPlay={() => setIsLoading(false)}
           onTimeUpdate={handleTimeUpdate}
-          ref={videoRef}
+          ref={(e) => {
+            if (e) videosRef.current[id] = e;
+          }}
           src={url}
           className="border-base-300 rounded-box size-full border-3 object-contain"
         ></video>
       </div>
       <div className="relative flex w-[calc(100%-1rem)] items-center" style={{ "--marker-progress": markerProgress }}>
         <input
+          ref={scrubberRef}
           type="range"
           className="range range-xs w-full"
           min={0}
-          max={duration || 1}
-          value={videoProgress}
+          max={durations[id] || 1}
+          value={videosData[id].times[part] || videosData[id].times.start || 0}
+          step={"any"}
           onChange={handleScrubberChange}
-          step="any"
+          disabled={isLoading}
           onMouseDown={() => {
             setIsDragging(true);
-            setWasPlaying(arePlaying[id]);
+            wasPlaying.current = arePlaying[id];
           }}
           onMouseUp={() => setIsDragging(false)}
         ></input>

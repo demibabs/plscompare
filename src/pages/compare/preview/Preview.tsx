@@ -6,7 +6,7 @@ import { SomethingWentWrong } from "../SomethingWentWrong";
 import { CompareHeader } from "../CompareHeader";
 
 export function Preview() {
-  const { filesData, videosData, isLoading } = useOutletContext<{
+  const { filesData, videosData, } = useOutletContext<{
     filesData: FileData[];
     videosData: VideoData[];
     isLoading: boolean;
@@ -32,9 +32,13 @@ export function Preview() {
             Preview and <b className={cn("decoration-primary underline")}>export</b>
           </>
         }
-        save={() => {} /* Placeholder for when file name saving is implemented */} 
+        save={
+          () => {} /* Placeholder for when file name saving is implemented. 
+          But i also might remove saving and just make everyhing save instantly. 
+          Probably better ux and I dont want to waste space on buttons indicating that they save */
+        }
       ></CompareHeader>
-      {!isLoading && <PreviewVideo filesData={filesData} videosData={videosData} />}
+      {<PreviewVideo filesData={filesData} videosData={videosData} />}
     </div>
   );
 }

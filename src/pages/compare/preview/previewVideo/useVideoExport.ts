@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Dimensions, Layout } from "./renderFrame";
+import type { Layout } from "./renderFrame";
 
 export type ExportConfig = {
   videos: { url: string; times: { start: number; end: number }; label: string | null }[];
-  canvasDimensions: Dimensions;
   fileName: string;
   freezeFrameTime: number;
   layout: Layout;
@@ -21,8 +20,8 @@ export function useVideoExport() {
 
   const cleanupWorker = useCallback(() => {
     if (workerRef.current) {
-      workerRef.current.terminate();
-      workerRef.current = null;
+    workerRef.current?.postMessage({ type: "CANCEL" })
+    workerRef.current = null;
     }
   }, []);
 
