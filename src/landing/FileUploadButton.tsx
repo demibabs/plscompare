@@ -15,8 +15,8 @@ export function FileUploadButton() {
       await get("user-files").then((uFiles) => {
         if (uFiles) {
           setUserFiles(uFiles);
-          if (uFiles.length === 1){
-            setStatusMessage("Submit at least 1 more file to proceed.")
+          if (uFiles.length === 1) {
+            setStatusMessage("Submit at least 1 more file to proceed.");
           }
         }
       });
@@ -30,7 +30,7 @@ export function FileUploadButton() {
     }
     const newFiles = Array.from(event.target.files);
     if (newFiles.some((nFile) => nFile.size === 0)) {
-      setStatusMessage("Something went wrong. Try again.");
+      setStatusMessage("All files must be larger than 0 bytes.");
       return;
     }
     await update("user-files", (uFiles: File[] | undefined) => {
@@ -59,7 +59,7 @@ export function FileUploadButton() {
   return (
     <div
       className={cn(
-        "flex gap-3 justify-center",
+        "flex justify-center gap-3",
         { "tooltip tooltip-bottom tooltip-open tooltip-neutral before:text-lg": statusMessage },
         { indicator: userFiles.length > 0 },
       )}
@@ -67,7 +67,9 @@ export function FileUploadButton() {
     >
       {userFiles.length > 0 && (
         <span className="indicator-item tooltip" data-tip={userFiles.map((uFile) => uFile.name).join(", ")}>
-          <span className="badge badge-error border-3 border-base-100"><b>{userFiles.length}</b></span>
+          <span className="badge badge-error border-base-100 border-3">
+            <b>{userFiles.length}</b>
+          </span>
         </span>
       )}
       <button onClick={() => inputRef.current?.click()} className="btn btn-lg md:btn-xl btn-warning">
@@ -87,15 +89,21 @@ export function FileUploadButton() {
         </svg>
         Upload clips
       </button>
-      <input accept="video/quicktime, video/mp4, .mp4, .mov" type="file" multiple ref={inputRef} className="hidden" onChange={handleFileChange}></input>
+      <input
+        accept="video/quicktime, video/mp4, .mp4, .mov"
+        type="file"
+        multiple
+        ref={inputRef}
+        className="hidden"
+        onChange={handleFileChange}
+      ></input>
       {userFiles.length >= 2 && (
         <button
           className="btn btn-lg md:btn-xl btn-warning btn-soft"
           onClick={() => {
             window.dispatchEvent(new Event("files-ready-for-compare"));
-            navigate("/compare/start-frame")
-          }
-        }
+            navigate("/compare/start-frame");
+          }}
         >
           Go
         </button>

@@ -75,7 +75,9 @@ async function runMediabunnyPipeline(config: ExportConfig) {
   const outVideoSource = new CanvasSource(canvas, {
     codec: "avc",
     bitrate: 5_000_000,
-  });
+    bitrateMode: "constant",
+    latencyMode: "quality",
+  } as any);
 
   output.addVideoTrack(outVideoSource, { frameRate: fps });
   await output.start();
@@ -127,10 +129,11 @@ async function runMediabunnyPipeline(config: ExportConfig) {
       const state = streams[i];
       const video = videos[i];
 
+      const EPSILON = 0.001;
       const sourceTime = Math.max(video.times.start + currentTimestampSec - freezeFrameTime, video.times.start);
 
       // Handle custom timer text math
-      if (sourceTime > video.times.end) {
+      if (sourceTime > video.times.end + EPSILON) {
         if (i !== longestVideoIndex) {
           const videoDuration = videos[i].times.end - videos[i].times.start;
           const longestDuration = videos[longestVideoIndex].times.end - videos[longestVideoIndex].times.start;
@@ -139,10 +142,10 @@ async function runMediabunnyPipeline(config: ExportConfig) {
       }
 
       // If we haven't hit the end of the video segment, advance the frame if needed
-      if (sourceTime <= video.times.end) {
+      if (sourceTime <= video.times.end + EPSILON) {
         // Fast-forward the stream until the *next* sample is in the future.
         // This natively handles differing framerates and freeze frames without redundant decoding.
-        while (!state.isDone && state.nextSample && state.nextSample.timestamp <= sourceTime) {
+        while (!state.isDone && state.nextSample && state.nextSample.timestamp <= sourceTime + (frameDurationSec / 2)) {
           if (state.currentSample) state.currentSample.close(); // Free old sample
           state.currentSample = state.nextSample;
 

@@ -12,7 +12,6 @@ export function Preview() {
     isLoading: boolean;
   }>();
 
-  const navigate = useNavigate();
 
   if (!videosData || videosData.some((vData) => vData.times.start === null)) {
     return <SomethingWentWrong data="start"></SomethingWentWrong>;

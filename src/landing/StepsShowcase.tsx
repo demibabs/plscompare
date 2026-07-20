@@ -61,7 +61,7 @@ export function StepsShowcase() {
               { "bg-nice-purple text-info-content bgp-bankNote-base-200/2": currentStep === 3 },
             )}
           >
-            <h3 className="card-title text-4xl">{stepsInfo[currentStep].title}</h3>
+            <h3 className="card-title text-2xl md:text-3xl lg:text-4xl">{stepsInfo[currentStep].title}</h3>
             <p className="mr-8 flex items-center pb-3">{stepsInfo[currentStep].body}</p>
             <div className="card-actions join">{stepButtons}</div>
           </div>

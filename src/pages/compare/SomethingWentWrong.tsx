@@ -1,8 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { FileUploadButton } from "../../landing/FileUploadButton";
 import type { Part } from "./sideBySideEditor/SideBySideEditor";
+import type { Dispatch, SetStateAction } from "react";
 
-export function SomethingWentWrong({ data }: { data: Part | "files" | "error" | "404" }) {
+export function SomethingWentWrong({
+  data,
+  setHasInteracted,
+}: {
+  data: Part | "files" | "error" | "404" | "noInteraction";
+  setHasInteracted?: Dispatch<SetStateAction<boolean>>;
+}) {
   const navigate = useNavigate();
 
   const imageIndices = {
@@ -11,6 +18,7 @@ export function SomethingWentWrong({ data }: { data: Part | "files" | "error" | 
     files: 4,
     error: 6,
     "404": 7,
+    noInteraction: 8,
   };
   const partTitleText = "I think you skipped a step.";
   const titleTexts = {
@@ -19,6 +27,7 @@ export function SomethingWentWrong({ data }: { data: Part | "files" | "error" | 
     end: partTitleText,
     error: "Everything just went wrong.",
     "404": "Wait, where are we?",
+    noInteraction: "Click here to continue.",
   };
   const partBodyText = <p>There are no {data}ing frames assigned to your clips.</p>;
   const bodyTexts = {
@@ -44,6 +53,7 @@ export function SomethingWentWrong({ data }: { data: Part | "files" | "error" | 
         <p>Let's try again, from the top.</p>
       </>
     ),
+    noInteraction: <></>,
   };
   const partButton = (
     <button className="btn btn-xl btn-error" onClick={() => navigate(`/compare/${data}-frame`)}>
@@ -55,23 +65,33 @@ export function SomethingWentWrong({ data }: { data: Part | "files" | "error" | 
       Go home
     </button>
   );
+  const continueButton = (
+    <button
+      className="btn btn-xl btn-warning"
+      onClick={() => {
+        if (setHasInteracted) setHasInteracted(true);
+      }}
+    >
+      Continue
+    </button>
+  );
   const buttons = {
     files: <FileUploadButton></FileUploadButton>,
     start: partButton,
     end: partButton,
     error: homeButton,
     "404": homeButton,
+    noInteraction: continueButton
   };
-
 
   return (
     <div className="flex w-full grow items-center justify-center p-10">
-      <main className="card lg:card-side card-xl bg-base-300 w-full max-w-xl lg:max-w-4xl border-3 border-base-300">
+      <main className="card lg:card-side card-xl bg-base-300 border-base-300 w-full max-w-xl border-3 lg:max-w-4xl">
         <figure className="w-full lg:w-lg">
           <img src={`/images/error_images/error_image_${imageIndices[data]}.webp`} />
         </figure>
         <div className="card-body not-lg:items-center">
-          <h1 className="card-title mb-3 text-5xl">{titleTexts[data]}</h1>
+          <h1 className="card-title mb-3 text-3xl md:text-4xl lg:text-5xl">{titleTexts[data]}</h1>
           <div className="text-lg">{bodyTexts[data]}</div>
           <div className="card-actions w-[calc(100%+2.5rem)] justify-center pt-3">{buttons[data]}</div>
         </div>

@@ -1,6 +1,6 @@
 import { get, set } from "idb-keyval";
-import { useEffect, useState } from "react";
-import { Outlet } from "react-router-dom";
+import { use, useEffect, useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import type { FileData, VideoData } from "./sideBySideEditor/SideBySideEditor";
 import { getVideoFramerate } from "../../utils/getVideoFramerate";
 import { SomethingWentWrong } from "./SomethingWentWrong";
@@ -11,8 +11,14 @@ export function Compare() {
   const [filesData, setFilesData] = useState<FileData[]>([]);
   const [videosData, setVideosData] = useState<VideoData[]>([]);
   const [fileName, setFileName] = useState("");
-  const defaultOptions: Options = { layout: "default", freezeFrameTime: 1 };
+  const defaultOptions: Options = { layout: "default", freezeFrameTime: 2 };
   const [options, setOptions] = useState<Options>(defaultOptions);
+  const [hasInteracted, setHasInteracted] = useState(() => {
+    if (window?.navigator?.userActivation){
+      return window.navigator.userActivation.hasBeenActive
+    }
+    return false
+  });
 
   useEffect(() => {
     let activeUrls: string[] = [];
@@ -28,7 +34,9 @@ export function Compare() {
       // Fetch the files from IndexedDB
       await get("user-files").then(async (storedFiles: File[]) => {
         if (storedFiles) {
-          storedFiles.forEach((file) => activeUrls.push(URL.createObjectURL(file)));
+          storedFiles.forEach((file) => {
+            activeUrls.push(URL.createObjectURL(file));
+          });
           setFilesData(
             await Promise.all(
               storedFiles.map(async (file, index) => {
@@ -51,7 +59,10 @@ export function Compare() {
       setIsLoading(false);
     }
     loadFromIDB();
-    window.addEventListener("files-ready-for-compare", loadFromIDB);
+    window.addEventListener("files-ready-for-compare", async () => {
+      await loadFromIDB();
+      setHasInteracted(false);
+    });
     return () => {
       activeUrls.forEach((url) => URL.revokeObjectURL(url));
       window.removeEventListener("files-ready-for-compare", loadFromIDB);
@@ -63,6 +74,22 @@ export function Compare() {
       set("videos-data", videosData);
     }
   }, [videosData, isLoading]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      set("file-name", fileName);
+    }
+  }, [fileName, isLoading]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      set("options", options);
+    }
+  }, [options, isLoading]);
+
+  if (!hasInteracted) {
+    return <SomethingWentWrong data="noInteraction" setHasInteracted={setHasInteracted}></SomethingWentWrong>;
+  }
 
   if (!isLoading) {
     if (!filesData || filesData.length < 2) {

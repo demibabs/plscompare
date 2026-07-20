@@ -1,15 +1,22 @@
 import type { Dimensions, Layout } from "../pages/compare/preview/previewVideo/renderFrame";
 
 export function getCanvasDimensions(layout: Layout, numVideos: number): Dimensions {
-  let width = 1920;
-  let height = 1080;
+  let width;
+  let height;
   switch (layout) {
+    case "default": {
+      width = 1920;
+      height = 1080;
+      break
+    }
     case "vertical": {
-      height *= numVideos;
-      break;
+      width = 3840 / numVideos;
+      height = 2160;
+      break
     }
     case "horizontal": {
-      width *= numVideos;
+      width = 3840
+      height = 2160 / numVideos
       break;
     }
   }

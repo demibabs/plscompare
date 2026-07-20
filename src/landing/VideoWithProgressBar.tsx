@@ -9,6 +9,7 @@ export function VideoWithProgressBar({ src, poster }: { src: string; poster: str
       <figure className="bg-base-200 border-base-300 skeleton rounded-box flex aspect-video w-full items-center justify-center border-3">
         <video
           ref={videoRef}
+          playsInline
           onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
           onTimeUpdate={(e) => setProgress(e.currentTarget.currentTime)}
           className="rounded-box"

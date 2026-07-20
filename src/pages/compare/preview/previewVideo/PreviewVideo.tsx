@@ -88,6 +88,7 @@ export function PreviewVideo() {
   }
 
   function handleExport() {
+    setIsPlaying(false);
     if (videosData.every((vData) => hasTimes(vData))) {
       const videos = videosData.map((vData, index) => ({
         url: filesData[index].url,
@@ -158,15 +159,6 @@ export function PreviewVideo() {
     return () => cancelAnimationFrame(request.current);
   }, []);
 
-  useEffect(() => {
-    set("file-name", fileName);
-  }, [fileName]);
-
-  useEffect(() => {
-    set("options", options);
-    set("options", options);
-  }, [options]);
-
   function playFreezeFrame() {
     setIsInFreezeFrame(true);
     timerRef.current = setTimeout(() => {
@@ -195,6 +187,8 @@ export function PreviewVideo() {
         ></canvas>{" "}
         {[...Array(videosData.length)].map((_, index) => (
           <video
+            playsInline
+            muted
             className="hidden"
             preload="auto"
             key={index}
@@ -286,7 +280,13 @@ export function PreviewVideo() {
             )}
           </button>
           <div className="card-actions items-center justify-center">
-            <button className="btn btn-primary border-base-300 btn-lg border-3" onClick={() => setOptionsModal(true)}>
+            <button
+              className="btn btn-primary border-base-300 btn-lg border-3"
+              onClick={() => {
+                setOptionsModal(true);
+                setIsPlaying(false);
+              }}
+            >
               Options
             </button>
             <dialog
@@ -316,7 +316,7 @@ export function PreviewVideo() {
                   </li>
                   <li className="bg-base-200 rounded-box bgp-formalInvitation-base-100/10 mt-3 flex w-full items-center justify-between gap-3 p-5 text-lg">
                     <p>Layout</p>
-                    <div className="bg-base-100 rounded-field border-base-content/20 h-full flex-col justify-between border-3 p-2 text-end">
+                    <div className="bg-base-100 rounded-field border-base-content/20 h-full border-3 p-2 text-end">
                       <div className="flex items-center justify-end gap-2">
                         <p>Default</p>
                         <input
@@ -324,10 +324,8 @@ export function PreviewVideo() {
                           className="radio"
                           name="layout-radio"
                           checked={options.layout === "default"}
-                          onChange={(e) => {
-                            if (e.currentTarget.checked) {
-                              setOptions({ ...options, layout: "default" });
-                            }
+                          onChange={() => {
+                            setOptions({ ...options, layout: "default" });
                           }}
                         ></input>
                       </div>
@@ -338,10 +336,8 @@ export function PreviewVideo() {
                           className="radio"
                           name="layout-radio"
                           checked={options.layout === "vertical"}
-                          onChange={(e) => {
-                            if (e.currentTarget.checked) {
-                              setOptions({ ...options, layout: "vertical" });
-                            }
+                          onChange={() => {
+                            setOptions({ ...options, layout: "vertical" });
                           }}
                         ></input>
                       </div>
@@ -352,10 +348,8 @@ export function PreviewVideo() {
                           className="radio"
                           name="layout-radio"
                           checked={options.layout === "horizontal"}
-                          onChange={(e) => {
-                            if (e.currentTarget.checked) {
-                              setOptions({ ...options, layout: "horizontal" });
-                            }
+                          onChange={() => {
+                            setOptions({ ...options, layout: "horizontal" });
                           }}
                         ></input>
                       </div>

@@ -39,7 +39,7 @@ export function ScrubbableVideo({
   const wasPlaying = useRef(false);
   const scrubberRef = useRef<HTMLInputElement>(null);
 
-  const startTime = videosData[id]?.times.start || null;
+  const startTime = videosData[id]?.times.start ?? null;
   const markerProgress =
     hasLoadedMetadata && startTime !== null && durations[id] && part === "end"
       ? (startTime * 100) / durations[id]
@@ -78,30 +78,30 @@ export function ScrubbableVideo({
     setHasLoadedMetadata(true);
     if (videosRef.current[id]) {
       setDurations((durs) => durs.with(id, videosRef.current[id].duration));
-      if (part === "end" && startTime) {
+      if (part === "end" && startTime !== null) {
         videosRef.current[id].currentTime = startTime;
       }
       const thisTime = videosData[id].times[part];
-      if (thisTime) {
+      if (thisTime !== null) {
         videosRef.current[id].currentTime = thisTime;
       }
     }
   }
 
-  function getMediaTime(id: number) {
-    if (videosRef.current[id]) {
-      videosRef.current[id].requestVideoFrameCallback((_, metadata) => {
-        setVideosData((vsData) =>
-          vsData.with(id, {
-            ...vsData[id],
-            times: {
-              ...vsData[id].times,
-              [part]: metadata.mediaTime,
-            },
-          }),
-        );
-      });
-      videosRef.current[id].requestVideoFrameCallback(() => getMediaTime(id));
+  function getMediaTime(now: number, metadata: VideoFrameCallbackMetadata) {
+    if (!isDragging) {
+      setVideosData((vsData) =>
+        vsData.with(id, {
+          ...vsData[id],
+          times: {
+            ...vsData[id].times,
+            [part]: metadata.mediaTime,
+          },
+        }),
+      );
+    }
+     if (videosRef.current[id]) {
+      videosRef.current[id].requestVideoFrameCallback(getMediaTime);
     }
   }
 
@@ -109,17 +109,17 @@ export function ScrubbableVideo({
     let request: number;
     const vElement = videosRef.current[id];
     if (vElement) {
-      request = vElement.requestVideoFrameCallback(() => getMediaTime(id));
+      request = vElement.requestVideoFrameCallback(getMediaTime);
     }
     return () => {
       if (vElement) vElement.cancelVideoFrameCallback(request);
     };
-  }, [id]);
+  }, [id, videosRef]);
 
   useEffect(() => {
     if (arePlaying[id]) videosRef.current[id]?.play();
     else videosRef.current[id]?.pause();
-  }, [arePlaying, id]);
+  }, [arePlaying, id, videosRef]);
 
   useEffect(() => {
     if (isDragging) {
@@ -128,24 +128,20 @@ export function ScrubbableVideo({
     if (!isDragging && wasPlaying.current) videosRef.current[id]?.play();
   }, [isDragging, id, videosRef]);
 
-  function scrub(numSeconds: number | "1frame") {
-    if (!videosRef.current[id]) return;
-    if (typeof numSeconds === "number") {
-      const newTime =
-        part === "start"
-          ? videosRef.current[id].currentTime + numSeconds
-          : Math.max(videosRef.current[id].currentTime + numSeconds, startTime || 0);
-      videosRef.current[id].currentTime = newTime;
-    }
-    // This allows for accurate *forward* frame stepping, even if the video has an inconsistent framerate.
-    // There's no easy way to do this backwards, so the backwards 1/framerate scrub will miss frames occasionally.
-    if (numSeconds === "1frame") {
-      if (videosRef.current[id].ended || !videosRef.current[id].paused) return;
-      videosRef.current[id].play();
-      videosRef.current[id].requestVideoFrameCallback(() => {
-        videosRef.current[id]?.pause();
-      });
-    }
+  function scrub(numSeconds: number) {
+    // 1. Find duration of frame
+    const frameDuration = 1 / framerate;
+    // 2. Find exactly which frame we are currently on
+    const currentFrame = Math.round(videosRef.current[id].currentTime / frameDuration);
+    // 3. Find how many frames we want to move (works for 0.1s, 1s, and 1f)
+    const frameOffset = Math.round(numSeconds / frameDuration);
+    const targetFrame = currentFrame + frameOffset;
+    // 4. Calculate new time, adding 0.4 to land near the middle of the frame
+    // (if added 0.5, that would round up on some browsers, not wanted)
+    const calculatedTime = (targetFrame + 0.4) * frameDuration;
+
+    const newTime = part === "start" ? calculatedTime : Math.max(calculatedTime, startTime || 0);
+    videosRef.current[id].currentTime = newTime;
   }
 
   const menuLiButtonClassName = cn(
@@ -164,9 +160,14 @@ export function ScrubbableVideo({
         onChange={handleInputChange}
         defaultValue={videosData[id].label || undefined}
       />
-      <div className="skeleton indicator rounded-box bg-base-200 my-5 flex aspect-video w-full items-center justify-center">
+      <div className="skeleton indicator rounded-box bg-base-200 my-5 flex w-full items-center justify-center">
         {isLoading && <div className="indicator-item indicator-center indicator-middle loading size-12" />}
         <video
+          onPause={() => setArePlaying((aP) => aP.with(id, false))}
+          onPlay={() => setArePlaying((aP) => aP.with(id, true))}
+          muted
+          preload="auto"
+          playsInline
           onLoadedMetadata={handleLoadedMetadata}
           onEnded={() => setArePlaying((aP) => aP.with(id, false))}
           onCanPlay={() => setIsLoading(false)}
@@ -175,7 +176,7 @@ export function ScrubbableVideo({
             if (e) videosRef.current[id] = e;
           }}
           src={url}
-          className="border-base-300 rounded-box size-full border-3 object-contain"
+          className="border-base-300 rounded-box size-full border-3 object-contain md:aspect-video"
         ></video>
       </div>
       <div className="relative flex w-[calc(100%-1rem)] items-center" style={{ "--marker-progress": markerProgress }}>
@@ -194,6 +195,10 @@ export function ScrubbableVideo({
             wasPlaying.current = arePlaying[id];
           }}
           onMouseUp={() => setIsDragging(false)}
+          onTouchStart={() => {
+            setIsDragging(true);
+            wasPlaying.current = arePlaying[id];
+          }}
         ></input>
         {markerProgress !== null && (
           <div className="bg-main-text mask mask-triangle-2 pointer-events-none absolute top-0 left-[calc(var(--marker-progress)*1%+(0.5-var(--marker-progress)/100)*1rem)] size-2.5 -translate-x-1/2 -translate-y-[calc(100%+0.3rem)]"></div>
@@ -253,7 +258,10 @@ export function ScrubbableVideo({
           </button>
         </li>
         <li className={liClassName}>
-          <button onClick={() => scrub("1frame")} className={cn(menuLiButtonClassName, "btn-primary border-primary")}>
+          <button
+            onClick={() => scrub(1 / framerate)}
+            className={cn(menuLiButtonClassName, "btn-primary border-primary")}
+          >
             +1f
           </button>
         </li>
