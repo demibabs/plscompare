@@ -2,9 +2,9 @@ import { get, set } from "idb-keyval";
 import { use, useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import type { FileData, VideoData } from "./sideBySideEditor/SideBySideEditor";
-import { getVideoFramerate } from "../../utils/getVideoFramerate";
 import { SomethingWentWrong } from "./SomethingWentWrong";
 import type { Options } from "./preview/previewVideo/PreviewVideo";
+import { getFrameData, type FrameData } from "../../utils/getFrameData";
 
 export function Compare() {
   const [isLoading, setIsLoading] = useState(true);
@@ -14,10 +14,10 @@ export function Compare() {
   const defaultOptions: Options = { layout: "default", freezeFrameTime: 2 };
   const [options, setOptions] = useState<Options>(defaultOptions);
   const [hasInteracted, setHasInteracted] = useState(() => {
-    if (window?.navigator?.userActivation){
-      return window.navigator.userActivation.hasBeenActive
+    if (window?.navigator?.userActivation) {
+      return window.navigator.userActivation.hasBeenActive;
     }
-    return false
+    return false;
   });
 
   useEffect(() => {
@@ -32,18 +32,19 @@ export function Compare() {
         if (vData) setVideosData(vData);
       });
       // Fetch the files from IndexedDB
-      await get("user-files").then(async (storedFiles: File[]) => {
+      await get("user-files").then(async (storedFiles: {file: File, frameData: FrameData}[]) => {
         if (storedFiles) {
-          storedFiles.forEach((file) => {
-            activeUrls.push(URL.createObjectURL(file));
+          storedFiles.forEach((f) => {
+            activeUrls.push(URL.createObjectURL(f.file));
           });
           setFilesData(
             await Promise.all(
-              storedFiles.map(async (file, index) => {
+              storedFiles.map(async (f, index) => {
                 return {
                   id: index,
                   url: activeUrls[index],
-                  framerate: await getVideoFramerate(file),
+                  framerate: f.frameData.framerate,
+                  allFrameTimes: f.frameData.allFrameTimes
                 };
               }),
             ),
@@ -61,7 +62,7 @@ export function Compare() {
     loadFromIDB();
     window.addEventListener("files-ready-for-compare", async () => {
       await loadFromIDB();
-      setHasInteracted(false);
+      setHasInteracted(true);
     });
     return () => {
       activeUrls.forEach((url) => URL.revokeObjectURL(url));
@@ -87,13 +88,12 @@ export function Compare() {
     }
   }, [options, isLoading]);
 
-  if (!hasInteracted) {
-    return <SomethingWentWrong data="noInteraction" setHasInteracted={setHasInteracted}></SomethingWentWrong>;
-  }
-
   if (!isLoading) {
     if (!filesData || filesData.length < 2) {
       return <SomethingWentWrong data="files"></SomethingWentWrong>;
+    }
+    if (!hasInteracted) {
+      return <SomethingWentWrong data="noInteraction" setHasInteracted={setHasInteracted}></SomethingWentWrong>;
     }
   }
 

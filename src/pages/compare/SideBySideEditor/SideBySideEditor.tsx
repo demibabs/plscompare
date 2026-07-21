@@ -1,13 +1,12 @@
-import { set } from "idb-keyval";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useOutletContext } from "react-router-dom";
 import { cn } from "../../../utils/cn";
 import { ScrubbableVideo } from "./ScrubbableVideo";
-import { useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { hasTimes } from "../../../utils/hasTimes";
 import { CompareHeader } from "../CompareHeader";
 
 export type Part = "start" | "end";
-export type FileData = { id: number; url: string; framerate: number };
+export type FileData = { id: number; url: string; framerate: number, allFrameTimes: number[] };
 export type VideoData = {
   label: string | null;
   times: {

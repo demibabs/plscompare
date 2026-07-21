@@ -29,8 +29,8 @@ self.onmessage = async (e: MessageEvent) => {
 
 async function runMediabunnyPipeline(config: ExportConfig) {
   const { videos, freezeFrameTime, layout } = config;
-  const canvasDimensions = getCanvasDimensions(layout, videos.length)
-  const fps = 60;
+  const canvasDimensions = getCanvasDimensions(layout, videos.length);
+  const fps = videos.every(v => v.framerate < 31) ? 30 : 60;
   const frameDurationSec = 1 / fps;
 
   try {
@@ -83,7 +83,7 @@ async function runMediabunnyPipeline(config: ExportConfig) {
   await output.start();
 
   const maxDuration = Math.max(...videos.map((v) => v.times.end - v.times.start)) + 2 * freezeFrameTime;
-  const totalFrames = Math.ceil(maxDuration * fps);
+  const totalFrames = Math.round(maxDuration * fps) + 1; // + 1 to include the final boundary frame
 
   const longestVideoIndex = videos.reduce((maxIndex, _, index) => {
     const { start, end } = videos[index].times;
@@ -141,18 +141,17 @@ async function runMediabunnyPipeline(config: ExportConfig) {
         }
       }
 
-      // If we haven't hit the end of the video segment, advance the frame if needed
-      if (sourceTime <= video.times.end + EPSILON) {
-        // Fast-forward the stream until the *next* sample is in the future.
-        // This natively handles differing framerates and freeze frames without redundant decoding.
-        while (!state.isDone && state.nextSample && state.nextSample.timestamp <= sourceTime + (frameDurationSec / 2)) {
-          if (state.currentSample) state.currentSample.close(); // Free old sample
-          state.currentSample = state.nextSample;
+      // Advance the frame if needed, clamping to the end time so we always hit the final frame
+      const targetTime = Math.min(sourceTime, video.times.end);
+      // Fast-forward the stream until the *next* sample is in the future.
+      // This natively handles differing framerates and freeze frames without redundant decoding.
+      while (!state.isDone && state.nextSample && state.nextSample.timestamp <= targetTime + frameDurationSec / 2) {
+        if (state.currentSample) state.currentSample.close(); // Free old sample
+        state.currentSample = state.nextSample;
 
-          const nextRes = await state.iterator.next();
-          state.nextSample = nextRes.value || null;
-          state.isDone = nextRes.done;
-        }
+        const nextRes = await state.iterator.next();
+        state.nextSample = nextRes.value || null;
+        state.isDone = nextRes.done;
       }
     }
 
@@ -172,7 +171,7 @@ async function runMediabunnyPipeline(config: ExportConfig) {
     const timersText = timerTimes.map((tTime) => (tTime !== undefined ? formatSecondsToSSMS(tTime) : ""));
 
     // C. Draw the layout
-    renderFrame(ctx, layout, sources, sourcesDimensions, labelsText, timersText);;
+    renderFrame(ctx, layout, sources, sourcesDimensions, labelsText, timersText);
 
     // D. Encode
     await outVideoSource.add(currentTimestampSec, frameDurationSec);
@@ -185,7 +184,7 @@ async function runMediabunnyPipeline(config: ExportConfig) {
     });
 
     if (frameIndex % 10 === 0) {
-      const progress = (frameIndex / totalFrames) * 100
+      const progress = (frameIndex / totalFrames) * 100;
       self.postMessage({ type: "PROGRESS", progress });
     }
   }

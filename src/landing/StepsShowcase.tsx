@@ -35,6 +35,7 @@ export function StepsShowcase() {
 
   return (
     <section className="bg-base-200 bgp-fourPointStars-base-100/5 border-neutral/50 relative mt-3 w-full border-t-3 border-b-3 border-dashed px-10 py-2">
+      {/* Header above card */}
       <h2 className="text-main-text mt-7 max-w-full text-center text-3xl">
         Use an{" "}
         <b
@@ -48,31 +49,30 @@ export function StepsShowcase() {
         </b>{" "}
         to quickly compare any clips.
       </h2>
-      <section className="flex w-full justify-center">
+      {/* Card */}
+      <div
+        onClick={() => setCurrentStep(nextStep())}
+        className="card lg:card-side card-xl bg-base-300 border-neutral my-10 h-fit max-w-2xl overflow-hidden border-3 lg:h-120 lg:w-6xl lg:max-w-6xl mx-auto"
+      >
         <div
-          onClick={() => setCurrentStep(nextStep())}
-          className="card lg:card-side card-xl bg-base-300 border-neutral my-10 h-fit max-w-2xl lg:w-6xl lg:max-w-6xl overflow-hidden border-3 lg:h-120"
+          className={cn(
+            "card-body order-2 min-h-90 lg:order-1 lg:min-h-full lg:w-lg",
+            { "bg-success text-success-content bgp-ticTacToe-base-200/3": currentStep === 1 },
+            { "bg-info text-info-content bgp-diagonalLines-base-200/3 bg-size-[1rem_auto]": currentStep === 2 },
+            { "bg-nice-purple text-info-content bgp-bankNote-base-200/2": currentStep === 3 },
+          )}
         >
-          <div
-            className={cn(
-              "card-body min-h-90 lg:min-h-full lg:w-lg order-2 lg:order-1",
-              { "bg-success text-success-content bgp-ticTacToe-base-200/3": currentStep === 1 },
-              { "bg-info text-info-content bgp-diagonalLines-base-200/3 bg-size-[1rem_auto]": currentStep === 2 },
-              { "bg-nice-purple text-info-content bgp-bankNote-base-200/2": currentStep === 3 },
-            )}
-          >
-            <h3 className="card-title text-2xl md:text-3xl lg:text-4xl">{stepsInfo[currentStep].title}</h3>
-            <p className="mr-8 flex items-center pb-3">{stepsInfo[currentStep].body}</p>
-            <div className="card-actions join">{stepButtons}</div>
-          </div>
-          <figure className="bg-base-100 flex w-full items-center justify-center p-5 lg:min-h-full order-1 lg:order-2">
-            <picture className="flex size-full items-center justify-center">
-              <source media="(min-width: 48rem)" srcSet={"/images/steps_showcase/wide/step_" + currentStep + ".png"} />
-              <img className="h-auto w-full" src={"/images/steps_showcase/mobile/step_" + currentStep + ".png"}></img>
-            </picture>
-          </figure>
+          <h3 className="card-title text-2xl md:text-3xl lg:text-4xl">{stepsInfo[currentStep].title}</h3>
+          <p className="mr-8 flex items-center pb-3">{stepsInfo[currentStep].body}</p>
+          <div className="card-actions join">{stepButtons}</div>
         </div>
-      </section>
+        <figure className="bg-base-100 order-1 flex w-full items-center justify-center p-5 lg:order-2 lg:min-h-full">
+          <picture className="flex size-full items-center justify-center">
+            <source media="(min-width: 48rem)" srcSet={"/images/steps_showcase/wide/step_" + currentStep + ".png"} />
+            <img className="h-auto w-full" src={"/images/steps_showcase/mobile/step_" + currentStep + ".png"}></img>
+          </picture>
+        </figure>
+      </div>
     </section>
   );
 }

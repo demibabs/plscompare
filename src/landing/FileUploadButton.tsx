@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "../utils/cn";
-import { get, update } from "idb-keyval";
+import { clear, get, update } from "idb-keyval";
 import { useNavigate } from "react-router-dom";
 import type { VideoData } from "../pages/compare/sideBySideEditor/SideBySideEditor";
+import { getFrameData, type FrameData } from "../utils/getFrameData";
 
 export function FileUploadButton() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -10,6 +11,7 @@ export function FileUploadButton() {
   const [userFiles, setUserFiles] = useState<File[]>([]);
   const [statusMessage, setStatusMessage] = useState("");
 
+  // Makes sure button is initially synced with files user has submitted
   useEffect(() => {
     async function getUserFiles() {
       await get("user-files").then((uFiles) => {
@@ -29,14 +31,17 @@ export function FileUploadButton() {
       return;
     }
     const newFiles = Array.from(event.target.files);
+    // Weird bug causes files to incorrectly be registered as size 0, no idea how to fix
     if (newFiles.some((nFile) => nFile.size === 0)) {
       setStatusMessage("All files must be larger than 0 bytes.");
       return;
     }
-    await update("user-files", (uFiles: File[] | undefined) => {
+    const framesData = await Promise.all(newFiles.map(async f => await getFrameData(f)))
+    await update("user-files", (uFiles: {file: File, frameData: FrameData}[] | undefined) => {
+      const returnedData = newFiles.map((nF, index) => ({ file: nF, frameData: framesData[index]}))
       if (uFiles) {
-        return uFiles.concat(newFiles);
-      } else return newFiles;
+        return uFiles.concat(returnedData);
+      } else return returnedData
     });
     if (userFiles.length + newFiles.length === 1) setStatusMessage("Submit at least 1 more file to proceed.");
     else setStatusMessage("");
@@ -57,6 +62,7 @@ export function FileUploadButton() {
   }
 
   return (
+    // Status message wrapper
     <div
       className={cn(
         "flex justify-center gap-3",
@@ -65,13 +71,38 @@ export function FileUploadButton() {
       )}
       data-tip={statusMessage}
     >
+      {/* X button on left, file count icon on right */}
       {userFiles.length > 0 && (
-        <span className="indicator-item tooltip" data-tip={userFiles.map((uFile) => uFile.name).join(", ")}>
-          <span className="badge badge-error border-base-100 border-3">
-            <b>{userFiles.length}</b>
+        <>
+          <span className="indicator-item tooltip" data-tip={userFiles.map((uFile) => uFile.name).join(", ")}>
+            <span className="badge badge-error border-base-100 border-3">
+              <b>{userFiles.length}</b>
+            </span>
           </span>
-        </span>
+          <span className="indicator-item indicator-top indicator-start">
+            <span
+              className="badge badge-error border-base-100 border-3"
+              onClick={async () => {
+                await clear();
+                setUserFiles([])
+                setStatusMessage("")
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={3}
+                stroke="currentColor"
+                className="size-4"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </span>
+          </span>
+        </>
       )}
+      {/* The actual upload button */}
       <button onClick={() => inputRef.current?.click()} className="btn btn-lg md:btn-xl btn-warning">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -89,6 +120,7 @@ export function FileUploadButton() {
         </svg>
         Upload clips
       </button>
+      {/* Invisible input that triggers the file popup */}
       <input
         accept="video/quicktime, video/mp4, .mp4, .mov"
         type="file"
@@ -97,6 +129,7 @@ export function FileUploadButton() {
         className="hidden"
         onChange={handleFileChange}
       ></input>
+      {/* Go button */}
       {userFiles.length >= 2 && (
         <button
           className="btn btn-lg md:btn-xl btn-warning btn-soft"

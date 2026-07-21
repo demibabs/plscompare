@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Layout } from "./renderFrame";
 
 export type ExportConfig = {
-  videos: { url: string; times: { start: number; end: number }; label: string | null }[];
+  videos: { url: string; times: { start: number; end: number }; label: string | null, framerate: number }[];
   fileName: string;
   freezeFrameTime: number;
   layout: Layout;

@@ -26,8 +26,6 @@ export function PreviewVideo() {
   const videosRef = useRef<HTMLVideoElement[]>(Array(filesData.length).fill(null));
   const [isPlaying, setIsPlaying] = useState(false);
   const [canPlay, setCanPlay] = useState(false);
-  const [isInFreezeFrame, setIsInFreezeFrame] = useState(false);
-  const timerRef = useRef<number>(undefined);
   const freezeFrameTime = options.freezeFrameTime;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const request = useRef<number>(0);
@@ -52,11 +50,12 @@ export function PreviewVideo() {
   function watchVideo(vElement: HTMLVideoElement, index: number) {
     vElement.requestVideoFrameCallback((_, metadata) => {
       mediaTimes.current[index] = metadata.mediaTime;
-      if (metadata.mediaTime >= (videosData[index].times.end as number)) {
+      if (metadata.mediaTime >= (videosData[index].times.end as number) - 1 / (filesData[index].framerate)) {
         vElement.pause();
+        vElement.currentTime = videosData[index].times.end as number;
         timerStartTimes.current[index] = metadata.mediaTime;
         if (videosRef.current.every((vElement) => vElement.paused)) {
-          if (isPlaying) playFreezeFrame();
+          if (isPlaying) setIsPlaying(false);
         }
         return;
       }
@@ -94,6 +93,7 @@ export function PreviewVideo() {
         url: filesData[index].url,
         times: vData.times,
         label: vData.label,
+        framerate: filesData[index].framerate,
       }));
       startExport({
         videos,
@@ -138,8 +138,12 @@ export function PreviewVideo() {
       if (videosRef.current.every((vElement) => vElement.ended)) {
         videosRef.current.forEach((vElement) => vElement.play());
       } else {
-        videosRef.current.forEach((vElement) => {
-          if (!vElement.ended) vElement.play();
+        videosRef.current.forEach((vElement, index) => {
+          if (
+            hasTimes(videosData[index]) &&
+            vElement.currentTime < videosData[index].times.end - 1 / (filesData[index].framerate)
+          )
+            vElement.play();
         });
       }
     } else {
@@ -159,13 +163,6 @@ export function PreviewVideo() {
     return () => cancelAnimationFrame(request.current);
   }, []);
 
-  function playFreezeFrame() {
-    setIsInFreezeFrame(true);
-    timerRef.current = setTimeout(() => {
-      setIsInFreezeFrame(false);
-      setIsPlaying(!isPlaying);
-    }, freezeFrameTime * 1000);
-  }
   return (
     videosData.every((vData) => hasTimes(vData)) && (
       <div className="flex grow flex-col items-center px-10 py-5">
@@ -214,44 +211,34 @@ export function PreviewVideo() {
               if (videosRef.current[index].currentTime < videosData[index].times.start) {
                 videosRef.current[index].currentTime = videosData[index].times.start;
               }
-              if (videosRef.current.every((vElement, index) => vElement.currentTime >= videosData[index].times.end)) {
-                if (isPlaying) playFreezeFrame();
-              }
-            }}
-            onEnded={() => {
-              if (videosRef.current.every((vElement) => vElement.ended)) {
-                setIsPlaying(false);
-              }
             }}
           />
         ))}
         <div className="my-2 flex flex-col items-center justify-center gap-2">
           <button
             onClick={() => {
-              if (timerRef.current) clearTimeout(timerRef.current);
-
               if (isPlaying) setIsPlaying(false);
               else {
-                if (videosRef.current[0].currentTime <= videosData[0].times.start + 0.02) {
-                  playFreezeFrame();
-                } else if (
+                if (
                   videosRef.current.every((_, index) => {
-                    return mediaTimes.current[index] >= videosData[index].times.end;
+                    return (
+                      mediaTimes.current[index] >= videosData[index].times.end - 1 / (2 * filesData[index].framerate)
+                    );
                   })
                 ) {
                   videosRef.current.forEach(
                     (vElement, index) => (vElement.currentTime = videosData[index].times.start),
                   );
                   timerStartTimes.current.fill(-1);
-                  playFreezeFrame();
+                  setIsPlaying(true);
                 } else setIsPlaying(true);
               }
             }}
             className={cn("btn btn-lg border-base-300 btn-error border-3 px-3", {
-              "btn-disabled": !canPlay || isInFreezeFrame,
+              "btn-disabled": false, //!canPlay,
             })}
           >
-            {isPlaying || isInFreezeFrame ? (
+            {isPlaying ? (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
