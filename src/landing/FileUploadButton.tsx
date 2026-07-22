@@ -10,6 +10,7 @@ export function FileUploadButton() {
   const navigate = useNavigate();
   const [userFiles, setUserFiles] = useState<File[]>([]);
   const [statusMessage, setStatusMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   // Makes sure button is initially synced with files user has submitted
   useEffect(() => {
@@ -30,18 +31,19 @@ export function FileUploadButton() {
     if (!event.target.files) {
       return;
     }
+    setStatusMessage("");
     const newFiles = Array.from(event.target.files);
     // Weird bug causes files to incorrectly be registered as size 0, no idea how to fix
     if (newFiles.some((nFile) => nFile.size === 0)) {
       setStatusMessage("All files must be larger than 0 bytes.");
       return;
     }
-    const framesData = await Promise.all(newFiles.map(async f => await getFrameData(f)))
-    await update("user-files", (uFiles: {file: File, frameData: FrameData}[] | undefined) => {
-      const returnedData = newFiles.map((nF, index) => ({ file: nF, frameData: framesData[index]}))
+    const framesData = await Promise.all(newFiles.map(async (f) => await getFrameData(f)));
+    await update("user-files", (uFiles: { file: File; frameData: FrameData }[] | undefined) => {
+      const returnedData = newFiles.map((nF, index) => ({ file: nF, frameData: framesData[index] }));
       if (uFiles) {
         return uFiles.concat(returnedData);
-      } else return returnedData
+      } else return returnedData;
     });
     if (userFiles.length + newFiles.length === 1) setStatusMessage("Submit at least 1 more file to proceed.");
     else setStatusMessage("");
@@ -64,11 +66,9 @@ export function FileUploadButton() {
   return (
     // Status message wrapper
     <div
-      className={cn(
-        "flex justify-center gap-3",
-        { "tooltip tooltip-bottom tooltip-open tooltip-neutral before:text-lg": statusMessage },
-        { indicator: userFiles.length > 0 },
-      )}
+      className={cn("indicator flex justify-center gap-3", {
+        "tooltip tooltip-bottom tooltip-open tooltip-neutral before:text-lg": statusMessage,
+      })}
       data-tip={statusMessage}
     >
       {/* X button on left, file count icon on right */}
@@ -84,8 +84,8 @@ export function FileUploadButton() {
               className="badge badge-error border-base-100 border-3"
               onClick={async () => {
                 await clear();
-                setUserFiles([])
-                setStatusMessage("")
+                setUserFiles([]);
+                setStatusMessage("");
               }}
             >
               <svg
@@ -101,6 +101,9 @@ export function FileUploadButton() {
             </span>
           </span>
         </>
+      )}
+      {isLoading && (
+        <span className="indicator-item indicator-center indicator-middle loading loading-spinner text-main-text loading-xl"></span>
       )}
       {/* The actual upload button */}
       <button onClick={() => inputRef.current?.click()} className="btn btn-lg md:btn-xl btn-warning">
@@ -127,7 +130,11 @@ export function FileUploadButton() {
         multiple
         ref={inputRef}
         className="hidden"
-        onChange={handleFileChange}
+        onChange={async (e) => {
+          setIsLoading(true);
+          await handleFileChange(e);
+          setIsLoading(false);
+        }}
       ></input>
       {/* Go button */}
       {userFiles.length >= 2 && (

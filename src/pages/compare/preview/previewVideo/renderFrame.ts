@@ -1,7 +1,25 @@
 import { getCanvasDimensions } from "../../../../utils/getCanvasDimensions";
 
-export type Layout = "default" | "vertical" | "horizontal";
+export type Layout = "default" | "vertical" | "horizontal" | "grid";
 export type Dimensions = { width: number; height: number };
+
+/**
+ * Computes the grid rows × cols for a given number of videos.
+ * Expansion order: square → add column (rectangular) → add row (square) → repeat.
+ * e.g. 1×1 → 1×2 → 2×2 → 2×3 → 3×3 → 3×4 → 4×4 ...
+ */
+export function getGridDimensions(numVideos: number): { rows: number; cols: number } {
+  let rows = 1;
+  let cols = 1;
+  while (rows * cols < numVideos) {
+    if (rows === cols) {
+      cols++;
+    } else {
+      rows++;
+    }
+  }
+  return { rows, cols };
+}
 
 export function renderFrame(
   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
@@ -59,6 +77,33 @@ export function renderFrame(
         destY = containerY;
         destWidth = containerWidth;
         destHeight = containerHeight;
+      } else if (layout === "grid") {
+        const { rows, cols } = getGridDimensions(sourcesDimensions.length);
+        containerWidth = canvasDimensions.width / cols;
+        containerHeight = canvasDimensions.height / rows;
+        const col = index % cols;
+        const row = Math.floor(index / cols);
+        containerX = col * containerWidth;
+        containerY = row * containerHeight;
+
+        const targetAspectRatio = containerWidth / containerHeight;
+        const videoAspectRatio = sDims.width / sDims.height;
+
+        sourceX = 0;
+        sourceY = 0;
+        sourceWidth = sDims.width;
+        sourceHeight = sDims.height;
+
+        if (videoAspectRatio > targetAspectRatio) {
+          destWidth = containerWidth;
+          destHeight = containerWidth / videoAspectRatio;
+        } else {
+          destHeight = containerHeight;
+          destWidth = containerHeight * videoAspectRatio;
+        }
+
+        destX = containerX + (containerWidth - destWidth) / 2;
+        destY = containerY + (containerHeight - destHeight) / 2;
       } else {
         if (layout === "vertical") {
           containerWidth = canvasDimensions.width;

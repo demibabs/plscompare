@@ -52,8 +52,10 @@ export function PreviewVideo() {
       mediaTimes.current[index] = metadata.mediaTime;
       if (metadata.mediaTime >= (videosData[index].times.end as number) - 1 / (filesData[index].framerate)) {
         vElement.pause();
-        vElement.currentTime = videosData[index].times.end as number;
-        timerStartTimes.current[index] = metadata.mediaTime;
+        vElement.currentTime = (videosData[index].times.end as number) + 0.005;
+        mediaTimes.current[index] = videosData[index].times.end as number;
+        timerStartTimes.current[index] = videosData[index].times.end as number;
+        
         if (videosRef.current.every((vElement) => vElement.paused)) {
           if (isPlaying) setIsPlaying(false);
         }
@@ -193,9 +195,9 @@ export function PreviewVideo() {
             ref={(e) => {
               if (e) videosRef.current[index] = e;
             }}
-            onLoadedMetadata={() => (videosRef.current[index].currentTime = videosData[index].times.start)}
+            onLoadedMetadata={() => (videosRef.current[index].currentTime = videosData[index].times.start + 0.005)}
             onCanPlayThrough={() => {
-              if (videosRef.current.every((vElement) => vElement.readyState === 4)) {
+              if (videosRef.current.every((vElement) => vElement.readyState >= 2)) {
                 setCanPlay(true);
                 longestVideoIndex.current = videosRef.current.reduce((maxIndex, _, index) => {
                   const { start, end } = videosData[index].times;
@@ -209,7 +211,7 @@ export function PreviewVideo() {
             }}
             onTimeUpdate={() => {
               if (videosRef.current[index].currentTime < videosData[index].times.start) {
-                videosRef.current[index].currentTime = videosData[index].times.start;
+                videosRef.current[index].currentTime = videosData[index].times.start + 0.005;
               }
             }}
           />
@@ -227,7 +229,7 @@ export function PreviewVideo() {
                   })
                 ) {
                   videosRef.current.forEach(
-                    (vElement, index) => (vElement.currentTime = videosData[index].times.start),
+                    (vElement, index) => (vElement.currentTime = videosData[index].times.start + 0.005),
                   );
                   timerStartTimes.current.fill(-1);
                   setIsPlaying(true);
@@ -235,7 +237,7 @@ export function PreviewVideo() {
               }
             }}
             className={cn("btn btn-lg border-base-300 btn-error border-3 px-3", {
-              "btn-disabled": false, //!canPlay,
+              "btn-disabled": false//!canPlay,
             })}
           >
             {isPlaying ? (
@@ -337,6 +339,18 @@ export function PreviewVideo() {
                           checked={options.layout === "horizontal"}
                           onChange={() => {
                             setOptions({ ...options, layout: "horizontal" });
+                          }}
+                        ></input>
+                      </div>
+                      <div className="flex items-center justify-end gap-2">
+                        <p>Grid</p>
+                        <input
+                          type="radio"
+                          className="radio"
+                          name="layout-radio"
+                          checked={options.layout === "grid"}
+                          onChange={() => {
+                            setOptions({ ...options, layout: "grid" });
                           }}
                         ></input>
                       </div>

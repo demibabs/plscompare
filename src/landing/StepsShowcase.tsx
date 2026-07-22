@@ -1,5 +1,24 @@
 import { useState } from "react";
 import { cn } from "../utils/cn";
+import step1WideImage from "../assets/pages/landing/steps_showcase/wide/step_1.png";
+import step2WideImage from "../assets/pages/landing/steps_showcase/wide/step_2.png";
+import step3WideImage from "../assets/pages/landing/steps_showcase/wide/step_3.png";
+import step1MobileImage from "../assets/pages/landing/steps_showcase/mobile/step_1.png";
+import step2MobileImage from "../assets/pages/landing/steps_showcase/mobile/step_2.png";
+import step3MobileImage from "../assets/pages/landing/steps_showcase/mobile/step_3.png";
+
+const images: Record<string, Record<number, string>> = {
+  wide: {
+    1: step1WideImage,
+    2: step2WideImage,
+    3: step3WideImage,
+  },
+  mobile: {
+    1: step1MobileImage,
+    2: step2MobileImage,
+    3: step3MobileImage,
+  },
+};
 
 type StepInfo = { title: string; body: string };
 
@@ -52,24 +71,24 @@ export function StepsShowcase() {
       {/* Card */}
       <div
         onClick={() => setCurrentStep(nextStep())}
-        className="card lg:card-side card-xl bg-base-300 border-neutral my-10 h-fit max-w-2xl overflow-hidden border-3 lg:h-120 lg:w-6xl lg:max-w-6xl mx-auto"
+        className="card lg:card-side card-xl bg-base-300 border-neutral mx-auto my-10 h-fit max-w-2xl overflow-hidden border-3 lg:h-120 lg:w-6xl lg:max-w-6xl"
       >
         <div
           className={cn(
-            "card-body order-2 min-h-90 lg:order-1 lg:min-h-full lg:w-lg",
+            "card-body order-2 not-lg:py-8 lg:order-1 lg:min-h-full lg:w-lg",
             { "bg-success text-success-content bgp-ticTacToe-base-200/3": currentStep === 1 },
             { "bg-info text-info-content bgp-diagonalLines-base-200/3 bg-size-[1rem_auto]": currentStep === 2 },
             { "bg-nice-purple text-info-content bgp-bankNote-base-200/2": currentStep === 3 },
           )}
         >
           <h3 className="card-title text-2xl md:text-3xl lg:text-4xl">{stepsInfo[currentStep].title}</h3>
-          <p className="mr-8 flex items-center pb-3">{stepsInfo[currentStep].body}</p>
-          <div className="card-actions join">{stepButtons}</div>
+          <p className="flex items-center pb-3 lg:mr-8">{stepsInfo[currentStep].body}</p>
+          <div className="card-actions join gap-1 md:gap-2">{stepButtons}</div>
         </div>
         <figure className="bg-base-100 order-1 flex w-full items-center justify-center p-5 lg:order-2 lg:min-h-full">
           <picture className="flex size-full items-center justify-center">
-            <source media="(min-width: 48rem)" srcSet={"/images/steps_showcase/wide/step_" + currentStep + ".png"} />
-            <img className="h-auto w-full" src={"/images/steps_showcase/mobile/step_" + currentStep + ".png"}></img>
+            <source media="(min-width: 48rem)" srcSet={images.wide[currentStep]} />
+            <img className="h-auto w-full" src={images.mobile[currentStep]} loading="lazy"></img>
           </picture>
         </figure>
       </div>
@@ -92,7 +111,9 @@ function StepButton({
         e.stopPropagation();
         setCurrentStep(step);
       }}
-      className={cn("join-item btn btn-lg border-base-100 border-3", { "btn-warning": step === currentStep })}
+      className={cn("join-item btn btn-sm md:btn-md lg:btn-lg border-base-100 border-3", {
+        "btn-warning": step === currentStep,
+      })}
     >
       {step}
     </button>

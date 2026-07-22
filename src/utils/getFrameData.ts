@@ -2,7 +2,7 @@ import { ALL_FORMATS, BlobSource, Input, VideoSampleSink } from "mediabunny";
 
 export type FrameData = {framerate: number, allFrameTimes: number[]}
 export async function getFrameData(file: File) {
-  const allFrameTimes = [0];
+  const allFrameTimes: number[] = [];
   let framerate = 0;
   // Initialize your media input
   const input = new Input({ source: new BlobSource(file), formats: ALL_FORMATS });
@@ -14,11 +14,14 @@ export async function getFrameData(file: File) {
       framerate = packetStats.averagePacketRate;
 
       const sink = new VideoSampleSink(videoTrack);
+      let lastEndTime = 0;
       for await (const sample of sink.samples()) {
-        const endTime = sample.timestamp + sample.duration;
-
-        allFrameTimes.push(endTime);
+        allFrameTimes.push(sample.timestamp);
+        lastEndTime = sample.timestamp + sample.duration;
         sample.close();
+      }
+      if (allFrameTimes.length > 0) {
+        allFrameTimes.push(lastEndTime);
       }
     }
     return { allFrameTimes, framerate };

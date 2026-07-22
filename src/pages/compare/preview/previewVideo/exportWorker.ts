@@ -34,7 +34,7 @@ async function runMediabunnyPipeline(config: ExportConfig) {
   const frameDurationSec = 1 / fps;
 
   try {
-    const absoluteFontUrl = new URL("/fonts/Outfit-VariableFont_wght.woff2", self.location.origin).href;
+    const absoluteFontUrl = new URL("/src/assets/shared/fonts/Outfit-VariableFont_wght.woff2", self.location.origin).href;
     const customFont = new FontFace("Outfit", `url(${absoluteFontUrl})`);
 
     await customFont.load();
@@ -74,7 +74,7 @@ async function runMediabunnyPipeline(config: ExportConfig) {
 
   const outVideoSource = new CanvasSource(canvas, {
     codec: "avc",
-    bitrate: 5_000_000,
+    bitrate: 30_000_000,
     bitrateMode: "constant",
     latencyMode: "quality",
   } as any);
@@ -145,7 +145,7 @@ async function runMediabunnyPipeline(config: ExportConfig) {
       const targetTime = Math.min(sourceTime, video.times.end);
       // Fast-forward the stream until the *next* sample is in the future.
       // This natively handles differing framerates and freeze frames without redundant decoding.
-      while (!state.isDone && state.nextSample && state.nextSample.timestamp <= targetTime + frameDurationSec / 2) {
+      while (!state.isDone && state.nextSample && state.nextSample.timestamp <= targetTime + 0.005) {
         if (state.currentSample) state.currentSample.close(); // Free old sample
         state.currentSample = state.nextSample;
 

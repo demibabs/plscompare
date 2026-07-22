@@ -10,6 +10,7 @@ import {
 import { cn } from "../../../utils/cn";
 import type { FileData, Part, VideoData } from "./SideBySideEditor";
 import { useLatest } from "../../../utils/useLatest";
+import { getNearestFrameTime, getNextFrameTime, getPrevFrameTime } from "../../../utils/frameSnapping";
 
 export function ScrubbableVideo({
   fileData,
@@ -49,16 +50,17 @@ export function ScrubbableVideo({
 
   function handleTimeUpdate(e: React.SyntheticEvent<HTMLVideoElement, Event>) {
     const currentTime = e.currentTarget.currentTime;
-    if (part === "end" && startTime && currentTime < startTime) {
-      e.currentTarget.currentTime = startTime;
+    if (part === "end" && startTime !== null && currentTime < startTime) {
+      e.currentTarget.currentTime = startTime + 0.005;
     }
   }
 
   const handleScrubberChange = (e: ChangeEvent<HTMLInputElement>) => {
     const scrubberTime = parseFloat(e.target.value);
-    const newTime = part === "start" ? scrubberTime : Math.max(scrubberTime, startTime || 0);
+    const snappedTime = getNearestFrameTime(scrubberTime, allFrameTimes);
+    const newTime = part === "start" ? snappedTime : Math.max(snappedTime, startTime || 0);
     if (videosRef.current[id]) {
-      videosRef.current[id].currentTime = newTime;
+      videosRef.current[id].currentTime = newTime + 0.005;
     }
     setVideosData((vsData) =>
       vsData.with(id, {
@@ -81,23 +83,24 @@ export function ScrubbableVideo({
     if (videosRef.current[id]) {
       setDurations((durs) => durs.with(id, videosRef.current[id].duration));
       if (part === "end" && startTime !== null) {
-        videosRef.current[id].currentTime = startTime;
+        videosRef.current[id].currentTime = startTime + 0.005;
       }
       const thisTime = videosData[id].times[part];
       if (thisTime !== null) {
-        videosRef.current[id].currentTime = thisTime;
+        videosRef.current[id].currentTime = thisTime + 0.005;
       }
     }
   }
 
   function getMediaTime(now: number, metadata: VideoFrameCallbackMetadata) {
     if (!isDraggingLatest.current && isPlayingLatest.current) {
+      const newTime = getNearestFrameTime(metadata.mediaTime, allFrameTimes)
       setVideosData((vsData) =>
         vsData.with(id, {
           ...vsData[id],
           times: {
             ...vsData[id].times,
-            [part]: metadata.mediaTime,
+            [part]: newTime
           },
         }),
       );
@@ -133,67 +136,26 @@ export function ScrubbableVideo({
   function scrub(numSeconds: number) {
     if (!videosRef.current[id] || !allFrameTimes || allFrameTimes.length === 0) return;
 
-    const currentTime = videosRef.current[id].currentTime;
+    const exactCurrentTime =
+      videosData[id].times[part] !== null && videosData[id].times[part] !== undefined
+        ? (videosData[id].times[part] as number)
+        : videosRef.current[id].currentTime;
     const EPSILON = 0.001;
-    let targetTime = currentTime;
+    let targetTime
 
     const isNextFrame = Math.abs(numSeconds - (1 / framerate)) < EPSILON;
     const isPrevFrame = Math.abs(numSeconds - (-1 / framerate)) < EPSILON;
 
-    const upperBound = (value: number) => {
-      let left = 0;
-      let right = allFrameTimes.length - 1;
-      let ans = allFrameTimes.length;
-      while (left <= right) {
-        const mid = Math.floor((left + right) / 2);
-        if (allFrameTimes[mid] > value) {
-          ans = mid;
-          right = mid - 1;
-        } else {
-          left = mid + 1;
-        }
-      }
-      return ans;
-    };
-
-    const lowerBound = (value: number) => {
-      let left = 0;
-      let right = allFrameTimes.length - 1;
-      let ans = -1;
-      while (left <= right) {
-        const mid = Math.floor((left + right) / 2);
-        if (allFrameTimes[mid] < value) {
-          ans = mid;
-          left = mid + 1;
-        } else {
-          right = mid - 1;
-        }
-      }
-      return ans;
-    };
-
     if (isNextFrame) {
-      const idx = upperBound(currentTime + EPSILON);
-      targetTime = idx < allFrameTimes.length ? allFrameTimes[idx] : allFrameTimes[allFrameTimes.length - 1];
+      targetTime = getNextFrameTime(exactCurrentTime, allFrameTimes);
     } else if (isPrevFrame) {
-      const idx = lowerBound(currentTime - EPSILON);
-      targetTime = idx >= 0 ? allFrameTimes[idx] : allFrameTimes[0];
+      targetTime = getPrevFrameTime(exactCurrentTime, allFrameTimes);
     } else {
-      const calculatedTime = currentTime + numSeconds;
-      const upperIdx = upperBound(calculatedTime);
-      if (upperIdx === 0) {
-        targetTime = allFrameTimes[0];
-      } else if (upperIdx === allFrameTimes.length) {
-        targetTime = allFrameTimes[allFrameTimes.length - 1];
-      } else {
-        const prev = allFrameTimes[upperIdx - 1];
-        const next = allFrameTimes[upperIdx];
-        targetTime = Math.abs(calculatedTime - prev) < Math.abs(calculatedTime - next) ? prev : next;
-      }
+      targetTime = getNearestFrameTime(exactCurrentTime + numSeconds, allFrameTimes);
     }
 
     const newTime = part === "start" ? targetTime : Math.max(targetTime, startTime || 0);
-    videosRef.current[id].currentTime = newTime;
+    videosRef.current[id].currentTime = newTime + 0.005;
     setVideosData((vsData) =>
       vsData.with(id, {
         ...vsData[id],
@@ -224,7 +186,22 @@ export function ScrubbableVideo({
       <div className="skeleton indicator rounded-box bg-base-200 my-5 flex w-full items-center justify-center">
         {isLoading && <div className="indicator-item indicator-center indicator-middle loading size-12" />}
         <video
-          onPause={() => setArePlaying((aP) => aP.with(id, false))}
+          onPause={(e) => {
+            setArePlaying((aP) => aP.with(id, false));
+            if (allFrameTimes && allFrameTimes.length > 0) {
+              const exactTime = getNearestFrameTime(e.currentTarget.currentTime, allFrameTimes);
+              e.currentTarget.currentTime = exactTime + 0.005;
+              setVideosData((vsData) =>
+                vsData.with(id, {
+                  ...vsData[id],
+                  times: {
+                    ...vsData[id].times,
+                    [part]: exactTime,
+                  },
+                }),
+              );
+            }
+          }}
           onPlay={() => setArePlaying((aP) => aP.with(id, true))}
           preload="auto"
           playsInline
@@ -247,7 +224,7 @@ export function ScrubbableVideo({
           className="range range-xs w-full"
           min={0}
           max={durations[id] || 1}
-          value={videosData[id].times[part] || videosData[id].times.start || 0}
+          value={Math.max(videosData[id].times[part] || 0, videosData[id].times.start || 0)}
           step={"any"}
           onChange={handleScrubberChange}
           disabled={isLoading}
@@ -260,6 +237,7 @@ export function ScrubbableVideo({
             setIsDragging(true);
             wasPlaying.current = arePlaying[id];
           }}
+          onTouchEnd={() => setIsDragging(false)}
         ></input>
         {markerProgress !== null && (
           <div className="bg-main-text mask mask-triangle-2 pointer-events-none absolute top-0 left-[calc(var(--marker-progress)*1%+(0.5-var(--marker-progress)/100)*1rem)] size-2.5 -translate-x-1/2 -translate-y-[calc(100%+0.3rem)]"></div>
