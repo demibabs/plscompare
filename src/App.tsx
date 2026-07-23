@@ -9,6 +9,9 @@ import { Layout } from "./pages/layout/Layout";
 import { useEffect, useState } from "react";
 import { clear } from "idb-keyval";
 import { SomethingWentWrong } from "./pages/compare/SomethingWentWrong";
+import { ReadMe } from "./pages/read-me/ReadMe";
+import { ComparisonTips } from "./pages/read-me/ComparisonTips";
+import { NotesFromTheDev } from "./pages/read-me/NotesFromTheDev";
 
 const router = createBrowserRouter([
   {
@@ -27,7 +30,7 @@ const router = createBrowserRouter([
             children: [
               {
                 index: true,
-                loader: () => redirect("start-frame")
+                loader: () => redirect("start-frame"),
               },
               {
                 path: "start-frame",
@@ -40,6 +43,20 @@ const router = createBrowserRouter([
               {
                 path: "preview",
                 element: <Preview />,
+              },
+            ],
+          },
+          {
+            path: "/read-me",
+            element: <ReadMe></ReadMe>,
+            children: [
+              {
+                path: "comparison-tips",
+                element: <ComparisonTips></ComparisonTips>,
+              },
+              {
+                path: "notes-from-the-dev",
+                element: <NotesFromTheDev></NotesFromTheDev>,
               },
             ],
           },

@@ -37,11 +37,11 @@ export function StepsShowcase() {
     },
     2: {
       title: "Step 2: Set an ending frame for each clip",
-      body: "Do the same as step 1, but for a point after the important stuff has happened.",
+      body: "On the next screen, do the same as step 1, but for a point after the important stuff has happened.",
     },
     3: {
       title: "Step 3: Voilà!",
-      body: "The editing work is done for you, automatically. All you have to do is download.",
+      body: "That's it. The editing work is done for you automatically, and you can export in 1 click.",
     },
   };
 
@@ -55,7 +55,7 @@ export function StepsShowcase() {
   return (
     <section className="bg-base-200 bgp-fourPointStars-base-100/5 border-neutral/50 relative mt-3 w-full border-t-3 border-b-3 border-dashed px-10 py-2">
       {/* Header above card */}
-      <h2 className="text-main-text mt-7 max-w-full text-center text-3xl">
+      <h2 className="text-main-text mt-7 max-w-full text-center text-2xl md:text-3xl">
         Use an{" "}
         <b
           className={cn(
@@ -81,7 +81,7 @@ export function StepsShowcase() {
             { "bg-nice-purple text-info-content bgp-bankNote-base-200/2": currentStep === 3 },
           )}
         >
-          <h3 className="card-title text-2xl md:text-3xl lg:text-4xl">{stepsInfo[currentStep].title}</h3>
+          <h3 className="card-title not-md:hidden md:text-3xl lg:text-4xl">{stepsInfo[currentStep].title}</h3>
           <p className="flex items-center pb-3 lg:mr-8">{stepsInfo[currentStep].body}</p>
           <div className="card-actions join gap-1 md:gap-2">{stepButtons}</div>
         </div>

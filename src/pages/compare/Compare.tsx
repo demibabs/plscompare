@@ -1,10 +1,10 @@
 import { get, set } from "idb-keyval";
-import { use, useEffect, useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Outlet } from "react-router-dom";
 import type { FileData, VideoData } from "./sideBySideEditor/SideBySideEditor";
 import { SomethingWentWrong } from "./SomethingWentWrong";
 import type { Options } from "./preview/previewVideo/PreviewVideo";
-import { getFrameData, type FrameData } from "../../utils/getFrameData";
+import { type FrameData } from "../../utils/getFrameData";
 
 export function Compare() {
   const [isLoading, setIsLoading] = useState(true);
