@@ -8,7 +8,9 @@ import heroVideo from "../assets/pages/landing/hero/hero_video.mp4";
 import gridExampleImage from "../assets/pages/landing/layouts/grid_example.jpg";
 import horizontalExampleImage from "../assets/pages/landing/layouts/horizontal_example.jpg";
 import verticalExampleImage from "../assets/pages/landing/layouts/vertical_example.jpg";
+import defaultExampleImage from "../assets/pages/landing/layouts/default_example.jpg";
 import { GithHubIcon } from "../utils/GitHubIcon";
+import { DiscordIcon } from "../utils/DiscordIcon";
 
 export function Landing() {
   return (
@@ -66,44 +68,48 @@ export function Landing() {
             Compare <b className="decoration-error underline">several</b> clips at once—you're not limited to just two.
           </p>
         </div>
-        <div className="-mt-15 flex w-full flex-col items-center justify-center gap-12 px-5 md:px-10 lg:flex-row lg:gap-10 lg:px-20">
-          <div className="z-11 mt-5 grid w-4xl max-w-full grid-cols-[2fr_1fr] grid-rows-[2fr_1fr] gap-3">
-            <div className="relative col-span-1 col-start-1 row-span-1 row-start-1 aspect-video h-full">
+        <div className="-mt-15 flex w-full flex-col items-center justify-center gap-5 px-5 md:px-10 lg:flex-row lg:gap-10 lg:px-20">
+          <figure className="z-11 mt-7 w-4xl max-w-full grid-cols-[2fr_1fr] grid-rows-[2fr_1fr] flex-col not-md:flex md:grid gap-4 md:gap-3">
+            <div className="relative col-span-1 col-start-1 row-span-1 row-start-1 aspect-video h-full not-md:order-2">
               <div className="rounded-box border-base-300 size-full overflow-hidden border-3">
                 <img src={gridExampleImage} className="size-full" loading="lazy"></img>
               </div>
-              <div className="badge badge-md md:badge-lg lg:badge-xl badge-warning border-base-300 absolute top-0 left-1/2 -translate-1/2 border-3">
+              <div className="badge badge-lg lg:badge-xl badge-warning border-base-300 absolute top-0 left-1/2 -translate-1/2 border-3">
                 <b>Grid</b>
               </div>
             </div>
-            <div className="relative col-span-1 col-start-1 row-span-1 row-start-2 aspect-32/9 h-full w-auto">
+            <div className="relative col-span-1 col-start-1 row-span-1 row-start-2 aspect-32/9 h-full w-auto not-md:order-3">
               <div className="rounded-box border-base-300 size-full overflow-hidden border-3">
                 <img src={horizontalExampleImage} className="size-full" loading="lazy"></img>
               </div>
-              <div className="badge badge-md md:badge-lg lg:badge-xl badge-error border-base-300 absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 border-3">
+              <div className="badge badge-lg lg:badge-xl badge-error border-base-300 absolute md:bottom-0 not-md:top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 md:translate-y-1/2 border-3">
                 <b>Horizontal</b>
               </div>
             </div>
-            <div className="relative col-span-1 col-start-2 row-span-2 row-start-1 aspect-16/27 h-full">
+            <div className="relative col-span-1 col-start-2 row-span-2 row-start-1 md:aspect-16/27 not-md:order-1 not-md:aspect-video h-full">
               <div className="rounded-box border-base-300 size-full overflow-hidden border-3">
-                <img src={verticalExampleImage} className="size-full" loading="lazy"></img>
+                <picture>
+                  <source media="(min-width: 48rem)" srcSet={verticalExampleImage} />
+                  <img src={defaultExampleImage} className="size-full" loading="lazy"></img>
+                </picture>
               </div>
-              <div className="badge badge-md md:badge-lg lg:badge-xl badge-primary border-base-300 absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2 border-3">
-                <b>Vertical</b>
+              <div className="badge badge-lg lg:badge-xl badge-primary border-base-300 absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2 border-3">
+                <b className="md:hidden">Default</b>
+                <b className="not-md:hidden">Vertical</b>
               </div>
             </div>
-          </div>
-          <div className="rounded-box bg-base-200 border-base-300 bgp-boxes-base-300/6 z-12 my-auto flex h-fit w-2xl max-w-full flex-col gap-8 border-3 p-4 text-center lg:w-xs">
-            <p className="text-xl md:text-2xl">Choose the layout style that best suits your comparison.</p>
+          </figure>
+          <div className="rounded-box bg-base-200/70 border-base-300 bgp-boxes-base-300/6 z-12 my-auto flex h-fit max-w-full flex-col gap-8 border-3 p-3 text-center md:p-4 lg:w-xs">
+            <p className="text-lg md:text-2xl">Choose the layout style that best suits your comparison.</p>
           </div>
         </div>
         <div className="bgp-fourPointStars-base-100/15 -mt-10 h-20 w-full bg-size-[0.75rem_auto] lg:bg-size-[1rem_auto]"></div>
       </section>
-      <section className="bg-base-200 border-base-300 grid w-full grid-cols-3 gap-3 border-y-3 border-dashed px-20 py-10">
-        <div className="card card-lg bg-base-100 border-base-300 col-span-1 col-start-1 border-3">
+      <section className="bg-base-200 border-base-300 w-full grid-cols-3 grid-rows-2 flex-col gap-3 border-y-3 border-dashed px-5 py-10 not-md:gap-4 not-lg:flex md:px-10 lg:grid lg:px-20">
+        <div className="card not-md:card-md card-lg bg-base-100 border-base-300 col-span-1 col-start-1 row-span-1 row-start-1 border-3">
           <div className="card-body">
-            <div className="card-title mb-3 text-2xl">Supports all major video formats</div>
-            <div className="flex flex-wrap gap-2">
+            <div className="card-title mb-3 text-2xl not-md:text-xl">Supports all major video formats</div>
+            <div className="flex h-full flex-wrap items-center gap-2">
               <div className="badge badge-error badge-xl badge-border badge-soft border-3">.mp4</div>
               <div className="badge badge-warning badge-xl badge-border badge-soft border-3">.mov</div>
               <div className="badge badge-xl badge-border badge-soft border-3">.mkv</div>
@@ -116,54 +122,80 @@ export function Landing() {
             </div>
           </div>
         </div>
-        <div className="card card-lg bg-base-100 border-base-300 col-span-1 col-start-2 border-3">
+        <div className="card card-lg not-md:card-md bg-base-100 border-base-300 col-span-1 col-start-2 row-span-1 row-start-1 border-3">
           <div className="card-body">
-            <div className="card-title mb-3 text-2xl">Totally free and open source</div>
-            <p className="h-fit text-lg">
-              If you like this project, or are just curious how it works, consider visiting the project{" "}
-              <span className="border-b-2 whitespace-nowrap">
-                GitHub{"\u00A0"}<GithHubIcon size="1.5rem" className="inline -translate-y-1"></GithHubIcon>
+            <div className="card-title mb-3 text-2xl not-md:text-xl">Totally free and open source</div>
+            <p className="my-auto max-h-fit text-lg">
+              If you like this project, or are just curious how it works, consider visiting it on{" "}
+              <a className="text-success relative inline-block whitespace-nowrap after:absolute after:bottom-1 after:left-px after:h-0.5 after:w-[calc(100%-2px)] after:bg-current after:content-[''] hover:cursor-pointer">
+                GitHub{"\u00A0"}
+                <GithHubIcon size="1.5rem" className="inline -translate-y-1"></GithHubIcon>
+              </a>{" "}
+              and leaving a{" "}
+              <span className="text-main-text">
+                star{" "}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="inline size-5 -translate-y-0.5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"
+                  />
+                </svg>
               </span>
-              {" "}and leaving a star.
+              .
             </p>
           </div>
         </div>
-        <div className="card card-lg bg-base-100 border-base-300 col-span-1 col-start-3 border-3">
+        <div className="card card-lg not-md:card-md bg-base-100 border-base-300 col-span-1 col-start-3 row-span-1 row-start-1 border-3">
           <div className="card-body">
-            <div className="card-title mb-3 text-2xl">Supports all major video formats</div>
-            <div className="flex flex-wrap gap-2">
-              <div className="badge badge-error badge-xl badge-border badge-soft border-3">.mp4</div>
-              <div className="badge badge-warning badge-xl badge-border badge-soft border-3">.mov</div>
-              <div className="badge badge-xl badge-border badge-soft border-3">.mkv</div>
-              <div className="badge badge-success badge-xl badge-border badge-soft border-3">.webm</div>
-              <div className="badge badge-primary badge-xl badge-border badge-soft border-3">.ts</div>
-              <div className="badge badge-success badge-xl badge-border badge-soft border-3">.m4v</div>
-              <div className="badge badge-error badge-xl badge-border badge-soft border-3">.mka</div>
-              <div className="badge badge-warning badge-xl badge-border badge-soft border-3">.mts</div>
-              <div className="badge badge-xl badge-border badge-soft border-3">.m4a</div>
+            <div className="card-title mb-3 text-2xl not-md:text-xl">Nothing is watermarked</div>
+            <div className="relative flex size-full items-center justify-center text-3xl not-lg:py-5">
+              {" "}
+              <span className="text-warning opacity-30">pls</span>
+              <span className="opacity-30">compare.com</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="var(--color-error)"
+                className="absolute right-1/2 bottom-1/2 size-24 translate-1/2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636"
+                />
+              </svg>
             </div>
           </div>
         </div>
+        <div className="card card-lg bgp-diagonalStripes-[#261b25]/50 border-base-300/50 col-span-1 col-start-1 row-span-1 row-start-2 border-3 bg-size-[1.5rem_auto] not-lg:hidden"></div>
+        <div className="card not-md:card-md card-lg bg-base-100 border-base-300 col-span-1 col-start-2 row-span-1 row-start-2 border-3">
+          <div className="card-body">
+            <div className="card-title mb-3 text-2xl not-md:text-xl">Still under construction!</div>
+            <p className="my-auto max-h-fit text-lg">
+              The site will receive updates and improvements in the future, so hang tight! If you have any suggestions,
+              send me them on{" "}
+              <a className="text-warning relative inline-block whitespace-nowrap after:absolute after:bottom-1 after:left-px after:h-0.5 after:w-[calc(100%-2px)] after:bg-current after:content-[''] hover:cursor-pointer">
+                Discord{"\u00A0"}
+                <DiscordIcon size="1.25rem" className="inline -translate-y-0.75"></DiscordIcon>
+              </a>{" "}
+              .
+            </p>
+          </div>
+        </div>
+        <div className="card card-lg bgp-diagonalStripes-[#261b25]/50 border-base-300/50 col-span-1 col-start-3 row-span-1 row-start-2 border-3 bg-size-[1.5rem_auto] not-lg:hidden"></div>
       </section>
-      <section className="bg-base-100 bgp-randomShapes-base-100/10 flex w-full justify-center px-10 py-3 md:py-5">
-        <div className="flex w-fit max-w-full gap-5 text-2xl">
-          <button className="btn btn-warning btn-lg lg:btn-xl flex items-center justify-center border-3">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2.5}
-              stroke="currentColor"
-              className="size-4 lg:size-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"
-              />
-            </svg>
-            <p>Read me!</p>
-          </button>
+      <section className="bg-base-100 bgp-randomShapes-base-100/5 flex w-full justify-center px-10 py-3 md:py-5">
+        <div className="flex w-fit max-w-full text-2xl">
           <button
             className="btn btn-warning btn-soft btn-lg lg:btn-xl flex items-center justify-center border-3"
             onClick={() => {

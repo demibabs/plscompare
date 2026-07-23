@@ -74,7 +74,7 @@ async function runMediabunnyPipeline(config: ExportConfig) {
 
   const outVideoSource = new CanvasSource(canvas, {
     codec: "avc",
-    bitrate: 30_000_000,
+    bitrate: 5_000_000,
     bitrateMode: "constant",
     latencyMode: "quality",
   } as any);
@@ -156,8 +156,20 @@ async function runMediabunnyPipeline(config: ExportConfig) {
     }
 
     // B. Prepare sources for rendering
-    // toVideoFrame() clones the handle. We can safely close it after rendering without losing our cached currentSample.
-    const sources = streams.map((s) => (s.currentSample ? s.currentSample.toVideoFrame() : null));
+    // Use sample.draw() on scratch canvases instead of toVideoFrame() + drawImage(),
+    // because sample.draw() correctly applies rotation metadata (e.g. from iPhone recordings)
+    // while toVideoFrame() produces raw decoded pixels without rotation.
+    const sources: (OffscreenCanvas | null)[] = streams.map((s) => {
+      if (!s.currentSample) return null;
+      const dw = s.currentSample.displayWidth;
+      const dh = s.currentSample.displayHeight;
+      const scratch = new OffscreenCanvas(dw, dh);
+      const scratchCtx = scratch.getContext("2d");
+      if (scratchCtx) {
+        s.currentSample.draw(scratchCtx, 0, 0, dw, dh);
+      }
+      return scratch;
+    });
     const sourcesDimensions = streams.map((s) =>
       s.currentSample
         ? {
@@ -175,13 +187,6 @@ async function runMediabunnyPipeline(config: ExportConfig) {
 
     // D. Encode
     await outVideoSource.add(currentTimestampSec, frameDurationSec);
-
-    // E. Iteration Cleanup
-    // Close the cloned VideoFrames to prevent GPU memory leaks.
-    // DO NOT close the inner samples here, as we need them persisting for freeze frames.
-    sources.forEach((s) => {
-      if (s) s.close();
-    });
 
     if (frameIndex % 10 === 0) {
       const progress = (frameIndex / totalFrames) * 100;

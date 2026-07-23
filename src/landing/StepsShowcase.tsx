@@ -69,28 +69,40 @@ export function StepsShowcase() {
         to quickly compare any clips.
       </h2>
       {/* Card */}
-      <div
-        onClick={() => setCurrentStep(nextStep())}
-        className="card lg:card-side card-xl bg-base-300 border-neutral mx-auto my-10 h-fit max-w-2xl overflow-hidden border-3 lg:h-120 lg:w-6xl lg:max-w-6xl"
-      >
+      <div className="relative mx-auto my-10 size-fit max-w-full">
         <div
           className={cn(
-            "card-body order-2 not-lg:py-8 lg:order-1 lg:min-h-full lg:w-lg",
-            { "bg-success text-success-content bgp-ticTacToe-base-200/3": currentStep === 1 },
-            { "bg-info text-info-content bgp-diagonalLines-base-200/3 bg-size-[1rem_auto]": currentStep === 2 },
-            { "bg-nice-purple text-info-content bgp-bankNote-base-200/2": currentStep === 3 },
+            "badge badge-xl border-base-300 absolute top-0 left-0 z-11 -translate-x-1/8 -translate-y-1/4 border-3 md:hidden",
+            { "badge-success": currentStep === 1 },
+            { "badge-info": currentStep === 2 },
+            { "bg-nice-purple text-info-content": currentStep === 3 },
           )}
         >
-          <h3 className="card-title not-md:hidden md:text-3xl lg:text-4xl">{stepsInfo[currentStep].title}</h3>
-          <p className="flex items-center pb-3 lg:mr-8">{stepsInfo[currentStep].body}</p>
-          <div className="card-actions join gap-1 md:gap-2">{stepButtons}</div>
+          <b>Step {currentStep}</b>
         </div>
-        <figure className="bg-base-100 order-1 flex w-full items-center justify-center p-5 lg:order-2 lg:min-h-full">
-          <picture className="flex size-full items-center justify-center">
-            <source media="(min-width: 48rem)" srcSet={images.wide[currentStep]} />
-            <img className="h-auto w-full" src={images.mobile[currentStep]} loading="lazy"></img>
-          </picture>
-        </figure>
+        <div
+          onClick={() => setCurrentStep(nextStep())}
+          className="card lg:card-side card-xl bg-base-300 border-neutral h-fit w-2xl max-w-full overflow-hidden border-3 lg:h-120 lg:w-6xl"
+        >
+          <div
+            className={cn(
+              "card-body order-2 not-md:py-5 lg:order-1 lg:min-h-full lg:w-lg",
+              { "bg-success text-success-content bgp-ticTacToe-base-200/3": currentStep === 1 },
+              { "bg-info text-info-content bgp-diagonalLines-base-200/3 bg-size-[1rem_auto]": currentStep === 2 },
+              { "bg-nice-purple text-info-content bgp-bankNote-base-200/2": currentStep === 3 },
+            )}
+          >
+            <h3 className="card-title not-md:hidden md:text-3xl lg:text-4xl">{stepsInfo[currentStep].title}</h3>
+            <p className="flex items-center pb-3 lg:mr-8">{stepsInfo[currentStep].body}</p>
+            <div className="card-actions join gap-1 md:gap-2">{stepButtons}</div>
+          </div>
+          <figure className="bg-base-100 order-1 flex w-full items-center justify-center p-5 not-lg:rounded-b-none lg:order-2 lg:min-h-full">
+            <picture className="flex size-full items-center justify-center">
+              <source media="(min-width: 48rem)" srcSet={images.wide[currentStep]} />
+              <img className="h-auto w-full" src={images.mobile[currentStep]} loading="lazy"></img>
+            </picture>
+          </figure>
+        </div>
       </div>
     </section>
   );

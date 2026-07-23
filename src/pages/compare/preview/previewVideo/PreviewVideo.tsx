@@ -319,7 +319,7 @@ export function PreviewVideo() {
                         ></input>
                       </div>
                       <div className="flex items-center justify-end gap-2">
-                        <p>Vertical (full)</p>
+                        <p>Vertical</p>
                         <input
                           type="radio"
                           className="radio"
@@ -331,7 +331,7 @@ export function PreviewVideo() {
                         ></input>
                       </div>
                       <div className="flex items-center justify-end gap-2">
-                        <p>Horizontal (full)</p>
+                        <p>Horizontal</p>
                         <input
                           type="radio"
                           className="radio"
