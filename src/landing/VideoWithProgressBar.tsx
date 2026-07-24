@@ -28,6 +28,7 @@ export function VideoWithProgressBar({ src, poster }: { src: string; poster: str
     <div className="flex w-full flex-col items-center gap-3">
       <figure className="bg-base-200 border-base-300 skeleton rounded-box overflow-hidden flex aspect-video w-full items-center justify-center border-3">
         <video
+          className="size-full object-cover"
           ref={videoRef}
           playsInline
           src={src}

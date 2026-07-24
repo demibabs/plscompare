@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { cn } from "../utils/cn";
-import step1WideImage from "../assets/pages/landing/steps_showcase/wide/step_1.png";
-import step2WideImage from "../assets/pages/landing/steps_showcase/wide/step_2.png";
-import step3WideImage from "../assets/pages/landing/steps_showcase/wide/step_3.png";
-import step1MobileImage from "../assets/pages/landing/steps_showcase/mobile/step_1.png";
-import step2MobileImage from "../assets/pages/landing/steps_showcase/mobile/step_2.png";
-import step3MobileImage from "../assets/pages/landing/steps_showcase/mobile/step_3.png";
+import step1WideImage from "../assets/pages/landing/steps_showcase/wide/step_1.webp";
+import step2WideImage from "../assets/pages/landing/steps_showcase/wide/step_2.webp";
+import step3WideImage from "../assets/pages/landing/steps_showcase/wide/step_3.webp";
+import step1MobileImage from "../assets/pages/landing/steps_showcase/mobile/step_1.webp";
+import step2MobileImage from "../assets/pages/landing/steps_showcase/mobile/step_2.webp";
+import step3MobileImage from "../assets/pages/landing/steps_showcase/mobile/step_3.webp";
 
 const images: Record<string, Record<number, string>> = {
   wide: {
@@ -99,7 +99,7 @@ export function StepsShowcase() {
           <figure className="bg-base-100 order-1 flex w-full items-center justify-center p-5 not-lg:rounded-b-none lg:order-2 lg:min-h-full">
             <picture className="flex size-full items-center justify-center">
               <source media="(min-width: 48rem)" srcSet={images.wide[currentStep]} />
-              <img className="h-auto w-full" src={images.mobile[currentStep]} loading="lazy"></img>
+              <img className="h-auto w-full" src={images.mobile[currentStep]}></img>
             </picture>
           </figure>
         </div>

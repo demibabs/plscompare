@@ -1,14 +1,14 @@
 import { FileUploadButton } from "./FileUploadButton";
 import { StepsShowcase } from "./StepsShowcase";
 import { VideoWithProgressBar } from "./VideoWithProgressBar";
-import normalRouteImage from "../assets/pages/landing/hero/normal_route.jpg";
-import boxCutImage from "../assets/pages/landing/hero/box_cut.jpg";
-import heroVideoThumbnail from "../assets/pages/landing/hero/hero_video_thumbnail.jpg";
+import normalRouteImage from "../assets/pages/landing/hero/normal_route.webp";
+import boxCutImage from "../assets/pages/landing/hero/box_cut.webp";
+import heroVideoThumbnail from "../assets/pages/landing/hero/hero_video_thumbnail.webp";
 import heroVideo from "../assets/pages/landing/hero/hero_video.mp4";
-import gridExampleImage from "../assets/pages/landing/layouts/grid_example.jpg";
-import horizontalExampleImage from "../assets/pages/landing/layouts/horizontal_example.jpg";
-import verticalExampleImage from "../assets/pages/landing/layouts/vertical_example.jpg";
-import defaultExampleImage from "../assets/pages/landing/layouts/default_example.jpg";
+import gridExampleImage from "../assets/pages/landing/layouts/grid_example.webp";
+import horizontalExampleImage from "../assets/pages/landing/layouts/horizontal_example.webp";
+import verticalExampleImage from "../assets/pages/landing/layouts/vertical_example.webp";
+import defaultExampleImage from "../assets/pages/landing/layouts/default_example.webp";
 import { GithHubIcon } from "../utils/GitHubIcon";
 import { DiscordIcon } from "../utils/DiscordIcon";
 
@@ -32,7 +32,7 @@ export function Landing() {
                 <b>normal_route.mp4</b>
               </div>
               <div className="bg-base-200 skeleton border-base-300 rounded-box flex size-full items-center justify-center overflow-hidden border-3">
-                <img src={normalRouteImage} className="h-auto w-full min-w-0" fetchPriority="high" />
+                <img src={normalRouteImage} className="size-full min-w-0" fetchPriority="high" />
               </div>
             </figure>
             <figure className="indicator aspect-240/119 h-full not-lg:max-w-xs not-lg:grow lg:w-full lg:max-w-xs">
@@ -40,7 +40,7 @@ export function Landing() {
                 <b>box_cut.mov</b>
               </div>
               <div className="bg-base-200 skeleton border-base-300 rounded-box flex size-full items-center justify-center overflow-hidden border-3">
-                <img src={boxCutImage} className="rounded-box h-auto w-full min-w-0" fetchPriority="high" />
+                <img src={boxCutImage} className="rounded-box size-full min-w-0" fetchPriority="high" />
               </div>
             </figure>
           </div>
