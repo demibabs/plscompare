@@ -1,3 +1,6 @@
 export function ComparisonTips(){
-    return <></>
+    return <main className="w-full">
+        <h1 className="">Comparison tips</h1>
+        
+    </main>
 }

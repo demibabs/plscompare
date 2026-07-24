@@ -49,16 +49,14 @@ const router = createBrowserRouter([
           {
             path: "/read-me",
             element: <ReadMe></ReadMe>,
-            children: [
-              {
-                path: "comparison-tips",
-                element: <ComparisonTips></ComparisonTips>,
-              },
-              {
-                path: "notes-from-the-dev",
-                element: <NotesFromTheDev></NotesFromTheDev>,
-              },
-            ],
+          },
+          {
+            path: "/read-me/comparison-tips",
+            element: <ComparisonTips></ComparisonTips>,
+          },
+          {
+            path: "notes-from-the-dev",
+            element: <NotesFromTheDev></NotesFromTheDev>,
           },
           {
             path: "*",

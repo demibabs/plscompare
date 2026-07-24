@@ -65,16 +65,16 @@ export function Landing() {
       <section className="border-base-300 flex w-full flex-col items-center">
         <div className="lg:bgp-polkaDots-base-100/10 not-lg:bgp-polkaDots-base-100/5 flex w-full justify-center pt-6 pb-20 not-lg:bg-size-[0.75rem_auto]">
           <p className="text text-main-text mx-10 mt-3 text-center text-2xl md:text-3xl">
-            Compare <b className="decoration-error underline">several</b> clips at once—you're not limited to just two.
+            Compare <b className="decoration-nice-purple md:decoration-error underline">several</b> clips at once—you're not limited to just two.
           </p>
         </div>
         <div className="-mt-15 flex w-full flex-col items-center justify-center gap-5 px-5 md:px-10 lg:flex-row lg:gap-10 lg:px-20">
-          <figure className="z-11 mt-7 w-4xl max-w-full grid-cols-[2fr_1fr] grid-rows-[2fr_1fr] flex-col not-md:flex md:grid gap-4 md:gap-3">
+          <figure className="z-11 mt-7 w-4xl max-w-full grid-cols-[2fr_1fr] grid-rows-[2fr_1fr] flex-col not-md:flex md:grid gap-5 md:gap-3">
             <div className="relative col-span-1 col-start-1 row-span-1 row-start-1 aspect-video h-full not-md:order-2">
               <div className="rounded-box border-base-300 size-full overflow-hidden border-3">
                 <img src={gridExampleImage} className="size-full" loading="lazy"></img>
               </div>
-              <div className="badge badge-lg lg:badge-xl badge-warning border-base-300 absolute top-0 left-1/2 -translate-1/2 border-3">
+              <div className="badge badge-xl badge-warning border-base-300 absolute top-0 left-1/2 -translate-1/2 border-3">
                 <b>Grid</b>
               </div>
             </div>
@@ -82,7 +82,7 @@ export function Landing() {
               <div className="rounded-box border-base-300 size-full overflow-hidden border-3">
                 <img src={horizontalExampleImage} className="size-full" loading="lazy"></img>
               </div>
-              <div className="badge badge-lg lg:badge-xl badge-error border-base-300 absolute md:bottom-0 not-md:top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 md:translate-y-1/2 border-3">
+              <div className="badge badge-xl badge-error border-base-300 absolute md:bottom-0 not-md:top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 md:translate-y-1/2 border-3">
                 <b>Horizontal</b>
               </div>
             </div>
@@ -93,14 +93,14 @@ export function Landing() {
                   <img src={defaultExampleImage} className="size-full" loading="lazy"></img>
                 </picture>
               </div>
-              <div className="badge badge-lg lg:badge-xl badge-primary border-base-300 absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2 border-3">
+              <div className="badge badge-xl badge-info md:badge-primary border-base-300 absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2 border-3">
                 <b className="md:hidden">Default</b>
                 <b className="not-md:hidden">Vertical</b>
               </div>
             </div>
           </figure>
-          <div className="rounded-box bg-base-200/70 border-base-300 bgp-boxes-base-300/6 z-12 my-auto flex h-fit max-w-full flex-col gap-8 border-3 p-3 text-center md:p-4 lg:w-xs">
-            <p className="text-lg md:text-2xl">Choose the layout style that best suits your comparison.</p>
+          <div className="rounded-box bg-base-200/70 border-base-300 bgp-boxes-base-300/6 z-12 my-auto flex h-fit max-w-full flex-col gap-8 border-3 p-3 md:p-4 lg:w-xs">
+            <p className="text-xl md:text-2xl">Choose the layout style that best suits your comparison.</p>
           </div>
         </div>
         <div className="bgp-fourPointStars-base-100/15 -mt-10 h-20 w-full bg-size-[0.75rem_auto] lg:bg-size-[1rem_auto]"></div>

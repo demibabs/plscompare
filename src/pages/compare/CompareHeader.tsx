@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "../../utils/cn";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export function CompareHeader({
   prevPage,
@@ -20,7 +20,7 @@ export function CompareHeader({
   const navigate = useNavigate();
   const buttonClassName = "btn btn-md md:btn-xl border-3";
   return (
-    <div
+    <header
       className={cn(
         "border-base-300/50 grid w-full grid-cols-[1fr_auto_1fr] place-items-center border-b-3 px-6 py-5 md:px-16",
         bgp,
@@ -41,20 +41,17 @@ export function CompareHeader({
       </h1>
       <div className="col-span-1 col-start-3 flex w-full justify-end">
         {rightButton && nextPage ? (
-          <button
-            onClick={() => {
-              navigate(nextPage);
-            }}
+          <Link to={nextPage}
             className={cn(buttonClassName, "btn-error btn-soft border-error", {
               "btn-disabled border-0": rightButtonIsDisabled,
             })}
           >
             Next
-          </button>
+          </Link>
         ) : (
           <button className={cn(buttonClassName, "pointer-events-none opacity-0")}></button>
         )}
       </div>
-    </div>
+    </header>
   );
 }
