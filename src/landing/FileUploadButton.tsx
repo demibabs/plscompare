@@ -125,7 +125,7 @@ export function FileUploadButton() {
       </button>
       {/* Invisible input that triggers the file popup */}
       <input
-        accept="video/quicktime, video/mp4, .mp4, .mov"
+        accept="video/mp4, video/quicktime, video/webm, video/x-matroska, video/mp2t, video/ogg, .mp4, .m4v, .mov, .webm, .mkv, .ts, .mts, .ogv"
         type="file"
         multiple
         ref={inputRef}

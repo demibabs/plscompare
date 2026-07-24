@@ -20,7 +20,7 @@ export function Preview() {
   }
 
   return (
-    <div className="flex w-full grow flex-col">
+    <main className="flex w-full grow flex-col">
       <CompareHeader
         prevPage="/compare/end-frame"
         bgp="bgp-bathroomFloor-base-100/6"
@@ -30,7 +30,7 @@ export function Preview() {
           </>
         }
       ></CompareHeader>
-      {<PreviewVideo />}
-    </div>
+      <PreviewVideo />
+    </main>
   );
 }

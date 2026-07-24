@@ -109,16 +109,15 @@ export function Landing() {
         <div className="card not-md:card-md card-lg bg-base-100 border-base-300 col-span-1 col-start-1 row-span-1 row-start-1 border-3">
           <div className="card-body">
             <div className="card-title mb-3 text-2xl not-md:text-xl">Supports all major video formats</div>
-            <div className="flex h-full flex-wrap items-center gap-2">
+            <div className="flex flex-wrap h-full content-center gap-2">
               <div className="badge badge-error badge-xl badge-border badge-soft border-3">.mp4</div>
               <div className="badge badge-warning badge-xl badge-border badge-soft border-3">.mov</div>
               <div className="badge badge-xl badge-border badge-soft border-3">.mkv</div>
               <div className="badge badge-success badge-xl badge-border badge-soft border-3">.webm</div>
               <div className="badge badge-primary badge-xl badge-border badge-soft border-3">.ts</div>
               <div className="badge badge-success badge-xl badge-border badge-soft border-3">.m4v</div>
-              <div className="badge badge-error badge-xl badge-border badge-soft border-3">.mka</div>
+              <div className="badge badge-error badge-xl badge-border badge-soft border-3">.ogv</div>
               <div className="badge badge-warning badge-xl badge-border badge-soft border-3">.mts</div>
-              <div className="badge badge-xl badge-border badge-soft border-3">.m4a</div>
             </div>
           </div>
         </div>
