@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Layout } from "./renderFrame";
+import posthog from "../../../../posthog";
 
 export type ExportConfig = {
   videos: { url: string; times: { start: number; end: number }; label: string | null; framerate: number }[];
@@ -19,10 +20,8 @@ export function useVideoExport() {
   const workerRef = useRef<Worker | null>(null);
 
   const cleanupWorker = useCallback(() => {
-  
-      workerRef.current?.postMessage({ type: "CANCEL" });
-      workerRef.current = null;
-    
+    workerRef.current?.postMessage({ type: "CANCEL" });
+    workerRef.current = null;
   }, []);
 
   const startExport = useCallback(
@@ -42,6 +41,11 @@ export function useVideoExport() {
         if (message.type === "SUCCESS") {
           setIsExporting(false);
           setProgress(100);
+          posthog.capture("export_completed", {
+            file_count: config.videos.length,
+            layout: config.layout,
+            freeze_frame_time: config.freezeFrameTime,
+          });
           const blob = new Blob([message.buffer], { type: "video/mp4" });
           const downloadUrl = URL.createObjectURL(blob);
           const a = document.createElement("a");
@@ -52,6 +56,10 @@ export function useVideoExport() {
           cleanupWorker();
         }
         if (message.type === "ERROR") {
+          posthog.capture("export_failed", {
+            file_count: config.videos.length,
+            layout: config.layout,
+          });
           setError(message.error);
           setIsExporting(false);
           cleanupWorker();

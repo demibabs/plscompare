@@ -21,6 +21,7 @@
     "idb-keyval": "^6.3.0",
     "mediabunny": "^1.50.8",
     "mp4box": "^2.4.1",
+    "posthog-js": "^1.407.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.1",

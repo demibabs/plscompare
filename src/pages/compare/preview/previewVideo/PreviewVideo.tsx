@@ -8,6 +8,7 @@ import { hasTimes } from "../../../../utils/hasTimes";
 import { clear, set } from "idb-keyval";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { getCanvasDimensions } from "../../../../utils/getCanvasDimensions";
+import posthog from "../../../../posthog";
 
 export type Options = {
   layout: Layout;
@@ -97,6 +98,11 @@ export function PreviewVideo() {
         label: vData.label,
         framerate: filesData[index].framerate,
       }));
+      posthog.capture("export_started", {
+        file_count: filesData.length,
+        layout: optionsForLoop.current.layout,
+        freeze_frame_time: freezeFrameTime,
+      });
       startExport({
         videos,
         fileName: fileName || "plscompare",
@@ -321,6 +327,7 @@ export function PreviewVideo() {
                           name="layout-radio"
                           checked={options.layout === "default"}
                           onChange={() => {
+                            posthog.capture("layout_changed", { layout: "default" });
                             setOptions({ ...options, layout: "default" });
                           }}
                         ></input>
@@ -333,6 +340,7 @@ export function PreviewVideo() {
                           name="layout-radio"
                           checked={options.layout === "vertical"}
                           onChange={() => {
+                            posthog.capture("layout_changed", { layout: "vertical" });
                             setOptions({ ...options, layout: "vertical" });
                           }}
                         ></input>
@@ -345,6 +353,7 @@ export function PreviewVideo() {
                           name="layout-radio"
                           checked={options.layout === "horizontal"}
                           onChange={() => {
+                            posthog.capture("layout_changed", { layout: "horizontal" });
                             setOptions({ ...options, layout: "horizontal" });
                           }}
                         ></input>
@@ -357,6 +366,7 @@ export function PreviewVideo() {
                           name="layout-radio"
                           checked={options.layout === "grid"}
                           onChange={() => {
+                            posthog.capture("layout_changed", { layout: "grid" });
                             setOptions({ ...options, layout: "grid" });
                           }}
                         ></input>
@@ -413,7 +423,7 @@ export function PreviewVideo() {
                     <button
                       className={cn("btn btn-lg btn-soft btn-success", { "btn-disabled": progress !== 100 })}
                       onClick={() => {
-                        void clear().then(() => navigate("/"))
+                        void clear().then(() => navigate("/"));
                       }}
                     >
                       Home
