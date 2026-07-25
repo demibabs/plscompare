@@ -22,7 +22,9 @@ Here are two strategies for doing this section of the track *Shy Guy Bazaar*:
 <br>
 If you're unfamiliar with MKWorld, it may be unclear which strategy is faster, and even if you do know, it's hard to tell what the time difference is. Using plscompare, you can make a comparison like this:
 
-<img width="480" height="270" alt="comp_example" src="https://github.com/user-attachments/assets/e970c06e-bd19-498a-a874-e2b6512e4be5" />
+<div align=center>
+  <img width="480" height="270" alt="comp_example" src="https://github.com/user-attachments/assets/e970c06e-bd19-498a-a874-e2b6512e4be5" />
+</div>
 
 It then becomes clear that the left strategy saves roughly 0.08 seconds (5ish frames).
 
