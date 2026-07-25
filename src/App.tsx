@@ -80,7 +80,7 @@ export function App() {
       }
       setIsInitializing(false);
     }
-    checkSession();
+    void checkSession();
   }, []);
   return !isInitializing && <RouterProvider router={router}></RouterProvider>;
 }
