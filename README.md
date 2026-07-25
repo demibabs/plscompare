@@ -14,23 +14,14 @@ The UI allows for easy selection of starting and ending comparison frames, and t
 
 Here are two strategies for doing this section of the track *Shy Guy Bazaar*:
 
-<div style="display: flex; gap: 20px; justify-content: center;">
-  <video width="40%" controls>
-    <source src="./docs/readme_media/rails_example.mov">
-  </video>
-  <video width="40%" controls>
-    <source src="./docs/readme_media/ramps_example.mov">
-  </video>
-</div>  
-<br>
+https://github.com/user-attachments/assets/60b29d5d-6397-46e2-8930-19f8d7c63b3e
+
+https://github.com/user-attachments/assets/de5b6f35-4c65-48a2-a073-cbbef186d40a
+
 If you're unfamiliar with MKWorld, it may be unclear which strategy is faster, and even if you do know, it's hard to tell what the time difference is. Using **plscompare**, you can make a comp like this:
 
-<div style="display: flex; justify-content: center; margin-top: 20px">
-  <video width="70%" controls>
-    <source src="./docs/readme_media/comp_example.mp4"></source>
-  </video>
-</div>
-<br>
+https://github.com/user-attachments/assets/1ba2d9f1-e906-4716-86ec-2706e6c962a5
+
 It then becomes clear that the left strategy saves roughly 0.08 seconds (5ish frames).
 
 ## Stack
