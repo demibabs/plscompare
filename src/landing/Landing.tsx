@@ -79,7 +79,7 @@ export function Landing() {
       </header>
       <StepsShowcase></StepsShowcase>
       <section className="border-base-300 flex w-full flex-col items-center">
-        <div className="lg:bgp-polkaDots-base-100/10 not-lg:bgp-polkaDots-base-100/5 flex w-full justify-center pt-6 pb-20 not-lg:bg-size-[0.75rem_auto]">
+        <div className="lg:bgp-polkaDots-base-100/10 not-lg:bgp-polkaDots-base-100/5 flex w-full justify-center pt-7 pb-20 not-lg:bg-size-[0.75rem_auto]">
           <p className="text text-main-text mx-10 mt-3 text-center text-2xl md:text-3xl">
             Compare <b className="decoration-nice-purple md:decoration-error underline">several</b> clips at once—you're
             not limited to just two.
@@ -135,7 +135,7 @@ export function Landing() {
             <p className="text-xl md:text-2xl">Choose the layout style that best suits your comparison.</p>
           </div>
         </div>
-        <div className="bgp-fourPointStars-base-100/15 -mt-10 h-20 w-full bg-size-[0.75rem_auto] lg:bg-size-[1rem_auto]"></div>
+        <div className="bgp-fourPointStars-base-100/15 -mt-10 h-25 w-full bg-size-[0.75rem_auto] lg:bg-size-[1rem_auto]"></div>
       </section>
       <section className="bg-base-200 border-base-300 w-full grid-cols-3 grid-rows-2 flex-col gap-3 border-y-3 border-dashed px-5 py-10 not-md:gap-4 not-lg:flex md:px-10 lg:grid lg:px-20">
         <div className="card not-md:card-md card-lg bg-base-100 border-base-300 col-span-1 col-start-1 row-span-1 row-start-1 border-3">
