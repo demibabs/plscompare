@@ -4,18 +4,19 @@ import { clear, get, update } from "idb-keyval";
 import { useNavigate } from "react-router-dom";
 import type { VideoData } from "../pages/compare/sideBySideEditor/SideBySideEditor";
 import { getFrameData, type FrameData } from "../utils/getFrameData";
+import posthog from "../posthog";
 
 export function FileUploadButton() {
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
-  const [userFiles, setUserFiles] = useState<{file: File, frameData: FrameData}[]>([]);
+  const [userFiles, setUserFiles] = useState<{ file: File; frameData: FrameData }[]>([]);
   const [statusMessage, setStatusMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   // Makes sure button is initially synced with files user has submitted
   useEffect(() => {
     async function getUserFiles() {
-      await get("user-files").then((uFiles: {file: File, frameData: FrameData}[] | undefined) => {
+      await get("user-files").then((uFiles: { file: File; frameData: FrameData }[] | undefined) => {
         if (uFiles) {
           setUserFiles(uFiles);
           if (uFiles.length === 1) {
@@ -36,6 +37,7 @@ export function FileUploadButton() {
     // Weird bug causes files to incorrectly be registered as size 0, no idea how to fix
     if (newFiles.some((nFile) => nFile.size === 0)) {
       setStatusMessage("All files must be larger than 0 bytes.");
+      posthog.capture("file_upload_error", { reason: "zero_byte_file", file_count: newFiles.length });
       return;
     }
     const framesData = await Promise.all(newFiles.map(async (f) => await getFrameData(f)));
@@ -47,6 +49,10 @@ export function FileUploadButton() {
     });
     if (userFiles.length + newFiles.length === 1) setStatusMessage("Submit at least 1 more file to proceed.");
     else setStatusMessage("");
+    posthog.capture("files_uploaded", {
+      new_file_count: newFiles.length,
+      total_file_count: userFiles.length + newFiles.length,
+    });
     setUserFiles((uFiles) => uFiles.concat(returnedData));
     const newVideosData: VideoData[] = newFiles.map(() => {
       return {
@@ -83,6 +89,7 @@ export function FileUploadButton() {
             <span
               className="badge badge-error border-base-100 border-3"
               onClick={() => {
+                posthog.capture("files_cleared", { file_count: userFiles.length });
                 void clear().then(() => {
                   setUserFiles([]);
                   setStatusMessage("");
@@ -143,6 +150,7 @@ export function FileUploadButton() {
         <button
           className="btn btn-lg md:btn-xl btn-warning btn-soft"
           onClick={() => {
+            posthog.capture("comparison_started", { file_count: userFiles.length });
             window.dispatchEvent(new Event("files-ready-for-compare"));
             void navigate("/compare/start-frame");
           }}

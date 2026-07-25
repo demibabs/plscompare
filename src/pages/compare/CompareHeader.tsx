@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "../../utils/cn";
 import { Link, useNavigate } from "react-router-dom";
+import posthog from "../../posthog";
 
 export function CompareHeader({
   prevPage,
@@ -41,10 +42,20 @@ export function CompareHeader({
       </h1>
       <div className="col-span-1 col-start-3 flex w-full justify-end">
         {rightButton && nextPage ? (
-          <Link to={nextPage}
+          <Link
+            to={nextPage}
             className={cn(buttonClassName, "btn-error btn-soft border-error", {
               "btn-disabled border-0": rightButtonIsDisabled,
             })}
+            onClick={() => {
+              if (!rightButtonIsDisabled) {
+                if (nextPage === "/compare/end-frame") {
+                  posthog.capture("start_frames_confirmed");
+                } else if (nextPage === "/compare/preview") {
+                  posthog.capture("end_frames_confirmed");
+                }
+              }
+            }}
           >
             Next
           </Link>
