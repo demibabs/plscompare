@@ -8,14 +8,14 @@ import { getFrameData, type FrameData } from "../utils/getFrameData";
 export function FileUploadButton() {
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
-  const [userFiles, setUserFiles] = useState<File[]>([]);
+  const [userFiles, setUserFiles] = useState<{file: File, frameData: FrameData}[]>([]);
   const [statusMessage, setStatusMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   // Makes sure button is initially synced with files user has submitted
   useEffect(() => {
     async function getUserFiles() {
-      await get("user-files").then((uFiles) => {
+      await get("user-files").then((uFiles: {file: File, frameData: FrameData}[] | undefined) => {
         if (uFiles) {
           setUserFiles(uFiles);
           if (uFiles.length === 1) {
@@ -24,7 +24,7 @@ export function FileUploadButton() {
         }
       });
     }
-    getUserFiles();
+    void getUserFiles();
   }, []);
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement, HTMLInputElement>) {
@@ -39,15 +39,15 @@ export function FileUploadButton() {
       return;
     }
     const framesData = await Promise.all(newFiles.map(async (f) => await getFrameData(f)));
+    const returnedData = newFiles.map((nF, index) => ({ file: nF, frameData: framesData[index] }));
     await update("user-files", (uFiles: { file: File; frameData: FrameData }[] | undefined) => {
-      const returnedData = newFiles.map((nF, index) => ({ file: nF, frameData: framesData[index] }));
       if (uFiles) {
         return uFiles.concat(returnedData);
       } else return returnedData;
     });
     if (userFiles.length + newFiles.length === 1) setStatusMessage("Submit at least 1 more file to proceed.");
     else setStatusMessage("");
-    setUserFiles((uFiles) => uFiles.concat(newFiles));
+    setUserFiles((uFiles) => uFiles.concat(returnedData));
     const newVideosData: VideoData[] = newFiles.map(() => {
       return {
         label: null,
@@ -82,10 +82,11 @@ export function FileUploadButton() {
           <span className="indicator-item indicator-top indicator-start">
             <span
               className="badge badge-error border-base-100 border-3"
-              onClick={async () => {
-                await clear();
-                setUserFiles([]);
-                setStatusMessage("");
+              onClick={() => {
+                void clear().then(() => {
+                  setUserFiles([]);
+                  setStatusMessage("");
+                });
               }}
             >
               <svg
@@ -130,10 +131,11 @@ export function FileUploadButton() {
         multiple
         ref={inputRef}
         className="hidden"
-        onChange={async (e) => {
+        onChange={(e) => {
           setIsLoading(true);
-          await handleFileChange(e);
-          setIsLoading(false);
+          void handleFileChange(e).then(() => {
+            setIsLoading(false);
+          });
         }}
       ></input>
       {/* Go button */}
@@ -142,7 +144,7 @@ export function FileUploadButton() {
           className="btn btn-lg md:btn-xl btn-warning btn-soft"
           onClick={() => {
             window.dispatchEvent(new Event("files-ready-for-compare"));
-            navigate("/compare/start-frame");
+            void navigate("/compare/start-frame");
           }}
         >
           Go

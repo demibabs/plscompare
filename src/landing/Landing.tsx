@@ -70,6 +70,7 @@ export function Landing() {
             <VideoWithProgressBar
               src={heroVideo}
               poster={heroVideoThumbnail}
+              fetchPriority="high"
               alt="The clip of the turn and the clip of the shortcut being played side-by-side."
             ></VideoWithProgressBar>
           </div>
@@ -234,7 +235,7 @@ export function Landing() {
           <button
             className="btn btn-warning btn-soft btn-lg lg:btn-xl flex items-center justify-center border-3"
             onClick={() => {
-              if (window) window.scrollTo({ top: 0, behavior: "smooth" });
+              window.scrollTo({ top: 0, behavior: "smooth" });
             }}
           >
             <svg
