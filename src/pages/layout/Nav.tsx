@@ -8,7 +8,7 @@ export function Nav() {
           <b><span className="text-warning">pls</span><span>compare</span></b>
         </Link>
       </div>
-      <div className="navbar-end text-lg opacity-70 md:text-xl">
+      <div className="navbar-end text-lg opacity-90 md:text-xl">
         <Link to="/read-me" className="link link-hover">
           Read me!
         </Link>
