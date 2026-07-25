@@ -7,7 +7,7 @@ export function VideoWithProgressBar({ ...props }) {
 
   function updateProgressBar(_: DOMHighResTimeStamp, metadata: VideoFrameCallbackMetadata) {
     if (videoRef.current && progressBarRef.current) {
-      progressBarRef.current.value = (metadata.mediaTime ?? 0) / (videoRef.current.duration ?? 1);
+      progressBarRef.current.value = metadata.mediaTime / videoRef.current.duration;
       videoRef.current.requestVideoFrameCallback(updateProgressBar);
     }
   }

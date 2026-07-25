@@ -34,7 +34,7 @@ async function runMediabunnyPipeline(config: ExportConfig) {
   const frameDurationSec = 1 / fps;
 
   try {
-    const absoluteFontUrl = new URL("/src/assets/shared/fonts/Outfit-VariableFont_wght.woff2", self.location.origin).href;
+    const absoluteFontUrl = new URL("../../../../assets/shared/fonts/Outfit-VariableFont_wght.woff2", import.meta.url).href;
     const customFont = new FontFace("Outfit", `url(${absoluteFontUrl})`);
 
     await customFont.load();
