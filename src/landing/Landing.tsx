@@ -34,7 +34,7 @@ export function Landing() {
               <div className="bg-base-200 skeleton border-base-300 rounded-box flex size-full items-center justify-center overflow-hidden border-3">
                 <img
                   src={normalRouteImage}
-                  className="size-full min-w-0"
+                  className="size-full min-w-0 object-fill"
                   fetchPriority="high"
                   alt="A player driving around the last turn of Mario Circuit."
                 />
@@ -47,7 +47,7 @@ export function Landing() {
               <div className="bg-base-200 skeleton border-base-300 rounded-box flex size-full items-center justify-center overflow-hidden border-3">
                 <img
                   src={boxCutImage}
-                  className="rounded-box size-full min-w-0"
+                  className="size-full min-w-0 object-fill"
                   fetchPriority="high"
                   alt="A player using a shortcut to skip the last turn of Mario Circuit."
                 />
@@ -72,6 +72,7 @@ export function Landing() {
               poster={heroVideoThumbnail}
               fetchPriority="high"
               alt="The clip of the turn and the clip of the shortcut being played side-by-side."
+              className="size-full object-fill"
             ></VideoWithProgressBar>
           </div>
         </section>
@@ -90,7 +91,7 @@ export function Landing() {
               <div className="rounded-box border-base-300 size-full overflow-hidden border-3">
                 <img
                   src={gridExampleImage}
-                  className="size-full"
+                  className="size-full object-fill"
                   loading="lazy"
                   alt="A showcase of the grid comparison layout style."
                 ></img>
@@ -103,7 +104,7 @@ export function Landing() {
               <div className="rounded-box border-base-300 size-full overflow-hidden border-3">
                 <img
                   src={horizontalExampleImage}
-                  className="size-full"
+                  className="size-full object-fill"
                   loading="lazy"
                   alt="A showcase of the horizontal comparison layout style."
                 ></img>
@@ -118,7 +119,7 @@ export function Landing() {
                   <source media="(min-width: 48rem)" srcSet={verticalExampleImage} />
                   <img
                     src={defaultExampleImage}
-                    className="size-full"
+                    className="size-full object-fill"
                     loading="lazy"
                     alt="A showcase of either the default or grid comparison layout style."
                   ></img>
