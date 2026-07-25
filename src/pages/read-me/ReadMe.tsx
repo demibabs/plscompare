@@ -8,10 +8,10 @@ export function ReadMe() {
       <header className="bgp-zigZag-base-200/7 border-b-base-300 flex w-full flex-col items-center gap-3 p-10 text-center not-md:pb-15">
         <hgroup className="flex flex-col gap-3">
           <h1 className="text-main-text decoration-error text-5xl font-semibold underline">Read me!</h1>
-          <p className="text-2xl">Hey, you listened.</p>
+          <p className="text-2xl">Hey, you listened. Thanks, but this page isn't done yet.</p>
         </hgroup>
       </header>
-      <section className="-mt-5 grid w-full grid-cols-[minmax(0,1fr)_clamp(0px,var(--container-xl),100%)_minmax(0,1fr)] gap-10 p-10 not-md:pt-0 xl:lg:grid-cols-[minmax(0,1fr)_clamp(0px,var(--container-3xl),100%)_minmax(0,1fr)]">
+      {/* <section className="-mt-5 grid w-full grid-cols-[minmax(0,1fr)_clamp(0px,var(--container-xl),100%)_minmax(0,1fr)] gap-10 p-10 not-md:pt-0 xl:lg:grid-cols-[minmax(0,1fr)_clamp(0px,var(--container-3xl),100%)_minmax(0,1fr)]">
         <ul className="col-span-1 col-start-2 flex w-full flex-col gap-3">
           <ReadMeCard
             title={
@@ -95,7 +95,7 @@ export function ReadMe() {
             </p>
           </div>
         </aside>
-      </section>
+      </section> */}
     </main>
   );
 }
