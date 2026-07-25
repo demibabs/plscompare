@@ -14,15 +14,19 @@ The UI allows for easy selection of starting and ending comparison frames, and t
 
 Here are two strategies for doing this section of the track *Shy Guy Bazaar*:
 
-https://github.com/user-attachments/assets/60b29d5d-6397-46e2-8930-19f8d7c63b3e
+<div align=center>
+  <img width="48%" alt="rails_example" src="https://github.com/user-attachments/assets/62f839ca-65ea-4b71-bb7e-9e3db9d18a1c" />
+  <img width="48%" alt="ramps_example" src="https://github.com/user-attachments/assets/20af69a6-7450-4b00-bf5b-fdd68b60061a" />
+</div>
 
-https://github.com/user-attachments/assets/de5b6f35-4c65-48a2-a073-cbbef186d40a
+<br>
+If you're unfamiliar with MKWorld, it may be unclear which strategy is faster, and even if you do know, it's hard to tell what the time difference is. Using plscompare, you can make a comparison like this:
 
-If you're unfamiliar with MKWorld, it may be unclear which strategy is faster, and even if you do know, it's hard to tell what the time difference is. Using **plscompare**, you can make a comp like this:
-
-https://github.com/user-attachments/assets/1ba2d9f1-e906-4716-86ec-2706e6c962a5
+<img width="480" height="270" alt="comp_example" src="https://github.com/user-attachments/assets/e970c06e-bd19-498a-a874-e2b6512e4be5" />
 
 It then becomes clear that the left strategy saves roughly 0.08 seconds (5ish frames).
+
+(The actual comps are higher quality than this; I just had to turn it into a GIF to embed it into the README on all devices. See an actual example on the site landing page.)
 
 ## Stack
 
@@ -31,8 +35,6 @@ This application was coded using [Typescript](https://www.typescriptlang.org) an
 For the styling and design, I used [Tailwind](https://tailwindcss.com/) and [DaisyUI](https://daisyui.com/). I also used [Heropatterns](https://heropatterns.com/) and [Heroicons](https://heroicons.com/) for the patterns and SVGs seen throughout the site.
 
 For the exporter (and also extracting frame timestamps for the frame selection), I used [Mediabunny](https://mediabunny.dev/). This library is a life saver for doing any client-side work in the browser; I'd recommend it to anyone.
-
-However, the exporting is currently quite slow on mobile and low-end devices. Thus I am heavily considering moving it server-side and either using a headless browser or rewriting the exporter with FFmpeg.
 
 The site is deployed on [Cloudflare Pages](https://pages.cloudflare.com/).
 
