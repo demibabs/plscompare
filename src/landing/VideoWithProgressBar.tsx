@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-export function VideoWithProgressBar({ src, poster }: { src: string; poster: string }) {
+export function VideoWithProgressBar({ ...props }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressBarRef = useRef<HTMLProgressElement>(null);
   const requestRef = useRef<number>(undefined);
@@ -31,11 +31,10 @@ export function VideoWithProgressBar({ src, poster }: { src: string; poster: str
           className="size-full object-cover"
           ref={videoRef}
           playsInline
-          src={src}
-          poster={poster}
           autoPlay
           loop
           muted
+          {...props}
         ></video>
       </figure>
       <progress ref={progressBarRef} className="progress progress-primary w-[calc(100%-2rem)]"></progress>

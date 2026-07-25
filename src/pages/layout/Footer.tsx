@@ -5,7 +5,7 @@ export function Footer() {
         <p>By @crashwy</p>
         <div className="flex gap-6 opacity-70">
           <a className="link link-hover" href="https://discord.gg/FK3QGhvqzq">MKWTT Discord</a>
-          <p className="link link-hover">GitHub</p>
+          <a className="link link-hover" href="https://github.com/demibabs/plscompare">GitHub</a>
         </div>
       </div>
     </footer>

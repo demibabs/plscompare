@@ -81,7 +81,9 @@ export function StepsShowcase() {
           <b>Step {currentStep}</b>
         </div>
         <div
-          onClick={() => setCurrentStep(nextStep())}
+          onClick={() => {
+            setCurrentStep(nextStep());
+          }}
           className="card lg:card-side card-xl bg-base-300 border-neutral h-fit w-2xl max-w-full overflow-hidden border-3 lg:h-120 lg:w-6xl"
         >
           <div
@@ -96,10 +98,14 @@ export function StepsShowcase() {
             <p className="flex items-center pb-3 lg:mr-8">{stepsInfo[currentStep].body}</p>
             <div className="card-actions join gap-1 md:gap-2">{stepButtons}</div>
           </div>
-          <figure className="bg-base-100 order-1 flex w-full items-center justify-center p-5 not-lg:rounded-b-none lg:order-2 lg:min-h-full">
+          <figure className="bg-base-100 order-1 flex aspect-3/4 w-full items-center justify-center p-5 not-lg:rounded-b-none md:aspect-video lg:order-2 lg:min-h-full">
             <picture className="flex size-full items-center justify-center">
               <source media="(min-width: 48rem)" srcSet={images.wide[currentStep]} />
-              <img className="h-auto w-full" src={images.mobile[currentStep]}></img>
+              <img
+                className="size-full object-contain"
+                src={images.mobile[currentStep]}
+                alt="A showcase of the user interface for the current step."
+              ></img>
             </picture>
           </figure>
         </div>

@@ -50,12 +50,12 @@ export function PreviewVideo() {
   function watchVideo(vElement: HTMLVideoElement, index: number) {
     vElement.requestVideoFrameCallback((_, metadata) => {
       mediaTimes.current[index] = metadata.mediaTime;
-      if (metadata.mediaTime >= (videosData[index].times.end as number) - 1 / (filesData[index].framerate)) {
+      if (metadata.mediaTime >= (videosData[index].times.end as number) - 1 / filesData[index].framerate) {
         vElement.pause();
         vElement.currentTime = (videosData[index].times.end as number) + 0.005;
         mediaTimes.current[index] = videosData[index].times.end as number;
         timerStartTimes.current[index] = videosData[index].times.end as number;
-        
+
         if (videosRef.current.every((vElement) => vElement.paused)) {
           if (isPlaying) setIsPlaying(false);
         }
@@ -135,34 +135,41 @@ export function PreviewVideo() {
     const videos = videosRef.current;
     if (isPlaying) {
       videos.forEach((vElement, index) => {
-        requests.current[index] = vElement.requestVideoFrameCallback(() => watchVideo(vElement, index));
+        requests.current[index] = vElement.requestVideoFrameCallback(() => {
+          watchVideo(vElement, index);
+        });
       });
       if (videosRef.current.every((vElement) => vElement.ended)) {
-        videosRef.current.forEach((vElement) => vElement.play());
+        videosRef.current.forEach((vElement) => void vElement.play());
       } else {
         videosRef.current.forEach((vElement, index) => {
           if (
             hasTimes(videosData[index]) &&
-            vElement.currentTime < videosData[index].times.end - 1 / (filesData[index].framerate)
+            vElement.currentTime < videosData[index].times.end - 1 / filesData[index].framerate
           )
-            vElement.play();
+            void vElement.play();
         });
       }
     } else {
-      videosRef.current.forEach((vElement) => vElement.pause());
+      videosRef.current.forEach((vElement) => {
+        vElement.pause();
+      });
       videos.forEach((vElement, index) => {
         vElement.cancelVideoFrameCallback(requests.current[index]);
       });
     }
-    return () =>
+    return () => {
       videos.forEach((vElement, index) => {
         vElement.cancelVideoFrameCallback(requests.current[index]);
       });
+    };
   }, [isPlaying]);
 
   useEffect(() => {
     request.current = requestAnimationFrame(renderVideo);
-    return () => cancelAnimationFrame(request.current);
+    return () => {
+      cancelAnimationFrame(request.current);
+    };
   }, []);
 
   return (
@@ -190,7 +197,7 @@ export function PreviewVideo() {
             muted
             className="hidden"
             preload="auto"
-            key={index}
+            key={filesData[index].id}
             src={filesData[index].url}
             ref={(e) => {
               if (e) videosRef.current[index] = e;
@@ -237,7 +244,7 @@ export function PreviewVideo() {
               }
             }}
             className={cn("btn btn-lg border-base-300 btn-error border-3 px-3", {
-              "btn-disabled": false//!canPlay,
+              "btn-disabled": false, //!canPlay,
             })}
           >
             {isPlaying ? (
@@ -405,9 +412,8 @@ export function PreviewVideo() {
                     </button>
                     <button
                       className={cn("btn btn-lg btn-soft btn-success", { "btn-disabled": progress !== 100 })}
-                      onClick={async () => {
-                        await clear();
-                        navigate("/");
+                      onClick={() => {
+                        void clear().then(() => navigate("/"))
                       }}
                     >
                       Home

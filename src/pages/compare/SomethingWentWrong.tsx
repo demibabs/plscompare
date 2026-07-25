@@ -62,12 +62,12 @@ export function SomethingWentWrong({
     noInteraction: <></>,
   };
   const partButton = (
-    <button className="btn btn-xl btn-error" onClick={() => navigate(`/compare/${data}-frame`)}>
+    <button className="btn btn-xl btn-error" onClick={() => void navigate(`/compare/${data}-frame`)}>
       Fix
     </button>
   );
   const homeButton = (
-    <button className="btn btn-xl btn-primary" onClick={() => navigate("/")}>
+    <button className="btn btn-xl btn-primary" onClick={() => void navigate("/")}>
       Go home
     </button>
   );

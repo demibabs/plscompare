@@ -4,7 +4,7 @@ import { SomethingWentWrong } from "./SomethingWentWrong";
 
 export function EndFrame() {
   const { videosData } = useOutletContext<{ videosData: VideoData[]; }>();
-  if (!videosData || videosData.some((vData) => vData.times.start === null)) {
+  if (videosData.some((vData) => vData.times.start === null)) {
     return <SomethingWentWrong data="start"></SomethingWentWrong>;
   }
   return <SideBySideEditor part="end" />;

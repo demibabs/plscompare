@@ -26,7 +26,7 @@ export function ScrubbableVideo({
   fileData: FileData;
   videosData: VideoData[];
   setVideosData: Dispatch<SetStateAction<VideoData[]>>;
-  videosRef: RefObject<HTMLVideoElement[]>;
+  videosRef: RefObject<HTMLVideoElement[] | null>;
   arePlaying: boolean[];
   setArePlaying: Dispatch<SetStateAction<boolean[]>>;
   durations: number[];
@@ -59,7 +59,7 @@ export function ScrubbableVideo({
     const scrubberTime = parseFloat(e.target.value);
     const snappedTime = getNearestFrameTime(scrubberTime, allFrameTimes);
     const newTime = part === "start" ? snappedTime : Math.max(snappedTime, startTime || 0);
-    if (videosRef.current[id]) {
+    if (videosRef.current?.[id]) {
       videosRef.current[id].currentTime = newTime + 0.005;
     }
     setVideosData((vsData) =>
@@ -80,8 +80,10 @@ export function ScrubbableVideo({
 
   function handleLoadedMetadata() {
     setHasLoadedMetadata(true);
+    if (!videosRef.current) return;
     if (videosRef.current[id]) {
-      setDurations((durs) => durs.with(id, videosRef.current[id].duration));
+      const duration = videosRef.current[id].duration;
+      setDurations((durs) => durs.with(id, duration));
       if (part === "end" && startTime !== null) {
         videosRef.current[id].currentTime = startTime + 0.005;
       }
@@ -92,59 +94,61 @@ export function ScrubbableVideo({
     }
   }
 
-  function getMediaTime(now: number, metadata: VideoFrameCallbackMetadata) {
+  function getMediaTime(_: number, metadata: VideoFrameCallbackMetadata) {
     if (!isDraggingLatest.current && isPlayingLatest.current) {
-      const newTime = getNearestFrameTime(metadata.mediaTime, allFrameTimes)
+      const newTime = getNearestFrameTime(metadata.mediaTime, allFrameTimes);
       setVideosData((vsData) =>
         vsData.with(id, {
           ...vsData[id],
           times: {
             ...vsData[id].times,
-            [part]: newTime
+            [part]: newTime,
           },
         }),
       );
     }
-    if (videosRef.current[id]) {
+    if (videosRef.current?.[id]) {
       videosRef.current[id].requestVideoFrameCallback(getMediaTime);
     }
   }
 
   useEffect(() => {
-    let request: number;
-    const vElement = videosRef.current[id];
-    if (vElement) {
-      request = vElement.requestVideoFrameCallback(getMediaTime);
-    }
+    const vElement = videosRef.current?.[id];
+    if (!vElement) return;
+    const request = vElement.requestVideoFrameCallback(getMediaTime);
     return () => {
-      if (vElement) vElement.cancelVideoFrameCallback(request);
+      vElement.cancelVideoFrameCallback(request);
     };
   }, [id, videosRef]);
 
   useEffect(() => {
-    if (arePlaying[id]) videosRef.current[id]?.play();
-    else videosRef.current[id]?.pause();
-  }, [arePlaying, id, videosRef]);
+    if (arePlaying[id])
+      videosRef.current?.[id]?.play().catch(() => {
+        setArePlaying((aP) => aP.with(id, false));
+      });
+    else videosRef.current?.[id]?.pause();
+  }, [arePlaying, id, videosRef, setArePlaying]);
 
   useEffect(() => {
     if (isDragging) {
-      videosRef.current[id]?.pause();
+      videosRef.current?.[id]?.pause();
     }
-    if (!isDragging && wasPlaying.current) videosRef.current[id]?.play();
-  }, [isDragging, id, videosRef]);
+    if (!isDragging && wasPlaying.current)
+      videosRef.current?.[id]?.play().catch(() => {
+        setArePlaying((aP) => aP.with(id, false));
+      });
+  }, [isDragging, id, videosRef, setArePlaying]);
 
   function scrub(numSeconds: number) {
-    if (!videosRef.current[id] || !allFrameTimes || allFrameTimes.length === 0) return;
+    if (!videosRef.current?.[id] || allFrameTimes.length === 0) return;
 
-    const exactCurrentTime =
-      videosData[id].times[part] !== null && videosData[id].times[part] !== undefined
-        ? (videosData[id].times[part] as number)
-        : videosRef.current[id].currentTime;
+    const exactCurrentTime = videosData[id].times[part] ?? videosRef.current[id].currentTime;
+
     const EPSILON = 0.001;
-    let targetTime
+    let targetTime;
 
-    const isNextFrame = Math.abs(numSeconds - (1 / framerate)) < EPSILON;
-    const isPrevFrame = Math.abs(numSeconds - (-1 / framerate)) < EPSILON;
+    const isNextFrame = Math.abs(numSeconds - 1 / framerate) < EPSILON;
+    const isPrevFrame = Math.abs(numSeconds - -1 / framerate) < EPSILON;
 
     if (isNextFrame) {
       targetTime = getNextFrameTime(exactCurrentTime, allFrameTimes);
@@ -154,7 +158,7 @@ export function ScrubbableVideo({
       targetTime = getNearestFrameTime(exactCurrentTime + numSeconds, allFrameTimes);
     }
 
-    const newTime = part === "start" ? targetTime : Math.max(targetTime, startTime || 0);
+    const newTime = part === "start" ? targetTime : Math.max(targetTime, startTime ?? 0);
     videosRef.current[id].currentTime = newTime + 0.005;
     setVideosData((vsData) =>
       vsData.with(id, {
@@ -188,7 +192,7 @@ export function ScrubbableVideo({
         <video
           onPause={(e) => {
             setArePlaying((aP) => aP.with(id, false));
-            if (allFrameTimes && allFrameTimes.length > 0) {
+            if (allFrameTimes.length > 0) {
               const exactTime = getNearestFrameTime(e.currentTarget.currentTime, allFrameTimes);
               e.currentTarget.currentTime = exactTime + 0.005;
               setVideosData((vsData) =>
@@ -202,16 +206,22 @@ export function ScrubbableVideo({
               );
             }
           }}
-          onPlay={() => setArePlaying((aP) => aP.with(id, true))}
+          onPlay={() => {
+            setArePlaying((aP) => aP.with(id, true));
+          }}
           preload="auto"
           playsInline
           muted
           onLoadedMetadata={handleLoadedMetadata}
-          onEnded={() => setArePlaying((aP) => aP.with(id, false))}
-          onCanPlay={() => setIsLoading(false)}
+          onEnded={() => {
+            setArePlaying((aP) => aP.with(id, false));
+          }}
+          onCanPlay={() => {
+            setIsLoading(false);
+          }}
           onTimeUpdate={handleTimeUpdate}
           ref={(e) => {
-            if (e) videosRef.current[id] = e;
+            if (e && videosRef.current) videosRef.current[id] = e;
           }}
           src={url}
           className="border-base-300 rounded-box size-full border-3 object-contain md:aspect-video"
@@ -232,12 +242,16 @@ export function ScrubbableVideo({
             setIsDragging(true);
             wasPlaying.current = arePlaying[id];
           }}
-          onMouseUp={() => setIsDragging(false)}
+          onMouseUp={() => {
+            setIsDragging(false);
+          }}
           onTouchStart={() => {
             setIsDragging(true);
             wasPlaying.current = arePlaying[id];
           }}
-          onTouchEnd={() => setIsDragging(false)}
+          onTouchEnd={() => {
+            setIsDragging(false);
+          }}
         ></input>
         {markerProgress !== null && (
           <div className="bg-main-text mask mask-triangle-2 pointer-events-none absolute top-0 left-[calc(var(--marker-progress)*1%+(0.5-var(--marker-progress)/100)*1rem)] size-2.5 -translate-x-1/2 -translate-y-[calc(100%+0.3rem)]"></div>
@@ -245,18 +259,30 @@ export function ScrubbableVideo({
       </div>
       <menu className="join @container flex w-[calc(100%-2rem)] justify-center gap-1">
         <li className={liClassName}>
-          <button onClick={() => scrub(-1)} className={cn(menuLiButtonClassName, "btn-success border-success")}>
+          <button
+            onClick={() => {
+              scrub(-1);
+            }}
+            className={cn(menuLiButtonClassName, "btn-success border-success")}
+          >
             -1s
           </button>
         </li>
         <li className={liClassName}>
-          <button onClick={() => scrub(-0.1)} className={cn(menuLiButtonClassName, "btn-warning border-warning")}>
+          <button
+            onClick={() => {
+              scrub(-0.1);
+            }}
+            className={cn(menuLiButtonClassName, "btn-warning border-warning")}
+          >
             -0.1s
           </button>
         </li>
         <li className={liClassName}>
           <button
-            onClick={() => scrub(-1 / framerate)}
+            onClick={() => {
+              scrub(-1 / framerate);
+            }}
             className={cn(menuLiButtonClassName, "btn-primary border-primary")}
           >
             -1f
@@ -264,7 +290,9 @@ export function ScrubbableVideo({
         </li>
         <li className={liClassName}>
           <button
-            onClick={() => setArePlaying((aP) => aP.with(id, !aP[id]))}
+            onClick={() => {
+              setArePlaying((aP) => aP.with(id, !aP[id]));
+            }}
             className={cn(menuLiButtonClassName, "btn-error border-error")}
           >
             {arePlaying[id] ? (
@@ -298,19 +326,31 @@ export function ScrubbableVideo({
         </li>
         <li className={liClassName}>
           <button
-            onClick={() => scrub(1 / framerate)}
+            onClick={() => {
+              scrub(1 / framerate);
+            }}
             className={cn(menuLiButtonClassName, "btn-primary border-primary")}
           >
             +1f
           </button>
         </li>
         <li className={liClassName}>
-          <button onClick={() => scrub(0.1)} className={cn(menuLiButtonClassName, "btn-warning border-warning")}>
+          <button
+            onClick={() => {
+              scrub(0.1);
+            }}
+            className={cn(menuLiButtonClassName, "btn-warning border-warning")}
+          >
             +0.1s
           </button>
         </li>
         <li className={liClassName}>
-          <button onClick={() => scrub(1)} className={cn(menuLiButtonClassName, "btn-success border-success")}>
+          <button
+            onClick={() => {
+              scrub(1);
+            }}
+            className={cn(menuLiButtonClassName, "btn-success border-success")}
+          >
             +1s
           </button>
         </li>

@@ -24,7 +24,7 @@ export function getGridDimensions(numVideos: number): { rows: number; cols: numb
 export function renderFrame(
   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   layout: Layout,
-  sources: (CanvasImageSource | null)[],
+  sources: (CanvasImageSource)[],
   sourcesDimensions: Dimensions[],
   labelsText: (string | null)[],
   timersText: string[],
@@ -40,7 +40,7 @@ export function renderFrame(
     let destHeight: number;
     const canvasDimensions = getCanvasDimensions(layout, sources.length)
     const fontSize = 72;
-    ctx.font = fontSize + "px Outfit";
+    ctx.font = String(fontSize) + "px Outfit";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     sourcesDimensions.forEach((sDims, index) => {
@@ -139,7 +139,7 @@ export function renderFrame(
 
       // 4. Draw to canvas
       ctx.drawImage(
-        sources[index] as CanvasImageSource,
+        sources[index],
         sourceX,
         sourceY,
         sourceWidth,

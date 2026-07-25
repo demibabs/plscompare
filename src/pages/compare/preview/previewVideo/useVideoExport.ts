@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Layout } from "./renderFrame";
 
 export type ExportConfig = {
-  videos: { url: string; times: { start: number; end: number }; label: string | null, framerate: number }[];
+  videos: { url: string; times: { start: number; end: number }; label: string | null; framerate: number }[];
   fileName: string;
   freezeFrameTime: number;
   layout: Layout;
@@ -19,10 +19,10 @@ export function useVideoExport() {
   const workerRef = useRef<Worker | null>(null);
 
   const cleanupWorker = useCallback(() => {
-    if (workerRef.current) {
-    workerRef.current?.postMessage({ type: "CANCEL" })
-    workerRef.current = null;
-    }
+  
+      workerRef.current?.postMessage({ type: "CANCEL" });
+      workerRef.current = null;
+    
   }, []);
 
   const startExport = useCallback(
@@ -57,7 +57,7 @@ export function useVideoExport() {
           cleanupWorker();
         }
       };
-      workerRef.current?.postMessage({ type: "START_EXPORT", payload: config });
+      workerRef.current.postMessage({ type: "START_EXPORT", payload: config });
     },
     [cleanupWorker],
   );
@@ -71,6 +71,6 @@ export function useVideoExport() {
     isExporting,
     progress,
     error,
-    cancelExport: cleanupWorker
+    cancelExport: cleanupWorker,
   };
 }

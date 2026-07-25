@@ -32,7 +32,12 @@ export function Landing() {
                 <b>normal_route.mp4</b>
               </div>
               <div className="bg-base-200 skeleton border-base-300 rounded-box flex size-full items-center justify-center overflow-hidden border-3">
-                <img src={normalRouteImage} className="size-full min-w-0" fetchPriority="high" />
+                <img
+                  src={normalRouteImage}
+                  className="size-full min-w-0"
+                  fetchPriority="high"
+                  alt="A player driving around the last turn of Mario Circuit."
+                />
               </div>
             </figure>
             <figure className="indicator aspect-240/119 h-full not-lg:max-w-xs not-lg:grow lg:w-full lg:max-w-xs">
@@ -40,7 +45,12 @@ export function Landing() {
                 <b>box_cut.mov</b>
               </div>
               <div className="bg-base-200 skeleton border-base-300 rounded-box flex size-full items-center justify-center overflow-hidden border-3">
-                <img src={boxCutImage} className="rounded-box size-full min-w-0" fetchPriority="high" />
+                <img
+                  src={boxCutImage}
+                  className="rounded-box size-full min-w-0"
+                  fetchPriority="high"
+                  alt="A player using a shortcut to skip the last turn of Mario Circuit."
+                />
               </div>
             </figure>
           </div>
@@ -57,7 +67,11 @@ export function Landing() {
             </svg>
           </div>
           <div className="w-xl not-lg:max-w-full lg:w-xl">
-            <VideoWithProgressBar src={heroVideo} poster={heroVideoThumbnail}></VideoWithProgressBar>
+            <VideoWithProgressBar
+              src={heroVideo}
+              poster={heroVideoThumbnail}
+              alt="The clip of the turn and the clip of the shortcut being played side-by-side."
+            ></VideoWithProgressBar>
           </div>
         </section>
       </header>
@@ -65,14 +79,20 @@ export function Landing() {
       <section className="border-base-300 flex w-full flex-col items-center">
         <div className="lg:bgp-polkaDots-base-100/10 not-lg:bgp-polkaDots-base-100/5 flex w-full justify-center pt-6 pb-20 not-lg:bg-size-[0.75rem_auto]">
           <p className="text text-main-text mx-10 mt-3 text-center text-2xl md:text-3xl">
-            Compare <b className="decoration-nice-purple md:decoration-error underline">several</b> clips at once—you're not limited to just two.
+            Compare <b className="decoration-nice-purple md:decoration-error underline">several</b> clips at once—you're
+            not limited to just two.
           </p>
         </div>
         <div className="-mt-15 flex w-full flex-col items-center justify-center gap-5 px-5 md:px-10 lg:flex-row lg:gap-10 lg:px-20">
-          <figure className="z-11 mt-7 w-4xl max-w-full grid-cols-[2fr_1fr] grid-rows-[2fr_1fr] flex-col not-md:flex md:grid gap-5 md:gap-3">
+          <figure className="z-11 mt-7 w-4xl max-w-full grid-cols-[2fr_1fr] grid-rows-[2fr_1fr] flex-col gap-5 not-md:flex md:grid md:gap-3">
             <div className="relative col-span-1 col-start-1 row-span-1 row-start-1 aspect-video h-full not-md:order-2">
               <div className="rounded-box border-base-300 size-full overflow-hidden border-3">
-                <img src={gridExampleImage} className="size-full" loading="lazy"></img>
+                <img
+                  src={gridExampleImage}
+                  className="size-full"
+                  loading="lazy"
+                  alt="A showcase of the grid comparison layout style."
+                ></img>
               </div>
               <div className="badge badge-xl badge-warning border-base-300 absolute top-0 left-1/2 -translate-1/2 border-3">
                 <b>Grid</b>
@@ -80,17 +100,27 @@ export function Landing() {
             </div>
             <div className="relative col-span-1 col-start-1 row-span-1 row-start-2 aspect-32/9 h-full w-auto not-md:order-3">
               <div className="rounded-box border-base-300 size-full overflow-hidden border-3">
-                <img src={horizontalExampleImage} className="size-full" loading="lazy"></img>
+                <img
+                  src={horizontalExampleImage}
+                  className="size-full"
+                  loading="lazy"
+                  alt="A showcase of the horizontal comparison layout style."
+                ></img>
               </div>
-              <div className="badge badge-xl badge-error border-base-300 absolute md:bottom-0 not-md:top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 md:translate-y-1/2 border-3">
+              <div className="badge badge-xl badge-error border-base-300 absolute left-1/2 -translate-x-1/2 -translate-y-1/2 border-3 not-md:top-0 md:bottom-0 md:translate-y-1/2">
                 <b>Horizontal</b>
               </div>
             </div>
-            <div className="relative col-span-1 col-start-2 row-span-2 row-start-1 md:aspect-16/27 not-md:order-1 not-md:aspect-video h-full">
+            <div className="relative col-span-1 col-start-2 row-span-2 row-start-1 h-full not-md:order-1 not-md:aspect-video md:aspect-16/27">
               <div className="rounded-box border-base-300 size-full overflow-hidden border-3">
                 <picture>
                   <source media="(min-width: 48rem)" srcSet={verticalExampleImage} />
-                  <img src={defaultExampleImage} className="size-full" loading="lazy"></img>
+                  <img
+                    src={defaultExampleImage}
+                    className="size-full"
+                    loading="lazy"
+                    alt="A showcase of either the default or grid comparison layout style."
+                  ></img>
                 </picture>
               </div>
               <div className="badge badge-xl badge-info md:badge-primary border-base-300 absolute top-0 right-1/2 translate-x-1/2 -translate-y-1/2 border-3">
@@ -109,7 +139,7 @@ export function Landing() {
         <div className="card not-md:card-md card-lg bg-base-100 border-base-300 col-span-1 col-start-1 row-span-1 row-start-1 border-3">
           <div className="card-body">
             <div className="card-title mb-3 text-2xl not-md:text-xl">Supports all major video formats</div>
-            <div className="flex flex-wrap h-full content-center gap-2">
+            <div className="flex h-full flex-wrap content-center gap-2">
               <div className="badge badge-error badge-xl badge-border badge-soft border-3">.mp4</div>
               <div className="badge badge-warning badge-xl badge-border badge-soft border-3">.mov</div>
               <div className="badge badge-xl badge-border badge-soft border-3">.mkv</div>
@@ -126,7 +156,10 @@ export function Landing() {
             <div className="card-title mb-3 text-2xl not-md:text-xl">Totally free and open source</div>
             <p className="my-auto max-h-fit text-lg">
               If you like this project, or are just curious how it works, consider visiting it on{" "}
-              <a className="text-success relative inline-block whitespace-nowrap after:absolute after:bottom-1 after:left-px after:h-0.5 after:w-[calc(100%-2px)] after:bg-current after:content-[''] hover:cursor-pointer">
+              <a
+                className="text-success relative inline-block whitespace-nowrap after:absolute after:bottom-1 after:left-px after:h-0.5 after:w-[calc(100%-2px)] after:bg-current after:content-[''] hover:cursor-pointer"
+                href="https://github.com/demibabs/plscompare"
+              >
                 GitHub{"\u00A0"}
                 <GithHubIcon size="1.5rem" className="inline -translate-y-1"></GithHubIcon>
               </a>{" "}
@@ -183,7 +216,10 @@ export function Landing() {
             <p className="my-auto max-h-fit text-lg">
               The site will receive updates and improvements in the future, so hang tight! If you have any suggestions,
               send me them on{" "}
-              <a className="text-warning relative inline-block whitespace-nowrap after:absolute after:bottom-1 after:left-px after:h-0.5 after:w-[calc(100%-2px)] after:bg-current after:content-[''] hover:cursor-pointer">
+              <a
+                className="text-warning relative inline-block whitespace-nowrap after:absolute after:bottom-1 after:left-px after:h-0.5 after:w-[calc(100%-2px)] after:bg-current after:content-[''] hover:cursor-pointer"
+                href="https://discord.gg/FK3QGhvqzq"
+              >
                 Discord{"\u00A0"}
                 <DiscordIcon size="1.25rem" className="inline -translate-y-0.75"></DiscordIcon>
               </a>{" "}

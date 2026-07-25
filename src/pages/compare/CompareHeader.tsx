@@ -29,7 +29,7 @@ export function CompareHeader({
       <div className="col-span-1 col-start-1 flex w-full justify-start">
         <button
           onClick={() => {
-            navigate(prevPage);
+            void navigate(prevPage);
           }}
           className={cn(buttonClassName, "btn-base-100 border-error/40 text-error")}
         >
