@@ -28,7 +28,7 @@ export function SomethingWentWrong({
   };
   const partTitleText = "I think you skipped a step.";
   const titleTexts = {
-    files: "Hey, you forgot your files.",
+    files: "Hey, submit some videos :)",
     start: partTitleText,
     end: partTitleText,
     error: "Everything just went wrong.",
@@ -39,8 +39,7 @@ export function SomethingWentWrong({
   const bodyTexts = {
     files: (
       <>
-        <p>Or maybe I misplaced them...</p>
-        <p>Either way, you're going to need to submit some.</p>
+        <p>After that, you can begin making the comparison.</p>
       </>
     ),
     start: partBodyText,

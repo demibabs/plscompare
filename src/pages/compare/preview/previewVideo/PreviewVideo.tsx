@@ -298,8 +298,10 @@ export function PreviewVideo() {
                 setOptionsModal(false);
               }}
             >
-              <div className="modal-box">
-                <h1 className="pb-3 text-3xl">Options</h1>
+              <div className="modal-box border-base-300 border-3">
+                <h1 className="pb-3 text-3xl">
+                  <b>Options</b>
+                </h1>
                 <ul className="w-full">
                   <li className="bg-base-200 rounded-box bgp-formalInvitation-base-100/10 mt-3 flex w-full items-center justify-between gap-3 p-5 text-lg">
                     <p className="pr-5">Freeze-frame duration (seconds)</p>
@@ -394,21 +396,23 @@ export function PreviewVideo() {
                 setExportModal(false);
               }}
             >
-              <div className="modal-box">
+              <div className="modal-box border-base-300 border-3">
                 <h1 className="pb-3 text-3xl">
-                  {progress === 100 ? (
-                    "Video exported!"
-                  ) : (
-                    <span>
-                      {error ? (
-                        <>Something went wrong...</>
-                      ) : (
-                        <>
-                          Exporting video... <span className="ml-1 text-2xl">({Math.round(progress)}%)</span>
-                        </>
-                      )}
-                    </span>
-                  )}
+                  <b>
+                    {progress === 100 ? (
+                      "Video exported!"
+                    ) : (
+                      <span>
+                        {error ? (
+                          <>Something went wrong...</>
+                        ) : (
+                          <>
+                            Exporting video... <span className="ml-1 text-2xl">({Math.round(progress)}%)</span>
+                          </>
+                        )}
+                      </span>
+                    )}
+                  </b>
                 </h1>
                 {error ? (
                   <p>Error message: {error}</p>
