@@ -33,3 +33,5 @@ originals/
 .env*
 !.env.example
 .env
+
+package-lock.json
