@@ -1,6 +1,6 @@
 import { get, set } from "idb-keyval";
 import { useEffect, useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import type { FileData, VideoData } from "./sideBySideEditor/SideBySideEditor";
 import { SomethingWentWrong } from "./SomethingWentWrong";
 import type { Options } from "./preview/previewVideo/PreviewVideo";
@@ -14,6 +14,7 @@ export function Compare() {
   const defaultOptions: Options = { layout: "default", freezeFrameTime: 2 };
   const [options, setOptions] = useState<Options>(defaultOptions);
   const [hasInteracted, setHasInteracted] = useState(window.navigator.userActivation.hasBeenActive);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let activeUrls: string[] = [];
@@ -86,10 +87,15 @@ export function Compare() {
     }
   }, [options, isLoading]);
 
-  if (!isLoading) {
-    if (filesData.length < 2) {
-      return <SomethingWentWrong data="files"></SomethingWentWrong>;
+  useEffect(() => {
+    if (!isLoading) {
+      if (filesData.length < 2) {
+        void navigate("/");
+      }
     }
+  });
+
+  if (!isLoading) {
     if (!hasInteracted) {
       return <SomethingWentWrong data="noInteraction" setHasInteracted={setHasInteracted}></SomethingWentWrong>;
     }
