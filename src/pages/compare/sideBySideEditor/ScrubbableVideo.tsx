@@ -44,9 +44,15 @@ export function ScrubbableVideo({
   const wasPlaying = useRef(false);
   const scrubberRef = useRef<HTMLInputElement>(null);
 
-  const startTime = videosData[id]?.times.start ?? null;
-  if (part === "start" && videosData[id] && startTime === null) {
-    videosData[id].times.start = 0;
+  const startTime = videosData[id]?.times.start;
+  const endTime = videosData[id]?.times.end
+  if (videosData[id]) {
+    if (part === "start" && startTime === null) {
+      videosData[id].times.start = 0;
+    }
+    if (part === "end" && endTime === null){
+      videosData[id].times.end = videosData[id].times.start
+    }
   }
   // Progress for marker that shows where starting time is
   const markerProgress =
