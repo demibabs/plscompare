@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import type { VideoData } from "../pages/compare/sideBySideEditor/SideBySideEditor";
 import { getFrameData, type FrameData } from "../utils/getFrameData";
 import posthog from "../posthog";
+import { checkIsSupportedVideo } from "../utils/checkIsSupportedVideo";
 
 export function FileUploadButton() {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -32,13 +33,20 @@ export function FileUploadButton() {
     if (!event.target.files) {
       return;
     }
-    setStatusMessage("");
     const newFiles = Array.from(event.target.files);
     // Weird bug causes files to incorrectly be registered as size 0, no idea how to fix
     if (newFiles.some((nFile) => nFile.size === 0)) {
       setStatusMessage("All files must be larger than 0 bytes.");
       posthog.capture("file_upload_error", { reason: "zero_byte_file", file_count: newFiles.length });
       return;
+    }
+    for (const file of newFiles) {
+      const isSupported = await checkIsSupportedVideo(file);
+      if (!isSupported) {
+        setStatusMessage("That file type is not supported.");
+        posthog.capture("file_upload_error", { reason: "unsupported_file_type", file_count: newFiles.length });
+        return;
+      }
     }
     const framesData = await Promise.all(newFiles.map(async (f) => await getFrameData(f)));
     // Put data into { file, frameData } form
@@ -115,7 +123,13 @@ export function FileUploadButton() {
         <span className="indicator-item indicator-center indicator-middle loading loading-spinner text-main-text loading-xl"></span>
       )}
       {/* The actual upload button */}
-      <button onClick={() => inputRef.current?.click()} className="btn btn-lg md:btn-xl btn-warning">
+      <button
+        onClick={() => {
+          inputRef.current?.click();
+          setStatusMessage("");
+        }}
+        className="btn btn-lg md:btn-xl btn-warning"
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
