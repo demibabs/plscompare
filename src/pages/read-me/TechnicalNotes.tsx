@@ -82,7 +82,7 @@ export function TechnicalNotes() {
           <ArticleH2>Learn more</ArticleH2>
           <ArticleP>
             This project is fully open source, so you can see all the code, the tech stack I used, and even run your own local version from{" "}
-            <a className="link link-success" href="https://github.com/demibabs/plscompare">the GitHub Repository.</a>
+            <a className="link link-success" href="https://github.com/demibabs/plscompare">the GitHub repository.</a>
           </ArticleP>
           <ArticleBigP>Thanks for reading :)</ArticleBigP>
         </ArticleGrid>

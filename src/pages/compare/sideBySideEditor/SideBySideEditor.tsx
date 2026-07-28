@@ -62,7 +62,7 @@ export function SideBySideEditor({ part }: { part: Part }) {
         rightButtonIsDisabled={rightButtonIsDisabled}
         nextPage={nextPage}
       />
-      <section className="my-6 flex h-fit w-full flex-wrap justify-center gap-4 px-10 md:my-10">
+      <section className="my-6 flex w-full flex-wrap justify-center gap-4 px-10 md:my-10">
         {[...Array(filesData.length)].map((_, index) => (
           <ScrubbableVideo
             key={filesData[index].id}
@@ -78,6 +78,7 @@ export function SideBySideEditor({ part }: { part: Part }) {
           />
         ))}
       </section>
+      <p className="mx-auto mb-10">whats up</p>
     </main>
   );
 }

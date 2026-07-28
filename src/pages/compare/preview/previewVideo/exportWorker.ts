@@ -11,7 +11,7 @@ import {
 
 import { renderFrame } from "./renderFrame";
 import type { ExportConfig } from "./useVideoExport";
-import { formatSecondsToSSMS } from "../../../../utils/formatMsToSSMS";
+import { formatSecondsToSSMS } from "../../../../utils/formatSecondsToSSMS";
 import { getCanvasDimensions } from "../../../../utils/getCanvasDimensions";
 
 let isCanceled = false;
@@ -30,11 +30,12 @@ self.onmessage = async (e: MessageEvent) => {
 async function runMediabunnyPipeline(config: ExportConfig) {
   const { videos, freezeFrameTime, layout } = config;
   const canvasDimensions = getCanvasDimensions(layout, videos.length);
-  const fps = videos.every(v => v.framerate < 31) ? 30 : 60;
+  const fps = videos.every((v) => v.framerate < 31) ? 30 : 60;
   const frameDurationSec = 1 / fps;
 
   try {
-    const absoluteFontUrl = new URL("../../../../assets/shared/fonts/Outfit-VariableFont_wght.woff2", import.meta.url).href;
+    const absoluteFontUrl = new URL("../../../../assets/shared/fonts/Outfit-VariableFont_wght.woff2", import.meta.url)
+      .href;
     const customFont = new FontFace("Outfit", `url(${absoluteFontUrl})`);
 
     await customFont.load();
@@ -49,7 +50,7 @@ async function runMediabunnyPipeline(config: ExportConfig) {
 
   const inputs: Input[] = [];
   let streams: any[] = [];
-  
+
   try {
     // 1. Initialize Inputs & Sinks using UrlSource (Streams directly instead of downloading Blobs)
     const sinks = await Promise.all(
@@ -214,19 +215,35 @@ async function runMediabunnyPipeline(config: ExportConfig) {
     // and the iterator gets a return signal which allows the sink to cleanup internal buffers.
     for (const state of streams) {
       if (state.currentSample) {
-        try { state.currentSample.close(); } catch (e) { /* ignore */ }
+        try {
+          state.currentSample.close();
+        } catch (e) {
+          /* ignore */
+        }
       }
       if (state.nextSample) {
-        try { state.nextSample.close(); } catch (e) { /* ignore */ }
+        try {
+          state.nextSample.close();
+        } catch (e) {
+          /* ignore */
+        }
       }
       if (state.iterator && typeof state.iterator.return === "function") {
-        try { await state.iterator.return(); } catch (e) { /* ignore */ }
+        try {
+          await state.iterator.return();
+        } catch (e) {
+          /* ignore */
+        }
       }
     }
 
     // Dispose of inputs to release system resources (decoders, demuxers)
     for (const input of inputs) {
-      try { input.dispose(); } catch (e) { /* ignore */ }
+      try {
+        input.dispose();
+      } catch (e) {
+        /* ignore */
+      }
     }
   }
 }

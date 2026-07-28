@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from 
 import type { FileData, VideoData } from "../../sideBySideEditor/SideBySideEditor";
 import { cn } from "../../../../utils/cn";
 import { renderFrame, type Dimensions, type Layout } from "./renderFrame";
-import { formatSecondsToSSMS } from "../../../../utils/formatMsToSSMS";
+import { formatSecondsToSSMS } from "../../../../utils/formatSecondsToSSMS";
 import { useVideoExport } from "./useVideoExport";
 import { hasTimes } from "../../../../utils/hasTimes";
 import { clear, set } from "idb-keyval";

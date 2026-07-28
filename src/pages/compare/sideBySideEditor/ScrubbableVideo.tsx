@@ -11,6 +11,7 @@ import { cn } from "../../../utils/cn";
 import type { FileData, Part, VideoData } from "./SideBySideEditor";
 import { useLatest } from "../../../utils/useLatest";
 import { getNearestFrameTime, getNextFrameTime, getPrevFrameTime } from "../../../utils/frameSnapping";
+import { formatSecondsToSSMS } from "../../../utils/formatSecondsToSSMS";
 
 export function ScrubbableVideo({
   fileData,
@@ -179,15 +180,15 @@ export function ScrubbableVideo({
   const liClassName = "flex grow";
 
   return (
-    <div className="flex max-w-xl grow basis-md flex-col items-center">
+    <div className="flex max-w-xl grow basis-md flex-col items-center mb-5">
       <input
         type="text"
         className="input input-ghost bg-base-200 border-base-300 border-3 text-lg"
         placeholder="Label?"
         onChange={handleInputChange}
-        defaultValue={videosData[id].label || undefined}
+        value={videosData[id].label ?? undefined}
       />
-      <div className="skeleton indicator rounded-box bg-base-200 my-5 flex w-full items-center justify-center">
+      <div className="skeleton indicator rounded-box bg-base-200 mt-7 mb-5 flex w-full items-center justify-center">
         {isLoading && <div className="indicator-item indicator-center indicator-middle loading size-12" />}
         <video
           onPause={(e) => {
@@ -226,6 +227,15 @@ export function ScrubbableVideo({
           src={url}
           className="border-base-300 rounded-box size-full border-3 object-contain md:aspect-video"
         ></video>
+        <span
+          className={cn(
+            "indicator-item indicator-center badge border-base-300 badge-xl border-3",
+            { "badge-success": part === "end" },
+            { "badge-primary": part === "start" },
+          )}
+        >
+          <b>{formatSecondsToSSMS(videosData[id].times[part] ?? 0)}</b>
+        </span>
       </div>
       <div className="relative flex w-[calc(100%-1rem)] items-center" style={{ "--marker-progress": markerProgress }}>
         <input
