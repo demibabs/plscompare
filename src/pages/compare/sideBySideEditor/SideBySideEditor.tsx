@@ -1,4 +1,4 @@
-import { useOutletContext } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
 import { cn } from "../../../utils/cn";
 import { ScrubbableVideo } from "./ScrubbableVideo";
 import { useRef, useState, type Dispatch, type SetStateAction } from "react";
@@ -6,7 +6,7 @@ import { hasTimes } from "../../../utils/hasTimes";
 import { CompareHeader } from "../CompareHeader";
 
 export type Part = "start" | "end";
-export type FileData = { id: number; url: string; framerate: number, allFrameTimes: number[] };
+export type FileData = { id: number; url: string; framerate: number; allFrameTimes: number[] };
 export type VideoData = {
   label: string | null;
   times: {
@@ -22,7 +22,7 @@ export function SideBySideEditor({ part }: { part: Part }) {
     setVideosData: Dispatch<SetStateAction<VideoData[]>>;
   }>();
   const [arePlaying, setArePlaying] = useState<boolean[]>(Array(filesData.length).fill(false));
-  const videosRef = useRef<HTMLVideoElement[]>(Array(filesData.length).fill(null));
+  const videosRef = useRef<(HTMLVideoElement | null)[]>(Array(filesData.length).fill(null));
   const [durations, setDurations] = useState<number[]>(Array(filesData.length).fill(1));
 
   const prevPage = part === "start" ? "/" : "/compare/start-frame";
@@ -62,8 +62,9 @@ export function SideBySideEditor({ part }: { part: Part }) {
         rightButtonIsDisabled={rightButtonIsDisabled}
         nextPage={nextPage}
       />
-      <section className="my-6 flex w-full flex-wrap justify-center gap-4 px-10 md:my-10">
-        {[...Array(filesData.length)].map((_, index) => (
+      {/* Video list */}
+      <section className="mt-6 flex w-full flex-wrap justify-center gap-4 px-10 md:mt-10">
+        {[...Array(filesData.length) as undefined[]].map((_, index) => (
           <ScrubbableVideo
             key={filesData[index].id}
             fileData={filesData[index]}
@@ -78,6 +79,28 @@ export function SideBySideEditor({ part }: { part: Part }) {
           />
         ))}
       </section>
+      {/* Collapse */}
+      <details className="collapse-arrow bg-base-200 border-base-300 collapse mt-2 mb-10 w-[calc(100%-5rem)] border-3">
+        <summary className="collapse-title text-main-text text-2xl">
+          {part === "start" ? <>New to making comparisons?</> : <>Any issues or feedback?</>}
+        </summary>
+        <p className="collapse-content bgp-diagonalStripes-base-300/15 text-lg pt-3">
+          {part === "start" ? (
+            <>
+              Check out{" "}
+              <Link to={"/read-me/comparison-tips"} className="link link-success">
+                Comparison Tips
+              </Link>{" "}
+              for some (hopefully) helpful advice.
+            </>
+          ) : (
+            <>
+              Tag <span className="text-info">@crashwy</span> in the Discord server linked on the bottom right of the
+              page and let me know. Your feedback is the best way for me to improve the site, so anything is appreciated! :)
+            </>
+          )}
+        </p>
+      </details>
     </main>
   );
 }
