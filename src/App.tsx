@@ -11,7 +11,8 @@ import { clear } from "idb-keyval";
 import { SomethingWentWrong } from "./pages/compare/SomethingWentWrong";
 import { ReadMe } from "./pages/read-me/ReadMe";
 import { ComparisonTips } from "./pages/read-me/ComparisonTips";
-import { NotesFromTheDev } from "./pages/read-me/NotesFromTheDev";
+import { TechnicalNotes } from "./pages/read-me/TechnicalNotes";
+import { Acknowledgements } from "./pages/read-me/Acknowledgements";
 
 const router = createBrowserRouter([
   {
@@ -55,8 +56,12 @@ const router = createBrowserRouter([
             element: <ComparisonTips></ComparisonTips>,
           },
           {
-            path: "notes-from-the-dev",
-            element: <NotesFromTheDev></NotesFromTheDev>,
+            path: "/read-me/technical-notes",
+            element: <TechnicalNotes></TechnicalNotes>,
+          },
+          {
+            path: "/read-me/acknowledgements",
+            element: <Acknowledgements></Acknowledgements>
           },
           {
             path: "*",

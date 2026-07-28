@@ -8,7 +8,7 @@ export function ReadMe() {
       <header className="bgp-zigZag-base-200/7 border-b-base-300 flex w-full flex-col items-center gap-3 p-10 text-center not-md:pb-15">
         <hgroup className="flex flex-col gap-3">
           <h1 className="text-main-text decoration-error text-5xl font-semibold underline">Read me!</h1>
-          <p className="text-2xl">Hey, you listened. Thanks, but this page isn't done yet.</p>
+          <p className="text-2xl">Hey, you listened.</p>
         </hgroup>
       </header>
       <section className="-mt-5 grid w-full grid-cols-[minmax(0,1fr)_clamp(0px,var(--container-xl),100%)_minmax(0,1fr)] gap-10 p-10 not-md:pt-0 xl:lg:grid-cols-[minmax(0,1fr)_clamp(0px,var(--container-3xl),100%)_minmax(0,1fr)]">
@@ -23,7 +23,7 @@ export function ReadMe() {
                   viewBox="0 0 24 24"
                   strokeWidth={2}
                   stroke="currentColor"
-                  className="inline size-6"
+                  className="inline size-6 -translate-y-0.5"
                 >
                   <path
                     strokeLinecap="round"
@@ -33,20 +33,20 @@ export function ReadMe() {
                 </svg>
               </span>
             }
-            content={<>Advice and common pitfalls that people fall into when trying to make comps.</>}
+            content={<>Some advice for making better comps.</>}
             destination="comparison-tips"
           ></ReadMeCard>
           <ReadMeCard
             title={
               <span>
-                Notes from the dev{" "}
+                Technical notes{" "}
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
                   strokeWidth={2}
                   stroke="currentColor"
-                  className="inline size-6"
+                  className="inline size-6 -translate-y-0.5"
                 >
                   <path
                     strokeLinecap="round"
@@ -56,8 +56,8 @@ export function ReadMe() {
                 </svg>
               </span>
             }
-            content={<>Some details about the current state of the site.</>}
-            destination="notes-from-the-dev"
+            content={<>Addressing some current issues with the site, and divulging some details about how it works.</>}
+            destination="technical-notes"
           ></ReadMeCard>
           <ReadMeCard
             title={
@@ -69,7 +69,7 @@ export function ReadMe() {
                   viewBox="0 0 24 24"
                   strokeWidth={1.5}
                   stroke="currentColor"
-                  className="inline size-6"
+                  className="inline size-6 -translate-y-0.5"
                 >
                   <path
                     strokeLinecap="round"
@@ -105,7 +105,7 @@ function ReadMeCard({ title, content, destination }: { title: ReactNode; content
   return (
     <li>
       <Link to={destination}
-        className="card card-md md:card-lg bg-base-200 border-base-300 bgp-ticTacToe-base-300/10 border-3"
+        className="card card-md md:card-lg bg-base-200 hover:bg-base-100 border-base-300 bgp-ticTacToe-base-300/10 border-3"
       >
         <div className="card-body">
           <h3 className="card-title text-main-text text-2xl wrap-anywhere md:text-3xl">{title}</h3>

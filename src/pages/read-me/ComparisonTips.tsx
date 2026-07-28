@@ -1,14 +1,24 @@
 import type { ReactNode } from "react";
-import { Article, ArticleHeader, ArticleGrid, ArticleP, ArticleH2, ArticleH3, FullBleed, ArticleBigP } from "./Article";
+import {
+  Article,
+  ArticleHeader,
+  ArticleGrid,
+  ArticleP,
+  ArticleH2,
+  ArticleH3,
+  FullBleed,
+  ArticleBigP,
+  ArticleInfo,
+} from "./Article";
 import { cn } from "../../utils/cn";
-import recordBestImage from "../../assets/pages/read_me/comparison_tips/examples/record/best.jpeg";
+import recordBestImage from "../../assets/pages/read_me/comparison_tips/examples/record/best.webp";
 import recordAvoidImage from "../../assets/pages/read_me/comparison_tips/examples/record/avoid.webp";
-import stateBestImage from "../../assets/pages/read_me/comparison_tips/examples/state/best.jpg";
-import stateOkImage from "../../assets/pages/read_me/comparison_tips/examples/state/ok.jpg";
-import stateAvoidImage from "../../assets/pages/read_me/comparison_tips/examples/state/avoid.jpg";
-import positionBestImage from "../../assets/pages/read_me/comparison_tips/examples/position/best.jpg";
-import positionOkImage from "../../assets/pages/read_me/comparison_tips/examples/position/ok.jpg";
-import positionAvoidImage from "../../assets/pages/read_me/comparison_tips/examples/position/avoid.jpg";
+import stateBestImage from "../../assets/pages/read_me/comparison_tips/examples/state/best.webp";
+import stateOkImage from "../../assets/pages/read_me/comparison_tips/examples/state/ok.webp";
+import stateAvoidImage from "../../assets/pages/read_me/comparison_tips/examples/state/avoid.webp";
+import positionBestImage from "../../assets/pages/read_me/comparison_tips/examples/position/best.webp";
+import positionOkImage from "../../assets/pages/read_me/comparison_tips/examples/position/ok.webp";
+import positionAvoidImage from "../../assets/pages/read_me/comparison_tips/examples/position/avoid.webp";
 
 export function ComparisonTips() {
   return (
@@ -39,6 +49,20 @@ export function ComparisonTips() {
             If you want to get a video from YouTube, the best way is simply to screen record the portion of the YT video
             that you would like to use. Uploading videos to the site directly from YouTube is not a planned feature.
           </ArticleP>
+          <ArticleInfo>
+            <p>
+              The reason why I don't plan to support YouTube directly is because it's impossible to export frames from a
+              YT video client-side. The workarounds to this are complicated and break often, so I think
+              it's easier to ask the user to bring their own videos.
+            </p>
+            <p>
+              If you make comparisons often, you'll probably want the{" "}
+              <a className="link link-success" href="https://www.youtube.com/playlist?list=PLL19dfwbx4VulmGUjjgX8PlBeWsg0diwu">
+                Current World Records
+              </a>{" "}
+              YouTube playlist on standby.
+            </p>
+          </ArticleInfo>
           <ArticleH3>Nintendo Switch 2</ArticleH3>
           <ArticleP>
             If you want a video from your Nintendo Switch 2, first make sure you have the Nintendo Switch app downloaded
@@ -89,12 +113,14 @@ export function ComparisonTips() {
           <ArticleH3>Vehicle position</ArticleH3>
           <ArticleP>
             Firstly, you have to account for the <i>position</i> of the vehicle, ensuring that all vehicles you're
-            comparing are equally progressed along the track.
+            comparing are equally progressed along the track. This doesn't necessarily mean they have to be in the{" "}
+            <i>exact</i> same spot (for example, some horizontal variation on straightaways is fine), but it's best to
+            be as close as possible.
           </ArticleP>
           <ArticleP>
             Best to use a visual cue near the vehicle, like a certain mark in the road, the edge of a ramp or boost
             panel, or a peg in a rail. Another good option is to tie the comparison point to a position-based event,
-            like the frame the vehicle touches a coin.
+            like the frame the vehicle touches a coin (although that won't work for ghosts).
           </ArticleP>
           <ArticleP>
             An acceptable but worse choice for visual cues are repeating patterns, like the grid on Rainbow Road or the
@@ -107,7 +133,7 @@ export function ComparisonTips() {
             fine, but for some reason, the in-game camera's FOV is not actually 100% consistent. This means relying on
             it entirely can be misleading, and you should prefer visual cues based on the position of the vehicle.
           </ArticleP>
-          <FullBleed className="bgp-deathStar-base-300/30">
+          <FullBleed className="bgp-signal-base-300/30">
             <Example src={positionBestImage} value="Best">
               Using a clear and distinct visual cue, like a coin.
             </Example>
@@ -115,8 +141,7 @@ export function ComparisonTips() {
               Using a repeating visual cue like a curb, as long as you ensure all clips are truly in the same spot.
             </Example>
             <Example src={positionAvoidImage} value="Avoid">
-              Just eyeballing it, or having to rely fully on the camera. For an example like this, you'll usually want
-              to start/end a comp before or after a glider, rather than during.
+              Just eyeballing it, or having to rely fully on the camera.
             </Example>
           </FullBleed>
           <ArticleH3>Vehicle state</ArticleH3>
@@ -125,8 +150,8 @@ export function ComparisonTips() {
             mini-turbo charge level, whether the vehicle is in a boost, and how much time is remaining in that boost.
           </ArticleP>
           <ArticleP>
-            Even if two vehicles are at the same position through the track, one of them might've started their drift at
-            a better angle and thus will be able to charge their mini-turbo earlier (or charge to a higher level), which
+            Even if two vehicles are at the same position through the track, one of them might've started their drift
+            earlier and thus will be able to charge their mini-turbo earlier (or charge to a higher level), which
             usually saves time. In such cases, wait until both vehicles have released their mini-turbo <i>and</i>{" "}
             finished the boost before ending the comparison.
           </ArticleP>
@@ -136,26 +161,41 @@ export function ComparisonTips() {
             where that second condition is difficult to verify, best to be safe and just wait until each boost has
             ended.
           </ArticleP>
-          <FullBleed className="bgp-charlieBrown-base-300/30">
+          <FullBleed className="bgp-aztec-base-300/30">
             <Example src={stateBestImage} value="Best">
-              Neither vehicle is in a boost or drift.
+              Neither vehicle being in a boost or drift.
             </Example>
             <Example src={stateOkImage} value="OK">
-              Both vehicles are in a boost, as long as you can verify both boosts have an equivalent amount of time
+              Both vehicles being in a boost, as long as you can verify both boosts have an equivalent amount of time
               remaining.
             </Example>
             <Example src={stateAvoidImage} value="Avoid">
-              Both vehicles are in a drift, but one has a greater mini-turbo charge than the other.
+              Both vehicles being in a drift, but one having a greater mini-turbo charge than the other.
             </Example>
           </FullBleed>
           <ArticleH3>Cutting unnecessary gameplay</ArticleH3>
           <ArticleP>
             You should only extend a comp past its main gameplay (the parts of the clips that are intentionally
-            different) if it's necessary to get a quality comparison point. Otherwise, prefer keeping comps as short as
-            possible to minimize unwanted variance. In other words, try to <i>start</i> your comparison at the{" "}
+            different) as far as <i>necessary</i> to get a quality comparison point. Otherwise, prefer keeping comps as
+            short as possible to minimize variance. In other words, try to <i>start</i> your comparison at the{" "}
             <i>last</i> good starting point, and <i>end</i> it at the <i>first</i> good ending point.
           </ArticleP>
-          <ArticleBigP className="my-10">
+          <ArticleH2>Interpreting your results</ArticleH2>
+          <ArticleP>
+            It's important to remember that a single comp isn't the end-all-be-all. Because even if the comparison
+            itself is perfectly made, it's still likely for the gameplay <i>within</i> to be flawed. Even world record
+            runs often contain mistakes and strats done sub-optimally.
+          </ArticleP>
+          <ArticleP>
+            Also, a small amount of imprecision is always going to be introduced by screen recorders, and video
+            compression on sites like YouTube and Discord. The final timer should still generally be quite accurate to
+            the footage, but if the difference is only a frame or so, you should probably treat it as a wash.
+          </ArticleP>
+          <ArticleP>
+            With all of that said, a well-made comp can still be a great jumping-off point to figure out if a strat is
+            worth further pursuing (that's why I made this site!).
+          </ArticleP>
+          <ArticleBigP>
             That's all for now, but if you think I missed anything, please let me know. Happy comparing :)
           </ArticleBigP>
         </ArticleGrid>
