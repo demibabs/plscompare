@@ -12,6 +12,7 @@ export function VideoWithProgressBar({ ...props }) {
     }
   }
 
+  // Progress bar updating loop
   useEffect(() => {
     const vRefCurrent = videoRef.current;
     if (vRefCurrent) {
@@ -26,6 +27,7 @@ export function VideoWithProgressBar({ ...props }) {
 
   return (
     <div className="flex w-full flex-col items-center gap-3">
+      {/* Video */}
       <figure className="bg-base-200 border-base-300 skeleton rounded-box overflow-hidden flex aspect-video w-full items-center justify-center border-3">
         <video
           className="size-full object-cover"
@@ -37,6 +39,7 @@ export function VideoWithProgressBar({ ...props }) {
           {...props}
         ></video>
       </figure>
+      {/* Progress bar */}
       <progress ref={progressBarRef} className="progress progress-primary w-[calc(100%-2rem)]"></progress>
     </div>
   );

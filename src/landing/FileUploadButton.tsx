@@ -41,6 +41,7 @@ export function FileUploadButton() {
       return;
     }
     const framesData = await Promise.all(newFiles.map(async (f) => await getFrameData(f)));
+    // Put data into { file, frameData } form
     const returnedData = newFiles.map((nF, index) => ({ file: nF, frameData: framesData[index] }));
     await update("user-files", (uFiles: { file: File; frameData: FrameData }[] | undefined) => {
       if (uFiles) {

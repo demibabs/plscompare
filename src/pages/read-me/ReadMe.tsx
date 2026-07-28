@@ -7,7 +7,7 @@ export function ReadMe() {
     <main className="flex w-full flex-col items-center">
       <header className="bgp-zigZag-base-200/7 border-b-base-300 flex w-full flex-col items-center gap-3 p-10 text-center not-md:pb-15">
         <hgroup className="flex flex-col gap-3">
-          <h1 className="text-main-text decoration-error text-5xl font-semibold underline">Read me!</h1>
+          <h1 className="text-main-text decoration-error text-3xl md:text-4xl lg:text-5xl font-semibold underline">Read me!</h1>
           <p className="text-2xl">Hey, you listened.</p>
         </hgroup>
       </header>

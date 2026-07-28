@@ -14,7 +14,8 @@ import { DiscordIcon } from "../utils/DiscordIcon";
 
 export function Landing() {
   return (
-    <>
+    <main className="w-full">
+    {/* Hero */}
       <header className="flex w-full flex-col items-center">
         <div className="bgp-polkaDots-base-100/10 w-full">
           <h1 className="text-main-text mx-auto mt-10 mb-15 w-full max-w-5xl px-10 text-center text-3xl md:text-4xl lg:px-20 lg:text-5xl">
@@ -77,7 +78,9 @@ export function Landing() {
           </div>
         </section>
       </header>
+      {/* Tutorial */}
       <StepsShowcase></StepsShowcase>
+      {/* Layouts showcase */}
       <section className="border-base-300 flex w-full flex-col items-center">
         <div className="lg:bgp-polkaDots-base-100/10 not-lg:bgp-polkaDots-base-100/5 flex w-full justify-center pt-7 pb-20 not-lg:bg-size-[0.75rem_auto]">
           <p className="text text-main-text mx-10 mt-3 text-center text-2xl md:text-3xl">
@@ -137,6 +140,7 @@ export function Landing() {
         </div>
         <div className="bgp-fourPointStars-base-100/15 -mt-10 h-20 md:h-25 w-full bg-size-[0.75rem_auto] lg:bg-size-[1rem_auto]"></div>
       </section>
+      {/* Feature cards */}
       <section className="bg-base-200 border-base-300 w-full grid-cols-3 grid-rows-2 flex-col gap-3 border-y-3 border-dashed px-5 py-10 not-md:gap-4 not-lg:flex md:px-10 lg:grid lg:px-20">
         <div className="card not-md:card-md card-lg bg-base-100 border-base-300 col-span-1 col-start-1 row-span-1 row-start-1 border-3">
           <div className="card-body">
@@ -231,6 +235,7 @@ export function Landing() {
         </div>
         <div className="card card-lg bgp-diagonalStripes-[#261b25]/50 border-base-300/50 col-span-1 col-start-3 row-span-1 row-start-2 border-3 bg-size-[1.5rem_auto] not-lg:hidden"></div>
       </section>
+      {/* "Scroll to top" button section */}
       <section className="bg-base-100 bgp-randomShapes-base-100/5 flex w-full justify-center px-10 py-3 md:py-5">
         <div className="flex w-fit max-w-full text-2xl">
           <button
@@ -253,6 +258,6 @@ export function Landing() {
           </button>
         </div>
       </section>
-    </>
+    </main>
   );
 }

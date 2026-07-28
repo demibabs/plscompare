@@ -5,10 +5,11 @@ import { renderFrame, type Dimensions, type Layout } from "./renderFrame";
 import { formatSecondsToSSMS } from "../../../../utils/formatSecondsToSSMS";
 import { useVideoExport } from "./useVideoExport";
 import { hasTimes } from "../../../../utils/hasTimes";
-import { clear, set } from "idb-keyval";
+import { clear } from "idb-keyval";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { getCanvasDimensions } from "../../../../utils/getCanvasDimensions";
 import posthog from "../../../../posthog";
+import { useLatest } from "../../../../utils/useLatest";
 
 export type Options = {
   layout: Layout;
@@ -24,6 +25,7 @@ export function PreviewVideo() {
     options: Options;
     setOptions: Dispatch<SetStateAction<Options>>;
   }>();
+  // Idk what even happened here ngl
   const videosRef = useRef<HTMLVideoElement[]>(Array(filesData.length).fill(null));
   const [isPlaying, setIsPlaying] = useState(false);
   const [canPlay, setCanPlay] = useState(false);
@@ -31,7 +33,7 @@ export function PreviewVideo() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const request = useRef<number>(0);
   const requests = useRef<number[]>(Array(videosData.length).fill(undefined));
-  const mediaTimes = useRef<number[]>(videosData.map((vData) => vData.times.start as number));
+  const mediaTimes = useRef<number[]>(videosData.map((vData) => vData.times.start ?? 0));
   const timerStartTimes = useRef<number[]>(Array(videosData.length).fill(-1));
   const longestVideoIndex = useRef(-1);
   const { startExport, progress, error, cancelExport } = useVideoExport();
@@ -40,34 +42,35 @@ export function PreviewVideo() {
   const [optionsModal, setOptionsModal] = useState(false);
   const optionsModalRef = useRef<HTMLDialogElement>(null);
   const navigate = useNavigate();
-  const optionsForLoop = useRef<Options>(options);
+  const optionsLatest = useLatest<Options>(options);
 
   const canvasDimensions = getCanvasDimensions(options.layout, filesData.length);
 
-  useEffect(() => {
-    optionsForLoop.current = options;
-  }, [options]);
-
+  // Video callback loop (each video has its own)
   function watchVideo(vElement: HTMLVideoElement, index: number) {
     vElement.requestVideoFrameCallback((_, metadata) => {
       mediaTimes.current[index] = metadata.mediaTime;
-      if (metadata.mediaTime >= (videosData[index].times.end as number) - 1 / filesData[index].framerate) {
-        vElement.pause();
-        vElement.currentTime = (videosData[index].times.end as number) + 0.005;
-        mediaTimes.current[index] = videosData[index].times.end as number;
-        timerStartTimes.current[index] = videosData[index].times.end as number;
-
+      if (videosData[index].times.end) {
+        // If video is past its end time, pause it and then clamp time to end time
+        if (metadata.mediaTime >= videosData[index].times.end - 1 / filesData[index].framerate) {
+          vElement.pause();
+          vElement.currentTime = videosData[index].times.end + 0.005;
+          mediaTimes.current[index] = videosData[index].times.end;
+          timerStartTimes.current[index] = videosData[index].times.end;
+        }
         if (videosRef.current.every((vElement) => vElement.paused)) {
           if (isPlaying) setIsPlaying(false);
+          // End loops if all vids have stopped
+          return;
         }
-        return;
       }
       watchVideo(vElement, index);
     });
   }
 
+  // Loop for rendering composited preview video
   function renderVideo() {
-    if (videosRef.current && canvasRef.current && videosData.every((vData) => hasTimes(vData))) {
+    if (canvasRef.current && videosData.every((vData) => hasTimes(vData))) {
       const ctx = canvasRef.current.getContext("2d");
       if (ctx) {
         const sourcesDimensions: Dimensions[] = videosRef.current.map((vElement) => ({
@@ -83,7 +86,7 @@ export function PreviewVideo() {
             (videosData[index].times.end - videosData[index].times.start);
           return formatSecondsToSSMS(timerTime);
         });
-        renderFrame(ctx, optionsForLoop.current.layout, videosRef.current, sourcesDimensions, labelsText, timersText);
+        renderFrame(ctx, optionsLatest.current.layout, videosRef.current, sourcesDimensions, labelsText, timersText);
       }
     }
     requestAnimationFrame(renderVideo);
@@ -100,22 +103,23 @@ export function PreviewVideo() {
       }));
       posthog.capture("export_started", {
         file_count: filesData.length,
-        layout: optionsForLoop.current.layout,
+        layout: optionsLatest.current.layout,
         freeze_frame_time: freezeFrameTime,
       });
       startExport({
         videos,
         fileName: fileName || "plscompare",
         freezeFrameTime,
-        layout: optionsForLoop.current.layout,
+        layout: optionsLatest.current.layout,
       });
     }
     if (exportModalRef.current) {
-      exportModalRef.current?.showModal();
+      exportModalRef.current.showModal();
       setExportModal(true);
     }
   }
 
+  // Synchronize modal states (will prob remove these states, they don't do anything)
   useEffect(() => {
     if (exportModalRef.current) {
       if (exportModal) {
@@ -138,6 +142,7 @@ export function PreviewVideo() {
   }, [optionsModal]);
 
   useEffect(() => {
+    // Handle pausing and resuming watchVideo loops
     const videos = videosRef.current;
     if (isPlaying) {
       videos.forEach((vElement, index) => {
@@ -145,6 +150,8 @@ export function PreviewVideo() {
           watchVideo(vElement, index);
         });
       });
+      // Handle synchronizing isPlaying with actual video playback
+      // Only play videos that havent reached their end time (unless all of them have reached their end time)
       if (videosRef.current.every((vElement) => vElement.ended)) {
         videosRef.current.forEach((vElement) => void vElement.play());
       } else {
@@ -171,6 +178,7 @@ export function PreviewVideo() {
     };
   }, [isPlaying]);
 
+  // Handle animation loop that draws onto canvas
   useEffect(() => {
     request.current = requestAnimationFrame(renderVideo);
     return () => {
@@ -181,6 +189,7 @@ export function PreviewVideo() {
   return (
     videosData.every((vData) => hasTimes(vData)) && (
       <div className="flex grow flex-col items-center px-10 py-5">
+        {/* File name input */}
         <label className="input input-ghost bg-base-200 border-base-300 mb-5 border-3 text-lg">
           <input
             placeholder="File name?"
@@ -191,13 +200,15 @@ export function PreviewVideo() {
           ></input>
           <span className="label bg-base-100 rounded-r-field h-full">.mp4</span>
         </label>
+        {/* Preview canvas */}
         <canvas
           ref={canvasRef}
           className="skeleton border-base-300 rounded-box h-auto max-h-90 max-w-full border-3"
           width={canvasDimensions.width}
           height={canvasDimensions.height}
         ></canvas>{" "}
-        {[...Array(videosData.length)].map((_, index) => (
+        {/* Hidden videos that get compoisited onto canvas */}
+        {[...(Array(videosData.length) as undefined[])].map((_, index) => (
           <video
             playsInline
             muted
@@ -230,6 +241,7 @@ export function PreviewVideo() {
           />
         ))}
         <div className="my-2 flex flex-col items-center justify-center gap-2">
+          {/* Pause button */}
           <button
             onClick={() => {
               if (isPlaying) setIsPlaying(false);
@@ -281,7 +293,9 @@ export function PreviewVideo() {
               </svg>
             )}
           </button>
+          {/* Second button row */}
           <div className="card-actions items-center justify-center">
+            {/* Options button */}
             <button
               className="btn btn-primary border-base-300 btn-lg border-3"
               onClick={() => {
@@ -291,6 +305,7 @@ export function PreviewVideo() {
             >
               Options
             </button>
+            {/* Options modal */}
             <dialog
               ref={optionsModalRef}
               className="modal"
@@ -386,9 +401,11 @@ export function PreviewVideo() {
                 <button></button>
               </form>
             </dialog>
+            {/* Export button */}
             <button className="btn btn-lg btn-warning border-base-300 border-3" onClick={handleExport}>
               Export
             </button>
+            {/* Export modal */}
             <dialog
               ref={exportModalRef}
               className="modal"

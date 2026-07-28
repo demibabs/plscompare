@@ -68,8 +68,9 @@ export function StepsShowcase() {
         </b>{" "}
         to quickly compare any clips.
       </h2>
-      {/* Card */}
+      {/* Card wrapper */}
       <div className="relative mx-auto my-10 size-fit max-w-full">
+        {/* Step number badge for mobile */}
         <div
           className={cn(
             "badge badge-xl border-base-300 absolute top-0 left-0 z-11 -translate-x-1/8 -translate-y-1/4 border-3 md:hidden",
@@ -80,12 +81,14 @@ export function StepsShowcase() {
         >
           <b>Step {currentStep}</b>
         </div>
+        {/* Card */}
         <div
           onClick={() => {
             setCurrentStep(nextStep());
           }}
           className="card lg:card-side card-xl bg-base-300 border-neutral h-fit w-2xl max-w-full overflow-hidden border-3 lg:h-120 lg:w-6xl"
         >
+          {/* Card body */}
           <div
             className={cn(
               "card-body order-2 not-md:py-5 lg:order-1 lg:min-h-full lg:w-lg",
@@ -98,6 +101,7 @@ export function StepsShowcase() {
             <p className="flex items-center pb-3 lg:mr-8">{stepsInfo[currentStep].body}</p>
             <div className="card-actions join gap-1 md:gap-2">{stepButtons}</div>
           </div>
+          {/* Image */}
           <figure className="bg-base-100 order-1 flex aspect-3/4 w-full items-center justify-center p-5 not-lg:rounded-b-none md:aspect-video lg:order-2 lg:min-h-full">
             <picture className="flex size-full items-center justify-center">
               <source media="(min-width: 48rem)" srcSet={images.wide[currentStep]} />
@@ -114,6 +118,7 @@ export function StepsShowcase() {
   );
 }
 
+// Button element
 function StepButton({
   step,
   currentStep,

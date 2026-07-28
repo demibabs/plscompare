@@ -6,6 +6,7 @@ import {
   type Dispatch,
   type RefObject,
   type SetStateAction,
+  type SyntheticEvent,
 } from "react";
 import { cn } from "../../../utils/cn";
 import type { FileData, Part, VideoData } from "./SideBySideEditor";
@@ -27,7 +28,7 @@ export function ScrubbableVideo({
   fileData: FileData;
   videosData: VideoData[];
   setVideosData: Dispatch<SetStateAction<VideoData[]>>;
-  videosRef: RefObject<HTMLVideoElement[] | null>;
+  videosRef: RefObject<(HTMLVideoElement | null)[]>;
   arePlaying: boolean[];
   setArePlaying: Dispatch<SetStateAction<boolean[]>>;
   durations: number[];
@@ -44,12 +45,14 @@ export function ScrubbableVideo({
   const scrubberRef = useRef<HTMLInputElement>(null);
 
   const startTime = videosData[id]?.times.start ?? null;
+  // Progress for marker that shows where starting time is
   const markerProgress =
     hasLoadedMetadata && startTime !== null && durations[id] && part === "end"
       ? (startTime * 100) / durations[id]
       : null;
 
-  function handleTimeUpdate(e: React.SyntheticEvent<HTMLVideoElement, Event>) {
+  // Make sure end time doesnt go to before start time
+  function handleTimeUpdate(e: SyntheticEvent<HTMLVideoElement>) {
     const currentTime = e.currentTarget.currentTime;
     if (part === "end" && startTime !== null && currentTime < startTime) {
       e.currentTarget.currentTime = startTime + 0.005;
@@ -59,8 +62,9 @@ export function ScrubbableVideo({
   const handleScrubberChange = (e: ChangeEvent<HTMLInputElement>) => {
     const scrubberTime = parseFloat(e.target.value);
     const snappedTime = getNearestFrameTime(scrubberTime, allFrameTimes);
-    const newTime = part === "start" ? snappedTime : Math.max(snappedTime, startTime || 0);
-    if (videosRef.current?.[id]) {
+    // Make sure end time doesn't go before start time
+    const newTime = part === "start" ? snappedTime : Math.max(snappedTime, startTime ?? 0);
+    if (videosRef.current[id]) {
       videosRef.current[id].currentTime = newTime + 0.005;
     }
     setVideosData((vsData) =>
@@ -79,9 +83,9 @@ export function ScrubbableVideo({
     setVideosData((vsData) => vsData.with(id, { ...vsData[id], label }));
   }
 
+  // Set every time to either start time, or saved time
   function handleLoadedMetadata() {
     setHasLoadedMetadata(true);
-    if (!videosRef.current) return;
     if (videosRef.current[id]) {
       const duration = videosRef.current[id].duration;
       setDurations((durs) => durs.with(id, duration));
@@ -108,13 +112,14 @@ export function ScrubbableVideo({
         }),
       );
     }
-    if (videosRef.current?.[id]) {
+    if (videosRef.current[id]) {
       videosRef.current[id].requestVideoFrameCallback(getMediaTime);
     }
   }
 
+  // Start video callback loop
   useEffect(() => {
-    const vElement = videosRef.current?.[id];
+    const vElement = videosRef.current[id];
     if (!vElement) return;
     const request = vElement.requestVideoFrameCallback(getMediaTime);
     return () => {
@@ -122,26 +127,27 @@ export function ScrubbableVideo({
     };
   }, [id, videosRef]);
 
+  // Synchronize state with whether video is playing
   useEffect(() => {
     if (arePlaying[id])
-      videosRef.current?.[id]?.play().catch(() => {
+      videosRef.current[id]?.play().catch(() => {
         setArePlaying((aP) => aP.with(id, false));
       });
-    else videosRef.current?.[id]?.pause();
+    else videosRef.current[id]?.pause();
   }, [arePlaying, id, videosRef, setArePlaying]);
 
+  // Handle pausing and unpausing of videos during drag
   useEffect(() => {
     if (isDragging) {
-      videosRef.current?.[id]?.pause();
+      videosRef.current[id]?.pause();
     }
     if (!isDragging && wasPlaying.current)
-      videosRef.current?.[id]?.play().catch(() => {
-        setArePlaying((aP) => aP.with(id, false));
-      });
+      void videosRef.current[id]?.play();
   }, [isDragging, id, videosRef, setArePlaying]);
 
+  // Handle pressing of scrub buttons
   function scrub(numSeconds: number) {
-    if (!videosRef.current?.[id] || allFrameTimes.length === 0) return;
+    if (!videosRef.current[id] || allFrameTimes.length === 0) return;
 
     const exactCurrentTime = videosData[id].times[part] ?? videosRef.current[id].currentTime;
 
@@ -181,6 +187,7 @@ export function ScrubbableVideo({
 
   return (
     <div className="flex max-w-xl grow basis-md flex-col items-center mb-5">
+      {/* Label input */}
       <input
         type="text"
         className="input input-ghost bg-base-200 border-base-300 border-3 text-lg"
@@ -188,6 +195,7 @@ export function ScrubbableVideo({
         onChange={handleInputChange}
         value={videosData[id].label ?? undefined}
       />
+      {/* Video box */}
       <div className="skeleton indicator rounded-box bg-base-200 mt-7 mb-5 flex w-full items-center justify-center">
         {isLoading && <div className="indicator-item indicator-center indicator-middle loading size-12" />}
         <video
@@ -222,11 +230,12 @@ export function ScrubbableVideo({
           }}
           onTimeUpdate={handleTimeUpdate}
           ref={(e) => {
-            if (e && videosRef.current) videosRef.current[id] = e;
+            if (e) videosRef.current[id] = e;
           }}
           src={url}
           className="border-base-300 rounded-box size-full border-3 object-contain md:aspect-video"
         ></video>
+        {/* Video timer */}
         <span
           className={cn(
             "indicator-item indicator-center badge border-base-300 badge-xl border-3",
@@ -237,7 +246,9 @@ export function ScrubbableVideo({
           <b>{formatSecondsToSSMS(videosData[id].times[part] ?? 0)}</b>
         </span>
       </div>
+      {/* Scrubber wrapper */}
       <div className="relative flex w-[calc(100%-1rem)] items-center" style={{ "--marker-progress": markerProgress }}>
+        {/* Scrubber */}
         <input
           ref={scrubberRef}
           type="range"
@@ -267,6 +278,7 @@ export function ScrubbableVideo({
           <div className="bg-main-text mask mask-triangle-2 pointer-events-none absolute top-0 left-[calc(var(--marker-progress)*1%+(0.5-var(--marker-progress)/100)*1rem)] size-2.5 -translate-x-1/2 -translate-y-[calc(100%+0.3rem)]"></div>
         )}
       </div>
+      {/* Button list */}
       <menu className="join @container flex w-[calc(100%-2rem)] justify-center gap-1">
         <li className={liClassName}>
           <button
