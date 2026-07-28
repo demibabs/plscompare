@@ -45,6 +45,9 @@ export function ScrubbableVideo({
   const scrubberRef = useRef<HTMLInputElement>(null);
 
   const startTime = videosData[id]?.times.start ?? null;
+  if (part === "start" && videosData[id] && startTime === null) {
+    videosData[id].times.start = 0;
+  }
   // Progress for marker that shows where starting time is
   const markerProgress =
     hasLoadedMetadata && startTime !== null && durations[id] && part === "end"
@@ -141,8 +144,7 @@ export function ScrubbableVideo({
     if (isDragging) {
       videosRef.current[id]?.pause();
     }
-    if (!isDragging && wasPlaying.current)
-      void videosRef.current[id]?.play();
+    if (!isDragging && wasPlaying.current) void videosRef.current[id]?.play();
   }, [isDragging, id, videosRef, setArePlaying]);
 
   // Handle pressing of scrub buttons
@@ -186,197 +188,200 @@ export function ScrubbableVideo({
   const liClassName = "flex grow";
 
   return (
-    <div className="flex max-w-xl grow basis-md flex-col items-center mb-5">
-      {/* Label input */}
-      <input
-        type="text"
-        className="input input-ghost bg-base-200 border-base-300 border-3 text-lg"
-        placeholder="Label?"
-        onChange={handleInputChange}
-        value={videosData[id].label ?? undefined}
-      />
-      {/* Video box */}
-      <div className="skeleton indicator rounded-box bg-base-200 mt-7 mb-5 flex w-full items-center justify-center">
-        {isLoading && <div className="indicator-item indicator-center indicator-middle loading size-12" />}
-        <video
-          onPause={(e) => {
-            setArePlaying((aP) => aP.with(id, false));
-            if (allFrameTimes.length > 0) {
-              const exactTime = getNearestFrameTime(e.currentTarget.currentTime, allFrameTimes);
-              e.currentTarget.currentTime = exactTime + 0.005;
-              setVideosData((vsData) =>
-                vsData.with(id, {
-                  ...vsData[id],
-                  times: {
-                    ...vsData[id].times,
-                    [part]: exactTime,
-                  },
-                }),
-              );
-            }
-          }}
-          onPlay={() => {
-            setArePlaying((aP) => aP.with(id, true));
-          }}
-          preload="auto"
-          playsInline
-          muted
-          onLoadedMetadata={handleLoadedMetadata}
-          onEnded={() => {
-            setArePlaying((aP) => aP.with(id, false));
-          }}
-          onCanPlay={() => {
-            setIsLoading(false);
-          }}
-          onTimeUpdate={handleTimeUpdate}
-          ref={(e) => {
-            if (e) videosRef.current[id] = e;
-          }}
-          src={url}
-          className="border-base-300 rounded-box size-full border-3 object-contain md:aspect-video"
-        ></video>
-        {/* Video timer */}
-        <span
-          className={cn(
-            "indicator-item indicator-center badge border-base-300 badge-xl border-3",
-            { "badge-success": part === "end" },
-            { "badge-primary": part === "start" },
-          )}
-        >
-          <b>{formatSecondsToSSMS(videosData[id].times[part] ?? 0)}</b>
-        </span>
-      </div>
-      {/* Scrubber wrapper */}
-      <div className="relative flex w-[calc(100%-1rem)] items-center" style={{ "--marker-progress": markerProgress }}>
-        {/* Scrubber */}
+    <>
+      <title>Select {part}ing frames | plscompare</title>
+      <div className="mb-5 flex max-w-xl grow basis-md flex-col items-center">
+        {/* Label input */}
         <input
-          ref={scrubberRef}
-          type="range"
-          className="range range-xs w-full"
-          min={0}
-          max={durations[id] || 1}
-          value={Math.max(videosData[id].times[part] || 0, videosData[id].times.start || 0)}
-          step={"any"}
-          onChange={handleScrubberChange}
-          disabled={isLoading}
-          onMouseDown={() => {
-            setIsDragging(true);
-            wasPlaying.current = arePlaying[id];
-          }}
-          onMouseUp={() => {
-            setIsDragging(false);
-          }}
-          onTouchStart={() => {
-            setIsDragging(true);
-            wasPlaying.current = arePlaying[id];
-          }}
-          onTouchEnd={() => {
-            setIsDragging(false);
-          }}
-        ></input>
-        {markerProgress !== null && (
-          <div className="bg-main-text mask mask-triangle-2 pointer-events-none absolute top-0 left-[calc(var(--marker-progress)*1%+(0.5-var(--marker-progress)/100)*1rem)] size-2.5 -translate-x-1/2 -translate-y-[calc(100%+0.3rem)]"></div>
-        )}
-      </div>
-      {/* Button list */}
-      <menu className="join @container flex w-[calc(100%-2rem)] justify-center gap-1">
-        <li className={liClassName}>
-          <button
-            onClick={() => {
-              scrub(-1);
+          type="text"
+          className="input input-ghost bg-base-200 border-base-300 border-3 text-lg"
+          placeholder="Label?"
+          onChange={handleInputChange}
+          value={videosData[id].label ?? undefined}
+        />
+        {/* Video box */}
+        <div className="skeleton indicator rounded-box bg-base-200 mt-7 mb-5 flex w-full items-center justify-center">
+          {isLoading && <div className="indicator-item indicator-center indicator-middle loading size-12" />}
+          <video
+            onPause={(e) => {
+              setArePlaying((aP) => aP.with(id, false));
+              if (allFrameTimes.length > 0) {
+                const exactTime = getNearestFrameTime(e.currentTarget.currentTime, allFrameTimes);
+                e.currentTarget.currentTime = exactTime + 0.005;
+                setVideosData((vsData) =>
+                  vsData.with(id, {
+                    ...vsData[id],
+                    times: {
+                      ...vsData[id].times,
+                      [part]: exactTime,
+                    },
+                  }),
+                );
+              }
             }}
-            className={cn(menuLiButtonClassName, "btn-success border-success")}
-          >
-            -1s
-          </button>
-        </li>
-        <li className={liClassName}>
-          <button
-            onClick={() => {
-              scrub(-0.1);
+            onPlay={() => {
+              setArePlaying((aP) => aP.with(id, true));
             }}
-            className={cn(menuLiButtonClassName, "btn-warning border-warning")}
-          >
-            -0.1s
-          </button>
-        </li>
-        <li className={liClassName}>
-          <button
-            onClick={() => {
-              scrub(-1 / framerate);
+            preload="auto"
+            playsInline
+            muted
+            onLoadedMetadata={handleLoadedMetadata}
+            onEnded={() => {
+              setArePlaying((aP) => aP.with(id, false));
             }}
-            className={cn(menuLiButtonClassName, "btn-primary border-primary")}
-          >
-            -1f
-          </button>
-        </li>
-        <li className={liClassName}>
-          <button
-            onClick={() => {
-              setArePlaying((aP) => aP.with(id, !aP[id]));
+            onCanPlay={() => {
+              setIsLoading(false);
             }}
-            className={cn(menuLiButtonClassName, "btn-error border-error")}
-          >
-            {arePlaying[id] ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2.5}
-                stroke="currentColor"
-                className="size-6"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
-              </svg>
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2.5}
-                stroke="currentColor"
-                className="size-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
-                />
-              </svg>
+            onTimeUpdate={handleTimeUpdate}
+            ref={(e) => {
+              if (e) videosRef.current[id] = e;
+            }}
+            src={url}
+            className="border-base-300 rounded-box size-full border-3 object-contain md:aspect-video"
+          ></video>
+          {/* Video timer */}
+          <span
+            className={cn(
+              "indicator-item indicator-center badge border-base-300 badge-xl border-3",
+              { "badge-success": part === "end" },
+              { "badge-primary": part === "start" },
             )}
-          </button>
-        </li>
-        <li className={liClassName}>
-          <button
-            onClick={() => {
-              scrub(1 / framerate);
-            }}
-            className={cn(menuLiButtonClassName, "btn-primary border-primary")}
           >
-            +1f
-          </button>
-        </li>
-        <li className={liClassName}>
-          <button
-            onClick={() => {
-              scrub(0.1);
+            <b>{formatSecondsToSSMS(videosData[id].times[part] ?? 0)}</b>
+          </span>
+        </div>
+        {/* Scrubber wrapper */}
+        <div className="relative flex w-[calc(100%-1rem)] items-center" style={{ "--marker-progress": markerProgress }}>
+          {/* Scrubber */}
+          <input
+            ref={scrubberRef}
+            type="range"
+            className="range range-xs w-full"
+            min={0}
+            max={durations[id] || 1}
+            value={Math.max(videosData[id].times[part] || 0, videosData[id].times.start || 0)}
+            step={"any"}
+            onChange={handleScrubberChange}
+            disabled={isLoading}
+            onMouseDown={() => {
+              setIsDragging(true);
+              wasPlaying.current = arePlaying[id];
             }}
-            className={cn(menuLiButtonClassName, "btn-warning border-warning")}
-          >
-            +0.1s
-          </button>
-        </li>
-        <li className={liClassName}>
-          <button
-            onClick={() => {
-              scrub(1);
+            onMouseUp={() => {
+              setIsDragging(false);
             }}
-            className={cn(menuLiButtonClassName, "btn-success border-success")}
-          >
-            +1s
-          </button>
-        </li>
-      </menu>
-    </div>
+            onTouchStart={() => {
+              setIsDragging(true);
+              wasPlaying.current = arePlaying[id];
+            }}
+            onTouchEnd={() => {
+              setIsDragging(false);
+            }}
+          ></input>
+          {markerProgress !== null && (
+            <div className="bg-main-text mask mask-triangle-2 pointer-events-none absolute top-0 left-[calc(var(--marker-progress)*1%+(0.5-var(--marker-progress)/100)*1rem)] size-2.5 -translate-x-1/2 -translate-y-[calc(100%+0.3rem)]"></div>
+          )}
+        </div>
+        {/* Button list */}
+        <menu className="join @container flex w-[calc(100%-2rem)] justify-center gap-1">
+          <li className={liClassName}>
+            <button
+              onClick={() => {
+                scrub(-1);
+              }}
+              className={cn(menuLiButtonClassName, "btn-success border-success")}
+            >
+              -1s
+            </button>
+          </li>
+          <li className={liClassName}>
+            <button
+              onClick={() => {
+                scrub(-0.1);
+              }}
+              className={cn(menuLiButtonClassName, "btn-warning border-warning")}
+            >
+              -0.1s
+            </button>
+          </li>
+          <li className={liClassName}>
+            <button
+              onClick={() => {
+                scrub(-1 / framerate);
+              }}
+              className={cn(menuLiButtonClassName, "btn-primary border-primary")}
+            >
+              -1f
+            </button>
+          </li>
+          <li className={liClassName}>
+            <button
+              onClick={() => {
+                setArePlaying((aP) => aP.with(id, !aP[id]));
+              }}
+              className={cn(menuLiButtonClassName, "btn-error border-error")}
+            >
+              {arePlaying[id] ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2.5}
+                  stroke="currentColor"
+                  className="size-6"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2.5}
+                  stroke="currentColor"
+                  className="size-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
+                  />
+                </svg>
+              )}
+            </button>
+          </li>
+          <li className={liClassName}>
+            <button
+              onClick={() => {
+                scrub(1 / framerate);
+              }}
+              className={cn(menuLiButtonClassName, "btn-primary border-primary")}
+            >
+              +1f
+            </button>
+          </li>
+          <li className={liClassName}>
+            <button
+              onClick={() => {
+                scrub(0.1);
+              }}
+              className={cn(menuLiButtonClassName, "btn-warning border-warning")}
+            >
+              +0.1s
+            </button>
+          </li>
+          <li className={liClassName}>
+            <button
+              onClick={() => {
+                scrub(1);
+              }}
+              className={cn(menuLiButtonClassName, "btn-success border-success")}
+            >
+              +1s
+            </button>
+          </li>
+        </menu>
+      </div>
+    </>
   );
 }

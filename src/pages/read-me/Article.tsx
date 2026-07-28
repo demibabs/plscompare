@@ -3,14 +3,20 @@ import { cn } from "../../utils/cn";
 import { useNavigate } from "react-router-dom";
 
 export function ArticleP({ children, className }: { children: ReactNode; className?: string }) {
-  return <p className={cn("text-base-content col-span-1 col-start-2 mb-3 px-10 text-lg md:text-xl", className)}>{children}</p>;
+  return (
+    <p className={cn("text-base-content col-span-1 col-start-2 mb-3 px-10 text-lg md:text-xl", className)}>
+      {children}
+    </p>
+  );
 }
 export function ArticleBigP({ children, className }: { children: ReactNode; className?: string }) {
-  return <p className={cn("text-warning col-span-1 col-start-2 mb-5 px-10 text-xl md:text-2xl", className)}>{children}</p>;
-}
-export function ArticleInfo({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <aside className="rounded-box indicator bg-info/10 text-info col-span-1 col-start-2 mx-auto mt-5 mb-8 flex w-[calc(100%-5rem)] flex-col gap-2 border-3 border-white/10 p-3 text-md md:text-lg">
+    <p className={cn("text-warning col-span-1 col-start-2 mb-5 px-10 text-xl md:text-2xl", className)}>{children}</p>
+  );
+}
+export function ArticleInfo({ children }: { children: ReactNode }) {
+  return (
+    <aside className="rounded-box indicator bg-info/10 text-info text-md col-span-1 col-start-2 mx-auto mt-5 mb-8 flex w-[calc(100%-5rem)] flex-col gap-2 border-3 border-white/10 p-3 md:text-lg">
       <span className="indicator-item badge badge-info">
         <b>i</b>
       </span>
@@ -35,16 +41,19 @@ export function ArticleH3({ children, className }: { children: ReactNode; classN
 
 export function ArticleHeader({ title, bgp, decoration }: { title: string; bgp: string; decoration: string }) {
   return (
-    <header
-      className={cn(
-        "border-base-300 bg-base-200/54 mb-20 flex w-full items-center justify-center border-b-3 p-10",
-        bgp,
-      )}
-    >
-      <h1 className={cn("text-main-text text-3xl md:text-4xl lg:text-5xl underline", decoration)}>
-        <b>{title}</b>
-      </h1>
-    </header>
+    <>
+      <title>{title} | plscompare</title>
+      <header
+        className={cn(
+          "border-base-300 bg-base-200/54 mb-20 flex w-full items-center justify-center border-b-3 p-10",
+          bgp,
+        )}
+      >
+        <h1 className={cn("text-main-text text-3xl underline md:text-4xl lg:text-5xl", decoration)}>
+          <b>{title}</b>
+        </h1>
+      </header>
+    </>
   );
 }
 
@@ -78,7 +87,7 @@ export function ArticleBackButton() {
   const navigate = useNavigate();
   return (
     <button
-      className="btn btn-lg md:btn-xl btn-primary w-fit mr-10 ml-auto col-start-2 col-span-1 border-3 border-base-300/20 not-md:mt-2"
+      className="btn btn-lg md:btn-xl btn-primary border-base-300/20 col-span-1 col-start-2 mr-10 ml-auto w-fit border-3 not-md:mt-2"
       onClick={() => {
         void navigate("/read-me");
       }}
