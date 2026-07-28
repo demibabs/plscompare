@@ -52,12 +52,15 @@ export function ComparisonTips() {
           <ArticleInfo>
             <p>
               The reason why I don't plan to support YouTube directly is because it's impossible to export frames from a
-              YT video client-side. The workarounds to this are complicated and break often, so I think
-              it's easier to ask the user to bring their own videos.
+              YT video client-side. The workarounds to this are complicated and break often, so I think it's easier to
+              ask the user to bring their own videos.
             </p>
             <p>
               If you make comparisons often, you'll probably want the{" "}
-              <a className="link link-success" href="https://www.youtube.com/playlist?list=PLL19dfwbx4VulmGUjjgX8PlBeWsg0diwu">
+              <a
+                className="link link-success"
+                href="https://www.youtube.com/playlist?list=PLL19dfwbx4VulmGUjjgX8PlBeWsg0diwu"
+              >
                 Current World Records
               </a>{" "}
               YouTube playlist on standby.
@@ -70,6 +73,11 @@ export function ComparisonTips() {
             to Smart Device. After that completes, open the Nintendo Switch app on your mobile device. Click the Album
             button on the right of the dock, click the video you want, and then press Save to download it to your
             device.
+          </ArticleP>
+          <ArticleP>
+            Note that Switch 2 captures are only 30fps. If you want 60fps footage from your own game, you'll have to
+            record from your computer, which requires purchasing a capture card. While 30fps videos are slightly less
+            accurate for comparisons, the difference is usually negligible.
           </ArticleP>
           <ArticleH3>Avoid phone camera clips</ArticleH3>
           <ArticleP>
@@ -246,7 +254,7 @@ function Example({ src, value, children }: { src: string; value: "Best" | "OK" |
       </div>
       <figcaption
         className={cn(
-          "border-base-300/10 rounded-box w-full border-3 p-5 text-xl",
+          "border-base-300/10 rounded-box w-full border-3 p-3 text-lg md:p-5 md:text-xl",
           { "bg-success text-success-content": value === "Best" },
           { "bg-warning text-warning-content": value === "OK" },
           { "bg-error text-error-content": value === "Avoid" },
