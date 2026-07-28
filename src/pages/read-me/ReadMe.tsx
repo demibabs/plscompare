@@ -11,7 +11,7 @@ export function ReadMe() {
           <p className="text-2xl">Hey, you listened.</p>
         </hgroup>
       </header>
-      <section className="-mt-5 grid w-full grid-cols-[minmax(0,1fr)_clamp(0px,var(--container-xl),100%)_minmax(0,1fr)] gap-10 p-10 not-md:pt-0 xl:lg:grid-cols-[minmax(0,1fr)_clamp(0px,var(--container-3xl),100%)_minmax(0,1fr)]">
+      <section className="-mt-5 grid w-full grid-cols-[1fr_clamp(0px,var(--container-xl),100%)_1fr] gap-y-10 p-10 not-md:pt-0 xl:lg:grid-cols-[minmax(0,1fr)_clamp(0px,var(--container-3xl),100%)_minmax(0,1fr)]">
         <ul className="col-span-1 col-start-2 flex w-full flex-col gap-3">
           <ReadMeCard
             title={
@@ -83,7 +83,7 @@ export function ReadMe() {
             destination="acknowledgements"
           ></ReadMeCard>
         </ul>
-        <aside className="card col-span-1 my-auto max-h-fit w-full min-w-0 border-3 border-white/10 bg-white/10 not-lg:col-start-2 lg:col-start-3">
+        <aside className="card col-span-1 my-auto max-h-fit w-full lg:w-[calc(100%-2.5rem)] min-w-0 border-3 border-white/10 bg-white/10 not-lg:col-start-2 lg:col-start-3 lg:ml-10">
           <div className="card-body text-lg">
             <p>
               If you like this project, consider leaving a star on{" "}
@@ -105,7 +105,7 @@ function ReadMeCard({ title, content, destination }: { title: ReactNode; content
   return (
     <li>
       <Link to={destination}
-        className="card card-md md:card-lg bg-base-200 hover:bg-base-100 border-base-300 bgp-ticTacToe-base-300/10 border-3"
+        className="card card-md md:card-lg bg-base-200 hover:bg-base-100 border-base-300 bgp-ticTacToe-base-300/10 border-3 w-full"
       >
         <div className="card-body">
           <h3 className="card-title text-main-text text-2xl wrap-anywhere md:text-3xl">{title}</h3>

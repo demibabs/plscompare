@@ -135,7 +135,7 @@ export function Landing() {
             <p className="text-xl md:text-2xl">Choose the layout style that best suits your comparison.</p>
           </div>
         </div>
-        <div className="bgp-fourPointStars-base-100/15 -mt-10 h-25 w-full bg-size-[0.75rem_auto] lg:bg-size-[1rem_auto]"></div>
+        <div className="bgp-fourPointStars-base-100/15 -mt-10 h-20 md:h-25 w-full bg-size-[0.75rem_auto] lg:bg-size-[1rem_auto]"></div>
       </section>
       <section className="bg-base-200 border-base-300 w-full grid-cols-3 grid-rows-2 flex-col gap-3 border-y-3 border-dashed px-5 py-10 not-md:gap-4 not-lg:flex md:px-10 lg:grid lg:px-20">
         <div className="card not-md:card-md card-lg bg-base-100 border-base-300 col-span-1 col-start-1 row-span-1 row-start-1 border-3">
