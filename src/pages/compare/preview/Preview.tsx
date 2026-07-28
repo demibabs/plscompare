@@ -34,7 +34,7 @@ export function Preview() {
         ></CompareHeader>
         <PreviewVideo />
         {/* Info card */}
-        <section className="bg-info/10 border-info/10 text-info rounded-box indicator mb-5 w-2xl max-w-[calc(100%-5rem)] flex-col gap-3 border-3 p-4 text-lg md:text-xl">
+        <section className="bg-info/10 border-info/10 text-info rounded-box indicator mb-8 w-2xl max-w-[calc(100%-5rem)] flex-col gap-3 border-3 p-4 text-lg md:text-xl">
           <span className="badge badge-info indicator-item">
             <b>i</b>
           </span>

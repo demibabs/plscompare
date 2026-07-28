@@ -53,54 +53,58 @@ export function SideBySideEditor({ part }: { part: Part }) {
   const nextPage = "/compare/" + (part === "start" ? "end-frame" : "preview");
 
   return (
-    <main className="flex w-full flex-col items-center">
-      <CompareHeader
-        prevPage={prevPage}
-        bgp={bgp}
-        headerText={headerText}
-        rightButton
-        rightButtonIsDisabled={rightButtonIsDisabled}
-        nextPage={nextPage}
-      />
-      {/* Video list */}
-      <section className="mt-6 flex w-full flex-wrap justify-center gap-4 px-10 md:mt-10">
-        {[...Array(filesData.length) as undefined[]].map((_, index) => (
-          <ScrubbableVideo
-            key={filesData[index].id}
-            fileData={filesData[index]}
-            part={part}
-            videosData={videosData}
-            setVideosData={setVideosData}
-            arePlaying={arePlaying}
-            setArePlaying={setArePlaying}
-            durations={durations}
-            setDurations={setDurations}
-            videosRef={videosRef}
-          />
-        ))}
-      </section>
-      {/* Collapse */}
-      <details className="collapse-arrow bg-base-200 border-base-300 collapse mt-2 mb-10 w-[calc(100%-5rem)] border-3">
-        <summary className="collapse-title text-main-text text-2xl">
-          {part === "start" ? <>New to making comparisons?</> : <>Any issues or feedback?</>}
-        </summary>
-        <p className="collapse-content bgp-diagonalStripes-base-300/15 text-lg pt-3">
-          {part === "start" ? (
-            <>
-              Check out{" "}
-              <Link to={"/read-me/comparison-tips"} className="link link-success">
-                Comparison Tips
-              </Link>{" "}
-              for some (hopefully) helpful advice.
-            </>
-          ) : (
-            <>
-              Tag <span className="text-info">@crashwy</span> in the Discord server linked on the bottom right of the
-              page and let me know. Your feedback is the best way for me to improve the site, so anything is appreciated! :)
-            </>
-          )}
-        </p>
-      </details>
-    </main>
+    <>
+      <title>{`Select ${part}ing frames | plscompare`}</title>
+      <main className="flex w-full flex-col items-center">
+        <CompareHeader
+          prevPage={prevPage}
+          bgp={bgp}
+          headerText={headerText}
+          rightButton
+          rightButtonIsDisabled={rightButtonIsDisabled}
+          nextPage={nextPage}
+        />
+        {/* Video list */}
+        <section className="mt-6 flex w-full flex-wrap justify-center gap-4 px-10 md:mt-10">
+          {[...(Array(filesData.length) as undefined[])].map((_, index) => (
+            <ScrubbableVideo
+              key={filesData[index].id}
+              fileData={filesData[index]}
+              part={part}
+              videosData={videosData}
+              setVideosData={setVideosData}
+              arePlaying={arePlaying}
+              setArePlaying={setArePlaying}
+              durations={durations}
+              setDurations={setDurations}
+              videosRef={videosRef}
+            />
+          ))}
+        </section>
+        {/* Collapse */}
+        <details className="collapse-arrow bg-base-200 border-base-300 collapse mt-2 mb-10 w-[calc(100%-5rem)] border-3">
+          <summary className="collapse-title text-main-text text-2xl">
+            {part === "start" ? <>New to making comparisons?</> : <>Any issues or feedback?</>}
+          </summary>
+          <p className="collapse-content bgp-diagonalStripes-base-300/15 pt-3 text-lg">
+            {part === "start" ? (
+              <>
+                Check out{" "}
+                <Link to={"/read-me/comparison-tips"} className="link link-success">
+                  Comparison Tips
+                </Link>{" "}
+                for some (hopefully) helpful advice.
+              </>
+            ) : (
+              <>
+                Tag <span className="text-info">@crashwy</span> in the Discord server linked on the bottom right of the
+                page and let me know. Your feedback is the best way for me to improve the site, so anything is
+                appreciated! :)
+              </>
+            )}
+          </p>
+        </details>
+      </main>
+    </>
   );
 }

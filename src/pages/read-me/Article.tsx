@@ -42,7 +42,7 @@ export function ArticleH3({ children, className }: { children: ReactNode; classN
 export function ArticleHeader({ title, bgp, decoration }: { title: string; bgp: string; decoration: string }) {
   return (
     <>
-      <title>{title} | plscompare</title>
+      <title>{`${title} | plscompare`}</title>
       <header
         className={cn(
           "border-base-300 bg-base-200/54 mb-20 flex w-full items-center justify-center border-b-3 p-10",
@@ -87,7 +87,7 @@ export function ArticleBackButton() {
   const navigate = useNavigate();
   return (
     <button
-      className="btn btn-lg md:btn-xl btn-primary border-base-300/20 col-span-1 col-start-2 mr-10 ml-auto w-fit border-3 not-md:mt-2"
+      className="btn btn-lg md:btn-xl btn-primary col-span-1 col-start-2 mr-10 ml-auto w-fit not-md:mt-2"
       onClick={() => {
         void navigate("/read-me");
       }}

@@ -25,7 +25,7 @@ export function ComparisonTips() {
     <main className="w-full">
       <Article>
         <ArticleHeader
-          title="Comparison Tips"
+          title="Comparison tips"
           bgp="bgp-hideout-base-100/30"
           decoration="decoration-success"
         ></ArticleHeader>

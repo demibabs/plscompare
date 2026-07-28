@@ -13,7 +13,7 @@ export function TechnicalNotes() {
     <main className="w-full">
       <Article>
         <ArticleHeader
-          title="Technical Notes"
+          title="Technical notes"
           bgp="bgp-circlesAndSquares-base-300/10"
           decoration="decoration-success"
         ></ArticleHeader>
