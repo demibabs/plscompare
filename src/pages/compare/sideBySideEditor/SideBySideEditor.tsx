@@ -78,7 +78,6 @@ export function SideBySideEditor({ part }: { part: Part }) {
           />
         ))}
       </section>
-      <p className="mx-auto mb-10">whats up</p>
     </main>
   );
 }
