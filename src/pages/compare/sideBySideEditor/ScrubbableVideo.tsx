@@ -45,15 +45,7 @@ export function ScrubbableVideo({
   const scrubberRef = useRef<HTMLInputElement>(null);
 
   const startTime = videosData[id]?.times.start;
-  const endTime = videosData[id]?.times.end
-  if (videosData[id]) {
-    if (part === "start" && startTime === null) {
-      videosData[id].times.start = 0;
-    }
-    if (part === "end" && endTime === null){
-      videosData[id].times.end = videosData[id].times.start
-    }
-  }
+  const endTime = videosData[id]?.times.end;
   // Progress for marker that shows where starting time is
   const markerProgress =
     hasLoadedMetadata && startTime !== null && durations[id] && part === "end"
@@ -100,10 +92,18 @@ export function ScrubbableVideo({
       setDurations((durs) => durs.with(id, duration));
       if (part === "end" && startTime !== null) {
         videosRef.current[id].currentTime = startTime + 0.005;
+        setVideosData((vsData) => vsData.with(id, { ...vsData[id], times: { ...vsData[id].times, end: startTime } }));
       }
       const thisTime = videosData[id].times[part];
       if (thisTime !== null) {
         videosRef.current[id].currentTime = thisTime + 0.005;
+        setVideosData((vsData) => vsData.with(id, { ...vsData[id], times: { ...vsData[id].times, [part]: thisTime } }));
+      } else {
+        if (part === "start") {
+          setVideosData((vsData) =>
+            vsData.with(id, { ...vsData[id], times: { ...vsData[id].times, start: 0 } }),
+          );
+        }
       }
     }
   }
