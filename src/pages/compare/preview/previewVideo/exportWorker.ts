@@ -68,7 +68,7 @@ async function runMediabunnyPipeline(config: ExportConfig) {
         if (!decodable) throw new Error("Video track cannot be decoded");
 
         // Explicitly request hardware acceleration
-        return new VideoSampleSink(videoTrack, { hardwareAcceleration: "prefer-hardware" });
+        return new VideoSampleSink(videoTrack, { hardwareAcceleration: "no-preference" });
       }),
     );
 
