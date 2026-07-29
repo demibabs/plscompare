@@ -240,43 +240,97 @@ export function PreviewVideo() {
             }}
           />
         ))}
-        <div className="my-2 flex flex-col items-center justify-center gap-2">
-          {/* Pause button */}
-          <button
-            onClick={() => {
-              if (isPlaying) setIsPlaying(false);
-              else {
-                if (
-                  videosRef.current.every((_, index) => {
-                    return (
-                      mediaTimes.current[index] >= videosData[index].times.end - 1 / (2 * filesData[index].framerate)
-                    );
-                  })
-                ) {
-                  videosRef.current.forEach(
-                    (vElement, index) => (vElement.currentTime = videosData[index].times.start + 0.005),
-                  );
-                  timerStartTimes.current.fill(-1);
-                  setIsPlaying(true);
-                } else setIsPlaying(true);
-              }
-            }}
-            className={cn("btn btn-lg border-base-300 btn-error border-3 px-3", {
-              "btn-disabled": false, //!canPlay,
-            })}
-          >
-            {isPlaying ? (
+        <div className="mb-2 mt-4 flex flex-col items-center justify-center gap-2">
+          {/* First button row */}
+          <div className="card-actions items-center justify-center">
+            <button
+              onClick={() => {
+                videosRef.current.forEach((vElement, index) => {
+                  vElement.currentTime = videosData[index].times.start + 0.005;
+                  mediaTimes.current[index] = videosData[index].times.start;
+                  timerStartTimes.current[index] = -1;
+                });
+              }}
+              className="btn btn-lg border-base-300 btn-info border-3 px-3"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
                 strokeWidth={2.5}
                 stroke="currentColor"
-                className="size-6"
+                className="size-6 rotate-180"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M3 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061A1.125 1.125 0 0 1 3 16.811V8.69ZM12.75 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061a1.125 1.125 0 0 1-1.683-.977V8.69Z"
+                />
               </svg>
-            ) : (
+            </button>
+
+            <button
+              onClick={() => {
+                if (isPlaying) setIsPlaying(false);
+                else {
+                  if (
+                    videosRef.current.every((_, index) => {
+                      return (
+                        mediaTimes.current[index] >= videosData[index].times.end - 1 / (2 * filesData[index].framerate)
+                      );
+                    })
+                  ) {
+                    videosRef.current.forEach(
+                      (vElement, index) => (vElement.currentTime = videosData[index].times.start + 0.005),
+                    );
+                    timerStartTimes.current.fill(-1);
+                    setIsPlaying(true);
+                  } else setIsPlaying(true);
+                }
+              }}
+              className={cn("btn btn-lg border-base-300 btn-error border-3 px-3", {
+                "btn-disabled": false, //!canPlay,
+              })}
+            >
+              {isPlaying ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2.5}
+                  stroke="currentColor"
+                  className="size-6"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2.5}
+                  stroke="currentColor"
+                  className="size-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
+                  />
+                </svg>
+              )}
+            </button>
+            <button
+              onClick={() => {
+                if (isPlaying) setIsPlaying(false);
+                videosRef.current.forEach((vElement, index) => {
+                  vElement.currentTime = videosData[index].times.end + 0.005;
+                  mediaTimes.current[index] = videosData[index].times.end;
+                  timerStartTimes.current[index] = videosData[index].times.end;
+                });
+              }}
+              className="btn btn-lg border-base-300 btn-success border-3 px-3"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -288,11 +342,11 @@ export function PreviewVideo() {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"
+                  d="M3 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061A1.125 1.125 0 0 1 3 16.811V8.69ZM12.75 8.689c0-.864.933-1.406 1.683-.977l7.108 4.061a1.125 1.125 0 0 1 0 1.954l-7.108 4.061a1.125 1.125 0 0 1-1.683-.977V8.69Z"
                 />
               </svg>
-            )}
-          </button>
+            </button>
+          </div>
           {/* Second button row */}
           <div className="card-actions items-center justify-center">
             {/* Options button */}
