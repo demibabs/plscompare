@@ -93,7 +93,7 @@ export function Compare() {
         void navigate("/");
       }
     }
-  });
+  }, [isLoading, filesData, navigate]);
 
   if (!isLoading) {
     if (!hasInteracted) {

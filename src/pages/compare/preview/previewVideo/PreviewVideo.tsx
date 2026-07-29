@@ -240,7 +240,7 @@ export function PreviewVideo() {
             }}
           />
         ))}
-        <div className="mb-2 mt-4 flex flex-col items-center justify-center gap-2">
+        <div className="my-2 flex flex-col items-center justify-center gap-2">
           {/* First button row */}
           <div className="card-actions items-center justify-center">
             <button
@@ -268,7 +268,6 @@ export function PreviewVideo() {
                 />
               </svg>
             </button>
-
             <button
               onClick={() => {
                 if (isPlaying) setIsPlaying(false);

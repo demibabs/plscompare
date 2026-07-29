@@ -22,5 +22,7 @@ export async function checkIsSupportedVideo(file: File): Promise<boolean> {
   } catch {
     // Fails if it's an audio-only file using a shared container (e.g., an .m4a file)
     return false;
+  } finally {
+    input.dispose()
   }
 }
