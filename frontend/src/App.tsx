@@ -1,5 +1,4 @@
 import { createBrowserRouter, redirect, RouterProvider } from "react-router-dom";
-import "./App.css";
 import { Landing } from "./landing/Landing";
 import { Compare } from "./pages/compare/Compare";
 import { StartFrame } from "./pages/compare/StartFrame";
@@ -76,16 +75,18 @@ const router = createBrowserRouter([
 export function App() {
   const [isInitializing, setIsInitializing] = useState(true);
 
+  // reset indexeddb on new sesh (may change)
   useEffect(() => {
     async function checkSession() {
       const isExistingSession = sessionStorage.getItem("videos_session");
       if (!isExistingSession) {
-        await clear();
+        void clear();
         sessionStorage.setItem("videos_session", "true");
       }
       setIsInitializing(false);
     }
     void checkSession();
   }, []);
+
   return !isInitializing && <RouterProvider router={router}></RouterProvider>;
 }
