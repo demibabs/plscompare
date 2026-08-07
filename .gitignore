@@ -34,7 +34,5 @@ originals/
 !.env.example
 .env
 
-package-lock.json
-
 .tmp-output.css
 *.tsbuildinfo
