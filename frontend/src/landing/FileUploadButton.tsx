@@ -41,14 +41,30 @@ export function FileUploadButton() {
       return;
     }
     for (const file of newFiles) {
-      const isSupported = await checkIsSupportedVideo(file);
+      const isSupported = (async () => {
+        try {
+          await checkIsSupportedVideo(file);
+        } catch (error) {
+          setStatusMessage(`${error}`);
+          return;
+        }
+      })();
       if (!isSupported) {
         setStatusMessage("That file type is not supported.");
         posthog.capture("file_upload_error", { reason: "unsupported_file_type", file_count: newFiles.length });
         return;
       }
     }
-    const framesData = await Promise.all(newFiles.map(async (f) => await getFrameData(f)));
+
+    let framesData: FrameData[]
+
+    try {
+      framesData = await Promise.all(newFiles.map(getFrameData))
+    } catch (error) {
+      setStatusMessage(`${error}`);
+      return;
+    }
+
     // Put data into { file, frameData } form
     const returnedData = newFiles.map((nF, index) => ({ file: nF, frameData: framesData[index] }));
     await update("user-files", (uFiles: { file: File; frameData: FrameData }[] | undefined) => {
