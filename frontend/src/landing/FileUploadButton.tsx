@@ -34,7 +34,6 @@ export function FileUploadButton() {
       return;
     }
     const newFiles = Array.from(event.target.files);
-    // Weird bug causes files to incorrectly be registered as size 0, no idea how to fix
     if (newFiles.some((nFile) => nFile.size === 0)) {
       setStatusMessage("All files must be larger than 0 bytes.");
       posthog.capture("file_upload_error", { reason: "zero_byte_file", file_count: newFiles.length });
@@ -46,6 +45,7 @@ export function FileUploadButton() {
           await checkIsSupportedVideo(file);
         } catch (error) {
           setStatusMessage(`${error}`);
+          posthog.capture("file_upload_error", { reason: `${error}`, file_count: newFiles.length });
           return;
         }
       })();
@@ -62,6 +62,7 @@ export function FileUploadButton() {
       framesData = await Promise.all(newFiles.map(getFrameData))
     } catch (error) {
       setStatusMessage(`${error}`);
+      posthog.capture("file_upload_error", { reason: `${error}`, file_count: newFiles.length });
       return;
     }
 
