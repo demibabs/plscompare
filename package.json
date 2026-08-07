@@ -1,6 +1,7 @@
 {
   "name": "plscompare",
   "private": true,
+  "type": "module",
   "workspaces": [
     "frontend",
     "backend"
@@ -11,10 +12,18 @@
     "dev:backend": "npm run dev --workspace backend",
     "build": "npm run build --workspace frontend",
     "deploy": "npm run deploy --workspace frontend",
-    "lint": "npm run lint --workspace frontend"
+    "lint": "eslint frontend backend"
   },
   "devDependencies": {
-    "concurrently": "^10.0.4"
+    "@eslint/js": "^10.0.1",
+    "concurrently": "^10.0.4",
+    "eslint": "^10.6.0",
+    "eslint-plugin-react-dom": "^5.18.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "eslint-plugin-react-x": "^5.18.0",
+    "globals": "^17.7.0",
+    "typescript-eslint": "^8.62.0"
   },
   "allowScripts": {
     "core-js@3.50.0": true,

@@ -8,9 +8,9 @@ import reactDom from "eslint-plugin-react-dom";
 import { defineConfig, globalIgnores } from "eslint/config";
 
 export default defineConfig([
-  globalIgnores(["dist"]),
+  globalIgnores(["**/dist/**", "**/node_modules/**"]),
   {
-    files: ["**/*.{ts,tsx}"],
+    files: ["frontend/src/**/*.{ts,tsx}"],
     extends: [
       js.configs.recommended,
       tseslint.configs.strictTypeChecked,
@@ -23,7 +23,21 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
       parserOptions: {
-        project: [";/frontend/tsconfig.node.json", "./frontend/tsconfig.app.json", "./backend/tsconfig.json"],
+        project: ["./frontend/tsconfig.app.json"],
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      "@typescript-eslint/consistent-type-definitions": ["error", "type"],
+    },
+  },
+  {
+    files: ["frontend/vite.config.ts", "backend/**/*.ts"],
+    extends: [js.configs.recommended, tseslint.configs.strictTypeChecked, tseslint.configs.stylisticTypeChecked],
+    languageOptions: {
+      globals: globals.node,
+      parserOptions: {
+        project: ["./frontend/tsconfig.node.json", "./backend/tsconfig.json"],
         tsconfigRootDir: import.meta.dirname,
       },
     },
