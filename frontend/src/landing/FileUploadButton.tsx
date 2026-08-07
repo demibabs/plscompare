@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { cn } from "../utils/cn";
 import { clear, get, update } from "idb-keyval";
 import { useNavigate } from "react-router-dom";
@@ -29,7 +29,7 @@ export function FileUploadButton() {
     void getUserFiles();
   }, []);
 
-  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement, HTMLInputElement>) {
+  async function handleFileChange(event: ChangeEvent<HTMLInputElement, HTMLInputElement>) {
     if (!event.target.files) {
       return;
     }
@@ -40,15 +40,14 @@ export function FileUploadButton() {
       return;
     }
     for (const file of newFiles) {
-      const isSupported = (async () => {
-        try {
-          await checkIsSupportedVideo(file);
-        } catch (error) {
-          setStatusMessage(`${error}`);
-          posthog.capture("file_upload_error", { reason: `${error}`, file_count: newFiles.length });
-          return;
-        }
-      })();
+      let isSupported;
+      try {
+        isSupported = await checkIsSupportedVideo(file);
+      } catch (error) {
+        setStatusMessage(`${error}`);
+        posthog.capture("file_upload_error", { reason: `${error}`, file_count: newFiles.length });
+        return;
+      }
       if (!isSupported) {
         setStatusMessage("That file type is not supported.");
         posthog.capture("file_upload_error", { reason: "unsupported_file_type", file_count: newFiles.length });
@@ -56,10 +55,10 @@ export function FileUploadButton() {
       }
     }
 
-    let framesData: FrameData[]
+    let framesData: FrameData[];
 
     try {
-      framesData = await Promise.all(newFiles.map(getFrameData))
+      framesData = await Promise.all(newFiles.map(getFrameData));
     } catch (error) {
       setStatusMessage(`${error}`);
       posthog.capture("file_upload_error", { reason: `${error}`, file_count: newFiles.length });
