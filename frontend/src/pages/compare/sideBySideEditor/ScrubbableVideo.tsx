@@ -12,7 +12,7 @@ import { cn } from "../../../utils/cn";
 import type { FileData, Part, VideoData } from "./SideBySideEditor";
 import { useLatest } from "../../../utils/useLatest";
 import { getNearestFrameTime, getNextFrameTime, getPrevFrameTime } from "../../../utils/frameSnapping";
-import { formatSecondsToSSMS } from "../../../utils/formatSecondsToSSMS";
+import { formatSecondsToSSMS } from "@plscompare/shared/formatSecondsToSSMS";
 
 export function ScrubbableVideo({
   fileData,
@@ -100,9 +100,7 @@ export function ScrubbableVideo({
         setVideosData((vsData) => vsData.with(id, { ...vsData[id], times: { ...vsData[id].times, [part]: thisTime } }));
       } else {
         if (part === "start") {
-          setVideosData((vsData) =>
-            vsData.with(id, { ...vsData[id], times: { ...vsData[id].times, start: 0 } }),
-          );
+          setVideosData((vsData) => vsData.with(id, { ...vsData[id], times: { ...vsData[id].times, start: 0 } }));
         }
       }
     }

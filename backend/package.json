@@ -2,7 +2,7 @@
   "name": "@plscompare/backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.ts",
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -12,8 +12,10 @@
     "dev": "tsx watch server.ts"
   },
   "dependencies": {
+    "@plscompare/shared": "1.0.0",
     "@mediabunny/server": "^1.52.1",
     "express": "^5.2.1",
+    "mediabunny": "^1.52.3",
     "multer": "^2.2.0",
     "skia-canvas": "^3.0.8"
   },

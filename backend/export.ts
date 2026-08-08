@@ -1,23 +1,26 @@
 import {
   Input,
-  UrlSource,
   ALL_FORMATS,
   VideoSampleSink,
   Output,
   Mp4OutputFormat,
   BufferTarget,
-  CanvasSource,
-  type VideoSample,
+  VideoSample,
+  FilePathSource,
+  VideoSampleSource,
+  FilePathTarget,
 } from "mediabunny";
 
 import { renderFrame } from "@plscompare/shared/renderFrame";
 import type { ExportConfig } from "@plscompare/shared/types";
 import { formatSecondsToSSMS } from "@plscompare/shared/formatSecondsToSSMS";
 import { getCanvasDimensions } from "@plscompare/shared/getCanvasDimensions";
+import { Canvas } from "skia-canvas";
+import { randomUUID } from "node:crypto";
+import { tmpdir } from "node:os";
+import { mkdir } from "node:fs/promises";
+import { join } from "node:path";
 
-let isCanceled = false;
-
-type ExportWorkerCommand = { type: "START_EXPORT"; payload: ExportConfig } | { type: "CANCEL" };
 
 type StreamState = {
   iterator: AsyncIterator<VideoSample, void>;
@@ -26,42 +29,16 @@ type StreamState = {
   isDone: boolean;
 };
 
-function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
-}
 
-self.onmessage = async (event: MessageEvent<ExportWorkerCommand>) => {
-  const message = event.data;
-  if (message.type === "START_EXPORT") {
-    try {
-      await runMediabunnyPipeline(message.payload);
-    } catch (err) {
-      self.postMessage({ type: "ERROR", error: getErrorMessage(err) });
-    }
-  }
-  if (message.type === "CANCEL") isCanceled = true;
-};
-
-async function runMediabunnyPipeline(config: ExportConfig) {
+export async function runMediabunnyPipeline(filePaths: string[], config: ExportConfig) {
   const { videos, freezeFrameTime, layout } = config;
   const canvasDimensions = getCanvasDimensions(layout, videos.length);
   const fps = videos.every((v) => v.framerate < 31) ? 30 : 60;
   const frameDurationSec = 1 / fps;
+  const isCanceled = false
 
-  try {
-    const absoluteFontUrl = new URL("../../../../assets/shared/fonts/Outfit-VariableFont_wght.woff2", import.meta.url)
-      .href;
-    const customFont = new FontFace("Outfit", `url(${absoluteFontUrl})`);
-
-    await customFont.load();
-    self.fonts.add(customFont);
-  } catch (err) {
-    console.warn("Could not load local font:", err);
-  }
-
-  const canvas = new OffscreenCanvas(canvasDimensions.width, canvasDimensions.height);
+  const canvas = new Canvas(canvasDimensions.width, canvasDimensions.height);
   const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Could not get 2D context");
 
   const inputs: Input[] = [];
   let streams: StreamState[] = [];
@@ -69,9 +46,9 @@ async function runMediabunnyPipeline(config: ExportConfig) {
   try {
     // 1. Initialize Inputs & Sinks using UrlSource (Streams directly instead of downloading Blobs)
     const sinks = await Promise.all(
-      videos.map(async (video) => {
+      videos.map(async (video, index) => {
         const input = new Input({
-          source: new UrlSource(video.url),
+          source: new FilePathSource(filePaths[index]),
           formats: ALL_FORMATS,
         });
         inputs.push(input);
@@ -86,13 +63,18 @@ async function runMediabunnyPipeline(config: ExportConfig) {
       }),
     );
 
-    const target = new BufferTarget();
+    const jobId = randomUUID()
+    const exportDirectory = join(tmpdir(), "exports", jobId)
+    await mkdir(exportDirectory, { recursive: true })
+    const outputPath = join(exportDirectory)
+
+    const target = new FilePathTarget(outputPath);
     const output = new Output({
       format: new Mp4OutputFormat(),
       target: target,
     });
 
-    const outVideoSource = new CanvasSource(canvas, {
+    const outVideoSource = new VideoSampleSource({
       codec: "avc",
       bitrate: 5_000_000,
       bitrateMode: "constant",
@@ -176,15 +158,13 @@ async function runMediabunnyPipeline(config: ExportConfig) {
       }
 
       // B. Prepare sources for rendering
-      const sources: (OffscreenCanvas | null)[] = streams.map((s) => {
+      const sources = streams.map((s) => {
         if (!s.currentSample) return null;
         const dw = s.currentSample.displayWidth;
         const dh = s.currentSample.displayHeight;
-        const scratch = new OffscreenCanvas(dw, dh);
+        const scratch = new Canvas(dw, dh);
         const scratchCtx = scratch.getContext("2d");
-        if (scratchCtx) {
-          s.currentSample.draw(scratchCtx, 0, 0, dw, dh);
-        }
+        s.currentSample.draw(scratchCtx, 0, 0, dw, dh);
         return scratch;
       });
       const sourcesDimensions = streams.map((s) =>
@@ -200,13 +180,21 @@ async function runMediabunnyPipeline(config: ExportConfig) {
       const timersText = timerTimes.map((tTime) => (tTime !== undefined ? formatSecondsToSSMS(tTime) : ""));
 
       // C. Draw the layout
-      const drawableSources = sources.filter((source): source is OffscreenCanvas => source !== null);
-      if (drawableSources.length === sources.length) {
-        renderFrame(ctx, layout, drawableSources, sourcesDimensions, labelsText, timersText);
-      }
+      renderFrame(ctx, layout, sources, sourcesDimensions, labelsText, timersText);
+
+      const imageData = ctx.getImageData(0, 0, canvasDimensions.width, canvasDimensions.height);
+
+      const sample = new VideoSample(imageData.data, {
+        format: "RGBA",
+        codedWidth: canvasDimensions.width,
+        codedHeight: canvasDimensions.height,
+        timestamp: currentTimestampSec,
+        duration: frameDurationSec,
+      })
 
       // D. Encode
-      await outVideoSource.add(currentTimestampSec, frameDurationSec);
+      await outVideoSource.add(sample);
+      sample.close()
 
       if (frameIndex % 10 === 0) {
         const progress = (frameIndex / totalFrames) * 100;
@@ -215,17 +203,12 @@ async function runMediabunnyPipeline(config: ExportConfig) {
     }
 
     await output.finalize();
-    const finalBuffer = target.buffer;
-
-    if (!finalBuffer) {
-      self.postMessage({ type: "ERROR", error: "Export resulted in an empty buffer." });
-      return;
+    
+    return {
+      jobId,
+      outputPath
     }
 
-    if (isCanceled) return;
-
-    const workerScope = self as unknown as DedicatedWorkerGlobalScope;
-    workerScope.postMessage({ type: "SUCCESS", buffer: finalBuffer }, [finalBuffer]);
   } finally {
     // 4. Final Cleanup
     // Iterate over streams to ensure any fetched but unprocessed samples are closed,

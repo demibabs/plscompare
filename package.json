@@ -4,7 +4,8 @@
   "type": "module",
   "workspaces": [
     "frontend",
-    "backend"
+    "backend",
+    "shared"
   ],
   "scripts": {
     "dev": "concurrently --kill-others-on-fail --names frontend,backend --prefix-colors cyan,magenta \"npm run dev:frontend\" \"npm run dev:backend\"",

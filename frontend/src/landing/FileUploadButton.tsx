@@ -102,14 +102,15 @@ export function FileUploadButton() {
       })}
       data-tip={statusMessage}
     >
-      {/* X button on left, file count icon on right */}
       {userFiles.length > 0 && (
         <>
+          {/* X button */}
           <span className="indicator-item tooltip" data-tip={userFiles.map((uFile) => uFile.name).join(", ")}>
             <span className="badge badge-error border-base-100 border-3">
               <b>{userFiles.length}</b>
             </span>
           </span>
+          {/* File count button */}
           <span className="indicator-item indicator-top indicator-start">
             <span
               className="badge badge-error border-base-100 border-3"

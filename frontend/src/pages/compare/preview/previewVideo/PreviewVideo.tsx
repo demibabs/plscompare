@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import type { FileData, VideoData } from "../../sideBySideEditor/SideBySideEditor";
 import { cn } from "../../../../utils/cn";
-import { renderFrame, type Dimensions, type Layout } from "./renderFrame";
-import { formatSecondsToSSMS } from "../../../../utils/formatSecondsToSSMS";
+import { renderFrame, type Dimensions, type Layout } from "@plscompare/shared/renderFrame";
+import { formatSecondsToSSMS } from "@plscompare/shared/formatSecondsToSSMS";
 import { useVideoExport } from "./useVideoExport";
 import { hasTimes } from "../../../../utils/hasTimes";
-import { clear } from "idb-keyval";
+import { clear, get } from "idb-keyval";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import { getCanvasDimensions } from "../../../../utils/getCanvasDimensions";
+import { getCanvasDimensions } from "@plscompare/shared/getCanvasDimensions";
 import posthog from "../../../../posthog";
 import { useLatest } from "../../../../utils/useLatest";
+import type { FrameData } from "../../../../utils/getFrameData";
 
 export type Options = {
   layout: Layout;
@@ -92,11 +93,12 @@ export function PreviewVideo() {
     requestAnimationFrame(renderVideo);
   }
 
-  function handleExport() {
+  async function handleExport() {
     setIsPlaying(false);
     if (videosData.every((vData) => hasTimes(vData))) {
+      const fs: { file: File, frameData: FrameData }[] = await get("user-files") ?? []
+      const files = fs.map(f => f.file)
       const videos = videosData.map((vData, index) => ({
-        url: filesData[index].url,
         times: vData.times,
         label: vData.label,
         framerate: filesData[index].framerate,
@@ -106,7 +108,7 @@ export function PreviewVideo() {
         layout: optionsLatest.current.layout,
         freeze_frame_time: freezeFrameTime,
       });
-      startExport({
+      startExport(files, {
         videos,
         fileName: fileName || "plscompare",
         freezeFrameTime,
