@@ -31,6 +31,8 @@ export function useVideoExport() {
 
       const job = await response.json();
 
+      setProgress(job.progress)
+
       if (job.status === "complete") {
         window.clearInterval(interval);
         setIsExporting(false);

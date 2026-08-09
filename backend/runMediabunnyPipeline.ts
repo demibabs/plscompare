@@ -28,7 +28,12 @@ type StreamState = {
   isDone: boolean;
 };
 
-export async function runMediabunnyPipeline(filePaths: string[], config: ExportConfig, jobId: UUID) {
+export async function runMediabunnyPipeline(
+  filePaths: string[],
+  config: ExportConfig,
+  jobId: UUID,
+  onChange: (num: number) => void,
+) {
   const { videos, freezeFrameTime, layout } = config;
   const canvasDimensions = getCanvasDimensions(layout, videos.length);
   const fps = videos.every((v) => v.framerate < 31) ? 30 : 60;
@@ -36,6 +41,7 @@ export async function runMediabunnyPipeline(filePaths: string[], config: ExportC
   const isCanceled = false;
 
   const canvas = new Canvas(canvasDimensions.width, canvasDimensions.height);
+  canvas.gpu = false;
   const ctx = canvas.getContext("2d");
 
   const inputs: Input[] = [];
@@ -44,7 +50,7 @@ export async function runMediabunnyPipeline(filePaths: string[], config: ExportC
   try {
     // 1. Initialize Inputs & Sinks using UrlSource (Streams directly instead of downloading Blobs)
     const sinks = await Promise.all(
-      videos.map(async (video, index) => {
+      videos.map(async (_, index) => {
         const input = new Input({
           source: new FilePathSource(filePaths[index]),
           formats: ALL_FORMATS,
@@ -57,7 +63,7 @@ export async function runMediabunnyPipeline(filePaths: string[], config: ExportC
         const decodable = await videoTrack.canDecode();
         if (!decodable) throw new Error("Video track cannot be decoded");
 
-        return new VideoSampleSink(videoTrack, { hardwareAcceleration: "no-preference" });
+        return new VideoSampleSink(videoTrack, { hardwareAcceleration: "prefer-software" });
       }),
     );
 
@@ -76,7 +82,7 @@ export async function runMediabunnyPipeline(filePaths: string[], config: ExportC
       bitrate: 5_000_000,
       bitrateMode: "constant",
       latencyMode: "quality",
-      hardwareAcceleration: "prefer-software",
+      hardwareAcceleration: "prefer-hardware",
     });
 
     output.addVideoTrack(outVideoSource, { frameRate: fps });
@@ -117,6 +123,24 @@ export async function runMediabunnyPipeline(filePaths: string[], config: ExportC
       }),
     );
 
+    const sourceFrames = streams.map((state) => {
+      const sample = state.currentSample;
+
+      if (!sample) {
+        throw new Error("Missing initial video sample");
+      }
+
+      const width = sample.displayWidth;
+      const height = sample.displayHeight;
+      const imageData = ctx.createImageData(width, height);
+
+      return {
+        imageData,
+        width,
+        height,
+      };
+    });
+
     // 3. The Main Compositing Loop
     for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
       if (isCanceled) break;
@@ -156,19 +180,17 @@ export async function runMediabunnyPipeline(filePaths: string[], config: ExportC
       }
 
       // B. Prepare sources for rendering
-      const sources = await Promise.all(streams.map(async (s) => {
-        if (!s.currentSample) return null;
-        const dw = s.currentSample.displayWidth;
-        const dh = s.currentSample.displayHeight;
-        const scratch = new Canvas(dw, dh);
-        const scratchCtx = scratch.getContext("2d");
-        const imageData = scratchCtx.createImageData(dw, dh);
-        await s.currentSample.copyTo(imageData.data, {
-          format: "RGBA",
-        });
-        scratchCtx.putImageData(imageData, 0, 0);
-        return scratch;
-      }));
+      await Promise.all(
+        streams.map(async (state, index) => {
+          const sample = state.currentSample;
+          const sourceFrame = sourceFrames[index];
+          if (!sample || !sourceFrame) return;
+          await sample.copyTo(sourceFrame.imageData.data, {
+            format: "RGBA",
+          });
+        }),
+      );
+      const sources = sourceFrames.map((sourceFrame) => sourceFrame.imageData);
       const sourcesDimensions = streams.map((s) =>
         s.currentSample
           ? {
@@ -182,9 +204,16 @@ export async function runMediabunnyPipeline(filePaths: string[], config: ExportC
       const timersText = timerTimes.map((tTime) => (tTime !== undefined ? formatSecondsToSSMS(tTime) : ""));
 
       // C. Draw the layout
-      renderFrame(ctx, layout, sources, sourcesDimensions, labelsText, timersText);
+      renderFrame(
+        ctx as unknown as CanvasRenderingContext2D,
+        layout,
+        sources as unknown as CanvasImageSource[],
+        sourcesDimensions,
+        labelsText,
+        timersText,
+      );
 
-      const imageData = ctx.getImageData(0, 0, canvasDimensions.width, canvasDimensions.height);
+      const imageData = canvas.getContext("2d").getImageData(0, 0, canvasDimensions.width, canvasDimensions.height);
 
       const sample = new VideoSample(imageData.data, {
         format: "RGBA",
@@ -200,6 +229,7 @@ export async function runMediabunnyPipeline(filePaths: string[], config: ExportC
 
       if (frameIndex % 10 === 0) {
         const progress = (frameIndex / totalFrames) * 100;
+        onChange(progress);
       }
     }
 

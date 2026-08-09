@@ -8,7 +8,7 @@ import { join } from "node:path";
 import { mkdir } from "node:fs/promises";
 import multer, { type Multer } from "multer";
 import { randomUUID } from "node:crypto";
-import { exportJobs } from "./exportJobs";
+import { exportJobs, type ExportJob } from "./exportJobs";
 
 const app = e();
 registerMediabunnyServer();
@@ -28,48 +28,42 @@ const upload = multer({
 });
 
 app.post("/api/exports", upload.array("files"), async (req, res) => {
-  try {
-    const files = req.files as Express.Multer.File[];
-    if (!files.length) {
-      res.status(400).json({ error: "No videos uploaded" });
-      return;
-    }
-    const rawConfig = req.body.config;
-    if (typeof rawConfig !== "string") {
-      res.status(400).json({ error: "Missing export config" });
-      return;
-    }
-    const config = JSON.parse(rawConfig);
-    const fileName = config.fileName;
-    const filePaths = files.map((f) => f.path);
-    const jobId = randomUUID();
-
-    exportJobs.set(jobId, {
-      id: jobId,
-      fileName,
-      status: "queued",
-      progress: 0,
-      createdAt: new Date(),
-    });
-
-    res.status(202).json({ jobId });
-
-    const job = exportJobs.get(jobId);
-
-    if (job) {
-      job.status = "processing";
-    }
-
-    const { outputPath } = await runMediabunnyPipeline(filePaths, config, jobId);
-    if (job) {
-      job.status = "complete";
-      job.progress = 100;
-      job.outputPath = outputPath;
-    }
-  } catch (error) {
-    // res.status(500).json({ error: "Something went wrong during the export." });
+  const files = req.files as Express.Multer.File[];
+  if (!files.length) {
+    res.status(400).json({ error: "No videos uploaded" });
     return;
   }
+  const rawConfig = req.body.config;
+  if (typeof rawConfig !== "string") {
+    res.status(400).json({ error: "Missing export config" });
+    return;
+  }
+  const config = JSON.parse(rawConfig);
+  // type guard needed here
+  const fileName = config.fileName;
+  const filePaths = files.map((f) => f.path);
+  const jobId = randomUUID();
+
+  const job: ExportJob = {
+    id: jobId,
+    fileName,
+    status: "queued",
+    progress: 0,
+    createdAt: new Date(),
+  };
+
+  exportJobs.set(jobId, job);
+
+  res.status(202).json({ jobId });
+
+  job.status = "processing";
+
+  const { outputPath } = await runMediabunnyPipeline(filePaths, config, jobId, (number) => {
+    job.progress = number;
+  });
+  job.status = "complete";
+  job.progress = 100;
+  job.outputPath = outputPath;
 });
 
 app.get("/api/exports/:jobId", (req, res) => {
@@ -82,6 +76,7 @@ app.get("/api/exports/:jobId", (req, res) => {
 
   res.json({
     status: job.status,
+    progress: job.progress,
     downloadUrl: job.status === "complete" ? `/api/exports/${job.id}/download` : undefined,
   });
 });
