@@ -37,7 +37,7 @@ export function PreviewVideo() {
   const mediaTimes = useRef<number[]>(videosData.map((vData) => vData.times.start ?? 0));
   const timerStartTimes = useRef<number[]>(Array(videosData.length).fill(-1));
   const longestVideoIndex = useRef(-1);
-  const { startExport, progress, error, cancelExport } = useVideoExport();
+  const { startExport, progress, error/*, cancelExport */} = useVideoExport();
   const [exportModal, setExportModal] = useState(false);
   const exportModalRef = useRef<HTMLDialogElement>(null);
   const [optionsModal, setOptionsModal] = useState(false);
@@ -128,7 +128,7 @@ export function PreviewVideo() {
         exportModalRef.current.showModal();
       } else {
         exportModalRef.current.close();
-        cancelExport();
+        //cancelExport();
       }
     }
   }, [exportModal]);

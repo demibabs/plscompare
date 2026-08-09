@@ -9,17 +9,35 @@ export function useVideoExport() {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  const startExport = (files: File[], config: ExportConfig) => {
+  const startExport = async (files: File[], config: ExportConfig) => {
     const body = new FormData();
-    body.append("options", JSON.stringify(config));
+    body.append("config", JSON.stringify(config));
     files.forEach((file) => {
       body.append("files", file);
     });
     setIsExporting(true);
-    void fetch("/api/exports", {
+    const response = await fetch("/api/exports", {
       method: "POST",
       body,
     });
+    const { jobId } = await response.json();
+
+    const interval = window.setInterval(async () => {
+      const response = await fetch(`/api/exports/${jobId}`);
+
+      if (!response.ok) {
+        return
+      }
+
+      const job = await response.json();
+
+      if (job.status === "complete") {
+        window.clearInterval(interval);
+        setIsExporting(false);
+        window.location.assign(job.downloadUrl);
+      }
+
+    }, 1000);
   };
 
   return {

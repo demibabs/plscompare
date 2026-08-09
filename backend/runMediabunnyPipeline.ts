@@ -16,11 +16,10 @@ import type { ExportConfig } from "@plscompare/shared/types";
 import { formatSecondsToSSMS } from "@plscompare/shared/formatSecondsToSSMS";
 import { getCanvasDimensions } from "@plscompare/shared/getCanvasDimensions";
 import { Canvas } from "skia-canvas";
-import { randomUUID } from "node:crypto";
+import { type UUID } from "node:crypto";
 import { tmpdir } from "node:os";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
-
 
 type StreamState = {
   iterator: AsyncIterator<VideoSample, void>;
@@ -29,13 +28,12 @@ type StreamState = {
   isDone: boolean;
 };
 
-
-export async function runMediabunnyPipeline(filePaths: string[], config: ExportConfig) {
+export async function runMediabunnyPipeline(filePaths: string[], config: ExportConfig, jobId: UUID) {
   const { videos, freezeFrameTime, layout } = config;
   const canvasDimensions = getCanvasDimensions(layout, videos.length);
   const fps = videos.every((v) => v.framerate < 31) ? 30 : 60;
   const frameDurationSec = 1 / fps;
-  const isCanceled = false
+  const isCanceled = false;
 
   const canvas = new Canvas(canvasDimensions.width, canvasDimensions.height);
   const ctx = canvas.getContext("2d");
@@ -63,10 +61,9 @@ export async function runMediabunnyPipeline(filePaths: string[], config: ExportC
       }),
     );
 
-    const jobId = randomUUID()
-    const exportDirectory = join(tmpdir(), "exports", jobId)
-    await mkdir(exportDirectory, { recursive: true })
-    const outputPath = join(exportDirectory)
+    const exportDirectory = join(tmpdir(), "exports", jobId);
+    await mkdir(exportDirectory, { recursive: true });
+    const outputPath = join(exportDirectory, `output.mp4`);
 
     const target = new FilePathTarget(outputPath);
     const output = new Output({
@@ -79,6 +76,7 @@ export async function runMediabunnyPipeline(filePaths: string[], config: ExportC
       bitrate: 5_000_000,
       bitrateMode: "constant",
       latencyMode: "quality",
+      hardwareAcceleration: "prefer-software",
     });
 
     output.addVideoTrack(outVideoSource, { frameRate: fps });
@@ -158,15 +156,19 @@ export async function runMediabunnyPipeline(filePaths: string[], config: ExportC
       }
 
       // B. Prepare sources for rendering
-      const sources = streams.map((s) => {
+      const sources = await Promise.all(streams.map(async (s) => {
         if (!s.currentSample) return null;
         const dw = s.currentSample.displayWidth;
         const dh = s.currentSample.displayHeight;
         const scratch = new Canvas(dw, dh);
         const scratchCtx = scratch.getContext("2d");
-        s.currentSample.draw(scratchCtx, 0, 0, dw, dh);
+        const imageData = scratchCtx.createImageData(dw, dh);
+        await s.currentSample.copyTo(imageData.data, {
+          format: "RGBA",
+        });
+        scratchCtx.putImageData(imageData, 0, 0);
         return scratch;
-      });
+      }));
       const sourcesDimensions = streams.map((s) =>
         s.currentSample
           ? {
@@ -190,25 +192,22 @@ export async function runMediabunnyPipeline(filePaths: string[], config: ExportC
         codedHeight: canvasDimensions.height,
         timestamp: currentTimestampSec,
         duration: frameDurationSec,
-      })
+      });
 
       // D. Encode
       await outVideoSource.add(sample);
-      sample.close()
+      sample.close();
 
       if (frameIndex % 10 === 0) {
         const progress = (frameIndex / totalFrames) * 100;
-        self.postMessage({ type: "PROGRESS", progress });
       }
     }
 
     await output.finalize();
-    
-    return {
-      jobId,
-      outputPath
-    }
 
+    return {
+      outputPath,
+    };
   } finally {
     // 4. Final Cleanup
     // Iterate over streams to ensure any fetched but unprocessed samples are closed,
