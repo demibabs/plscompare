@@ -3,7 +3,7 @@ export type ExportJobStatus =
   | "processing"
   | "complete"
   | "failed"
-  | "cancelled";
+  | "canceled";
 
 export type ExportJob = {
   id: string;

@@ -9,6 +9,7 @@ import { mkdir } from "node:fs/promises";
 import multer, { type Multer } from "multer";
 import { randomUUID } from "node:crypto";
 import { exportJobs, type ExportJob } from "./exportJobs";
+import { rm } from "node:fs";
 
 const app = e();
 registerMediabunnyServer();
@@ -58,12 +59,18 @@ app.post("/api/exports", upload.array("files"), async (req, res) => {
 
   job.status = "processing";
 
-  const { outputPath } = await runMediabunnyPipeline(filePaths, config, jobId, (number) => {
+  const outputPath = await runMediabunnyPipeline(filePaths, config, job, (number) => {
     job.progress = number;
+  }).catch((error: unknown) => {
+    job.error = String(error);
+    job.status = "failed";
+    return;
   });
-  job.status = "complete";
-  job.progress = 100;
-  job.outputPath = outputPath;
+  if (outputPath) {
+    job.status = "complete";
+    job.progress = 100;
+    job.outputPath = outputPath;
+  }
 });
 
 app.get("/api/exports/:jobId", (req, res) => {
@@ -87,7 +94,28 @@ app.get("/api/exports/:jobId/download", (req, res) => {
     res.sendStatus(404);
     return;
   }
-  res.download(job.outputPath, `${job.fileName}.mp4`);
+  res.download(job.outputPath, `${job.fileName}.mp4`, (error) => {
+    
+    if (error && !res.headersSent) {
+      return res.status(500).send("Download failed.");
+    }
+
+    rm(join("..", job.outputPath), { recursive: true, force: true }, (error) => {
+      if (error) {
+        console.error("Failed to delete folder:", error);
+      }
+    });
+  });
+});
+
+app.delete("/api/exports/:jobId", (req, res) => {
+  const job = exportJobs.get(req.params.jobId);
+  if (!job) {
+    res.sendStatus(404);
+    return;
+  }
+  job.status = "canceled";
+  res.sendStatus(200);
 });
 
 const port = Number(process.env.port) || 3000;

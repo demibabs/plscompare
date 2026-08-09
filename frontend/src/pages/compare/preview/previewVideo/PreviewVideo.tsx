@@ -37,7 +37,7 @@ export function PreviewVideo() {
   const mediaTimes = useRef<number[]>(videosData.map((vData) => vData.times.start ?? 0));
   const timerStartTimes = useRef<number[]>(Array(videosData.length).fill(-1));
   const longestVideoIndex = useRef(-1);
-  const { startExport, progress, error/*, cancelExport */} = useVideoExport();
+  const { startExport, progress, error, cancelExport} = useVideoExport();
   const [exportModal, setExportModal] = useState(false);
   const exportModalRef = useRef<HTMLDialogElement>(null);
   const [optionsModal, setOptionsModal] = useState(false);
@@ -108,7 +108,7 @@ export function PreviewVideo() {
         layout: optionsLatest.current.layout,
         freeze_frame_time: freezeFrameTime,
       });
-      startExport(files, {
+      void startExport(files, {
         videos,
         fileName: fileName || "plscompare",
         freezeFrameTime,
@@ -128,7 +128,7 @@ export function PreviewVideo() {
         exportModalRef.current.showModal();
       } else {
         exportModalRef.current.close();
-        //cancelExport();
+        void cancelExport();
       }
     }
   }, [exportModal]);
@@ -457,7 +457,7 @@ export function PreviewVideo() {
               </form>
             </dialog>
             {/* Export button */}
-            <button className="btn btn-lg btn-warning border-base-300 border-3" onClick={handleExport}>
+            <button className="btn btn-lg btn-warning border-base-300 border-3" onClick={() => void handleExport()}>
               Export
             </button>
             {/* Export modal */}

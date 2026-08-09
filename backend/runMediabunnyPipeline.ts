@@ -16,10 +16,10 @@ import type { ExportConfig } from "@plscompare/shared/types";
 import { formatSecondsToSSMS } from "@plscompare/shared/formatSecondsToSSMS";
 import { getCanvasDimensions } from "@plscompare/shared/getCanvasDimensions";
 import { Canvas } from "skia-canvas";
-import { type UUID } from "node:crypto";
 import { tmpdir } from "node:os";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
+import type { ExportJob } from "./exportJobs";
 
 type StreamState = {
   iterator: AsyncIterator<VideoSample, void>;
@@ -31,14 +31,13 @@ type StreamState = {
 export async function runMediabunnyPipeline(
   filePaths: string[],
   config: ExportConfig,
-  jobId: UUID,
+  job: ExportJob,
   onChange: (num: number) => void,
 ) {
   const { videos, freezeFrameTime, layout } = config;
   const canvasDimensions = getCanvasDimensions(layout, videos.length);
   const fps = videos.every((v) => v.framerate < 31) ? 30 : 60;
   const frameDurationSec = 1 / fps;
-  const isCanceled = false;
 
   const canvas = new Canvas(canvasDimensions.width, canvasDimensions.height);
   canvas.gpu = false;
@@ -67,7 +66,7 @@ export async function runMediabunnyPipeline(
       }),
     );
 
-    const exportDirectory = join(tmpdir(), "exports", jobId);
+    const exportDirectory = join(tmpdir(), "exports", job.id);
     await mkdir(exportDirectory, { recursive: true });
     const outputPath = join(exportDirectory, `output.mp4`);
 
@@ -82,7 +81,7 @@ export async function runMediabunnyPipeline(
       bitrate: 5_000_000,
       bitrateMode: "constant",
       latencyMode: "quality",
-      hardwareAcceleration: "prefer-hardware",
+      hardwareAcceleration: "prefer-software",
     });
 
     output.addVideoTrack(outVideoSource, { frameRate: fps });
@@ -143,7 +142,7 @@ export async function runMediabunnyPipeline(
 
     // 3. The Main Compositing Loop
     for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
-      if (isCanceled) break;
+      if (job.status === "canceled") break;
 
       const currentTimestampSec = frameIndex * frameDurationSec;
       const timerTimes: (number | undefined)[] = Array.from({ length: videos.length });
@@ -184,7 +183,7 @@ export async function runMediabunnyPipeline(
         streams.map(async (state, index) => {
           const sample = state.currentSample;
           const sourceFrame = sourceFrames[index];
-          if (!sample || !sourceFrame) return;
+          if (!sample) return;
           await sample.copyTo(sourceFrame.imageData.data, {
             format: "RGBA",
           });
@@ -233,11 +232,14 @@ export async function runMediabunnyPipeline(
       }
     }
 
+    if (job.status === "canceled") {
+      await output.cancel();
+      return;
+    }
+
     await output.finalize();
 
-    return {
-      outputPath,
-    };
+    return outputPath;
   } finally {
     // 4. Final Cleanup
     // Iterate over streams to ensure any fetched but unprocessed samples are closed,
