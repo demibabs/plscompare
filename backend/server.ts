@@ -17,7 +17,7 @@ registerMediabunnyServer();
 
 app.use(
   cors({
-    origin: "https://plscompare.com",
+    origin: "*",
     credentials: true,
   }),
 );
