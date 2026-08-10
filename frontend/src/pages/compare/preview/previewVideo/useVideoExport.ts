@@ -17,7 +17,7 @@ export function useVideoExport() {
   const jobId = useRef<string | null>(null);
   const preprocessingController = useRef<AbortController | null>(null);
 
-  const BACKEND_URL = ""//String(import.meta.env.VITE_BACKEND_URL);
+  const BACKEND_URL = String(import.meta.env.VITE_BACKEND_URL);
 
   const startExport = async (files: File[], config: ExportConfig) => {
     if (jobId.current || preprocessingController.current) return;
