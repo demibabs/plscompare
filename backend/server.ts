@@ -41,7 +41,8 @@ function isExportConfig(value: unknown): value is ExportConfig {
       (typeof video.label === "string" || video.label === null) &&
       typeof video.framerate === "number" &&
       typeof video.times.start === "number" &&
-      typeof video.times.end === "number"
+      typeof video.times.end === "number" &&
+      (video.sourceTimeOffset === undefined || typeof video.sourceTimeOffset === "number")
     );
   });
 }

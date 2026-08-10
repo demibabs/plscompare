@@ -103,6 +103,9 @@ function validateInputs(filePaths: string[], config: ExportConfig, job: ExportJo
     finiteNumber(video.times.start, `Video ${String(index + 1)} start time`);
     finiteNumber(video.times.end, `Video ${String(index + 1)} end time`);
     finiteNumber(video.framerate, `Video ${String(index + 1)} frame rate`);
+    if (video.sourceTimeOffset !== undefined) {
+      finiteNumber(video.sourceTimeOffset, `Video ${String(index + 1)} source time offset`);
+    }
     if (video.times.start < 0 || video.times.end <= video.times.start) {
       throw new Error(`Video ${String(index + 1)} has an invalid time range.`);
     }
@@ -535,7 +538,8 @@ export async function runFfmpegPipeline(
 
   const args = ["-hide_banner", "-nostdin", "-y", "-loglevel", "warning", "-filter_complex_threads", "2"];
   config.videos.forEach((video, index) => {
-    args.push("-ss", numberForFilter(video.times.start), "-i", filePaths[index]);
+    const inputStartTime = Math.max(0, video.times.start - (video.sourceTimeOffset ?? 0));
+    args.push("-ss", numberForFilter(inputStartTime), "-i", filePaths[index]);
   });
   labelInputs.forEach((label) => {
     args.push("-loop", "1", "-framerate", String(fps), "-i", label.path);
