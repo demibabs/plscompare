@@ -4,15 +4,23 @@ import { fileURLToPath } from "node:url";
 import { FontLibrary } from "skia-canvas";
 import { runMediabunnyPipeline } from "./runMediabunnyPipeline";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { mkdir } from "node:fs/promises";
 import multer, { type Multer } from "multer";
 import { randomUUID } from "node:crypto";
 import { exportJobs, type ExportJob } from "./exportJobs";
 import { rm } from "node:fs";
+import cors from "cors";
 
 const app = e();
 registerMediabunnyServer();
+
+app.use(
+  cors({
+    origin: "https://plscompare.com",
+    credentials: true,
+  }),
+);
 
 try {
   const fontUrl = new URL("../frontend/src/assets/shared/fonts/Outfit-VariableFont_wght.woff2", import.meta.url);
@@ -22,7 +30,9 @@ try {
   console.warn("Could not load local font:", err);
 }
 
-const uploadDirectory = join(tmpdir(), "uploads");
+const jobId = randomUUID();
+
+const uploadDirectory = join(tmpdir(), jobId, "uploads");
 await mkdir(uploadDirectory, { recursive: true });
 const upload = multer({
   dest: uploadDirectory,
@@ -43,7 +53,6 @@ app.post("/api/exports", upload.array("files"), async (req, res) => {
   // type guard needed here
   const fileName = config.fileName;
   const filePaths = files.map((f) => f.path);
-  const jobId = randomUUID();
 
   const job: ExportJob = {
     id: jobId,
@@ -59,18 +68,33 @@ app.post("/api/exports", upload.array("files"), async (req, res) => {
 
   job.status = "processing";
 
-  const outputPath = await runMediabunnyPipeline(filePaths, config, job, (number) => {
-    job.progress = number;
-  }).catch((error: unknown) => {
+  const exportDirectory = join(tmpdir(), "exports", job.id);
+  await mkdir(exportDirectory, { recursive: true });
+  job.outputPath = join(exportDirectory, `output.mp4`);
+  try {
+    await runMediabunnyPipeline(filePaths, config, job, (number) => {
+      job.progress = number;
+    });
+  } catch (error: unknown) {
     job.error = String(error);
     job.status = "failed";
+    rm(exportDirectory, { recursive: true, force: true }, (error) => {
+      if (error) {
+        console.error("Failed to delete folder:", error);
+      }
+    });
     return;
-  });
-  if (outputPath) {
-    job.status = "complete";
-    job.progress = 100;
-    job.outputPath = outputPath;
   }
+  if (job.status === "canceled") {
+    rm(exportDirectory, { recursive: true, force: true }, (error) => {
+      if (error) {
+        console.error("Failed to delete folder:", error);
+      }
+    });
+    return;
+  }
+  job.status = "complete";
+  job.progress = 100;
 });
 
 app.get("/api/exports/:jobId", (req, res) => {
@@ -95,12 +119,11 @@ app.get("/api/exports/:jobId/download", (req, res) => {
     return;
   }
   res.download(job.outputPath, `${job.fileName}.mp4`, (error) => {
-    
     if (error && !res.headersSent) {
       return res.status(500).send("Download failed.");
     }
 
-    rm(join("..", job.outputPath), { recursive: true, force: true }, (error) => {
+    rm(dirname(job.outputPath), { recursive: true, force: true }, (error) => {
       if (error) {
         console.error("Failed to delete folder:", error);
       }
@@ -118,7 +141,7 @@ app.delete("/api/exports/:jobId", (req, res) => {
   res.sendStatus(200);
 });
 
-const port = Number(process.env.port) || 3000;
+const port = Number(process.env.PORT) || 3000;
 app.listen(port, "0.0.0.0", () => {
   console.log(`Port ${String(port)} is listening :)`);
 });

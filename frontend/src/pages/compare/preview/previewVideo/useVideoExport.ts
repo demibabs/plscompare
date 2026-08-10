@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { ExportConfig } from "@plscompare/shared/types";
 
 export function useVideoExport() {
@@ -6,6 +6,8 @@ export function useVideoExport() {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const jobId = useRef<string | null>(null);
+
+  const BACKEND_URL = String(import.meta.env.VITE_BACKEND_URL)
 
   const startExport = async (files: File[], config: ExportConfig) => {
     if (jobId.current) return;
@@ -17,7 +19,7 @@ export function useVideoExport() {
     files.forEach((file) => {
       body.append("files", file);
     });
-    const response = await fetch("/api/exports", {
+    const response = await fetch(`${BACKEND_URL}/api/exports`, {
       method: "POST",
       body,
     });
@@ -29,7 +31,7 @@ export function useVideoExport() {
     jobId.current = (await response.json()).jobId;
 
     const interval = window.setInterval(async () => {
-      const response = await fetch(`/api/exports/${jobId.current}`);
+      const response = await fetch(`${BACKEND_URL}/api/exports/${jobId.current}`);
 
       if (!jobId.current) {
         window.clearInterval(interval);
@@ -51,7 +53,7 @@ export function useVideoExport() {
 
       if (job.status === "complete") {
         window.clearInterval(interval);
-        window.location.assign(job.downloadUrl);
+        window.location.assign(`${BACKEND_URL}${job.downloadUrl}`);
         jobId.current = null;
         setIsExporting(false);
       }
@@ -60,7 +62,7 @@ export function useVideoExport() {
 
   async function cancelExport() {
     if (!jobId.current) return;
-    const response = await fetch(`/api/exports/${jobId.current}`, { method: "DELETE" });
+    const response = await fetch(`${BACKEND_URL}/api/exports/${jobId.current}`, { method: "DELETE" });
     if (!response.ok) {
       return;
     }

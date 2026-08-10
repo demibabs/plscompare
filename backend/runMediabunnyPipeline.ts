@@ -4,7 +4,6 @@ import {
   VideoSampleSink,
   Output,
   Mp4OutputFormat,
-  BufferTarget,
   VideoSample,
   FilePathSource,
   VideoSampleSource,
@@ -66,11 +65,7 @@ export async function runMediabunnyPipeline(
       }),
     );
 
-    const exportDirectory = join(tmpdir(), "exports", job.id);
-    await mkdir(exportDirectory, { recursive: true });
-    const outputPath = join(exportDirectory, `output.mp4`);
-
-    const target = new FilePathTarget(outputPath);
+    const target = new FilePathTarget(job.outputPath);
     const output = new Output({
       format: new Mp4OutputFormat(),
       target: target,
@@ -238,8 +233,7 @@ export async function runMediabunnyPipeline(
     }
 
     await output.finalize();
-
-    return outputPath;
+    
   } finally {
     // 4. Final Cleanup
     // Iterate over streams to ensure any fetched but unprocessed samples are closed,
