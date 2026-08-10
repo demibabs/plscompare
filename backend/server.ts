@@ -1,34 +1,22 @@
-import { registerMediabunnyServer } from "@mediabunny/server";
 import e from "express";
-import { fileURLToPath } from "node:url";
-import { FontLibrary } from "skia-canvas";
-import { runMediabunnyPipeline } from "./runMediabunnyPipeline";
+import { runFfmpegPipeline } from "./runFfmpegPipeline";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { mkdir } from "node:fs/promises";
-import multer, { type Multer } from "multer";
+import multer from "multer";
 import { randomUUID } from "node:crypto";
 import { exportJobs, type ExportJob } from "./exportJobs";
 import { rm } from "node:fs";
 import cors from "cors";
+import type { ExportConfig } from "@plscompare/shared/types";
 
 const app = e();
-registerMediabunnyServer();
 
 app.use(
   cors({
     origin: "*",
-    credentials: true,
   }),
 );
-
-try {
-  const fontUrl = new URL("../frontend/src/assets/shared/fonts/Outfit-VariableFont_wght.woff2", import.meta.url);
-  const fontPath = fileURLToPath(fontUrl);
-  FontLibrary.use("Outfit", fontPath);
-} catch (err) {
-  console.warn("Could not load local font:", err);
-}
 
 const jobId = randomUUID();
 
@@ -38,19 +26,48 @@ const upload = multer({
   dest: uploadDirectory,
 });
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isExportConfig(value: unknown): value is ExportConfig {
+  if (!isRecord(value) || !Array.isArray(value.videos)) return false;
+  if (typeof value.fileName !== "string" || typeof value.freezeFrameTime !== "number") return false;
+  if (!(["default", "vertical", "horizontal", "grid"] as unknown[]).includes(value.layout)) return false;
+
+  return value.videos.every((video: unknown) => {
+    if (!isRecord(video) || !isRecord(video.times)) return false;
+    return (
+      (typeof video.label === "string" || video.label === null) &&
+      typeof video.framerate === "number" &&
+      typeof video.times.start === "number" &&
+      typeof video.times.end === "number"
+    );
+  });
+}
+
+function isExportCanceled(job: ExportJob) {
+  return job.status === "canceled";
+}
+
 app.post("/api/exports", upload.array("files"), async (req, res) => {
   const files = req.files as Express.Multer.File[];
   if (!files.length) {
     res.status(400).json({ error: "No videos uploaded" });
     return;
   }
-  const rawConfig = req.body.config;
+  const body: unknown = req.body;
+  const rawConfig = isRecord(body) ? body.config : undefined;
   if (typeof rawConfig !== "string") {
     res.status(400).json({ error: "Missing export config" });
     return;
   }
-  const config = JSON.parse(rawConfig);
-  // type guard needed here
+  const parsedConfig: unknown = JSON.parse(rawConfig);
+  if (!isExportConfig(parsedConfig)) {
+    res.status(400).json({ error: "Invalid export config" });
+    return;
+  }
+  const config = parsedConfig;
   const fileName = config.fileName;
   const filePaths = files.map((f) => f.path);
 
@@ -72,7 +89,7 @@ app.post("/api/exports", upload.array("files"), async (req, res) => {
   await mkdir(exportDirectory, { recursive: true });
   job.outputPath = join(exportDirectory, `output.mp4`);
   try {
-    await runMediabunnyPipeline(filePaths, config, job, (number) => {
+    await runFfmpegPipeline(filePaths, config, job, (number) => {
       job.progress = number;
     });
   } catch (error: unknown) {
@@ -85,7 +102,7 @@ app.post("/api/exports", upload.array("files"), async (req, res) => {
     });
     return;
   }
-  if (job.status === "canceled") {
+  if (isExportCanceled(job)) {
     rm(exportDirectory, { recursive: true, force: true }, (error) => {
       if (error) {
         console.error("Failed to delete folder:", error);
@@ -118,12 +135,13 @@ app.get("/api/exports/:jobId/download", (req, res) => {
     res.sendStatus(404);
     return;
   }
-  res.download(job.outputPath, `${job.fileName}.mp4`, (error) => {
+  const outputPath = job.outputPath;
+  res.download(outputPath, `${job.fileName}.mp4`, (error) => {
     if (error && !res.headersSent) {
       return res.status(500).send("Download failed.");
     }
 
-    rm(dirname(job.outputPath), { recursive: true, force: true }, (error) => {
+    rm(dirname(outputPath), { recursive: true, force: true }, (error) => {
       if (error) {
         console.error("Failed to delete folder:", error);
       }
