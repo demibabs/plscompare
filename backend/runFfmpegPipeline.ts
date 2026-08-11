@@ -560,7 +560,7 @@ export async function runFfmpegPipeline(
     "-c:v",
     "libx264",
     "-preset",
-    "medium",
+    "veryfast",
     "-b:v",
     OUTPUT_BITRATE,
     "-minrate",

@@ -174,7 +174,7 @@ export function FileUploadButton() {
           void handleFileChange(e)
             .catch((error: unknown) => {
               setStatusMessage(String(error));
-              posthog.capture("file_upload_error", { reason: "unsupported_file_type" });
+              posthog.capture("file_upload_error", { reason: String(error) });
             })
             .finally(() => {
               setProgress(0);
