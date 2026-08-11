@@ -1,5 +1,5 @@
 import { createBrowserRouter, redirect, RouterProvider } from "react-router-dom";
-import { Landing } from "./landing/Landing";
+import { Landing } from "./pages/landing/Landing";
 import { Compare } from "./pages/compare/Compare";
 import { StartFrame } from "./pages/compare/StartFrame";
 import { EndFrame } from "./pages/compare/EndFrame";
@@ -60,7 +60,7 @@ const router = createBrowserRouter([
           },
           {
             path: "/read-me/acknowledgements",
-            element: <Acknowledgements></Acknowledgements>
+            element: <Acknowledgements></Acknowledgements>,
           },
           {
             path: "*",
