@@ -18,14 +18,6 @@ app.use(
   }),
 );
 
-
-
-const uploadDirectory = join(tmpdir(), jobId, "uploads");
-await mkdir(uploadDirectory, { recursive: true });
-const upload = multer({
-  dest: uploadDirectory,
-});
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -51,10 +43,23 @@ function isExportCanceled(job: ExportJob) {
   return job.status === "canceled";
 }
 
-app.post("/api/exports", upload.array("files"), async (req, res) => {
+app.post("/api/exports", async (req, res, next) => {
   const jobId = randomUUID();
-  const files = req.files as Express.Multer.File[];
-  if (!files.length) {
+
+  const uploadDirectory = join(tmpdir(), jobId, "uploads");
+  await mkdir(uploadDirectory, { recursive: true });
+  res.locals.jobId = jobId;
+
+  multer({
+    dest: uploadDirectory,
+  }).array("files")(req, res, next);
+});
+
+app.post("/api/exports", async (req, res) => {
+  const jobId = res.locals.jobId;
+
+  const files = req.files as Express.Multer.File[] | undefined;
+  if (!files?.length) {
     res.status(400).json({ error: "No videos uploaded" });
     return;
   }

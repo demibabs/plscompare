@@ -115,7 +115,7 @@ export function useVideoExport() {
       }, 1000);
     } catch (exportError: unknown) {
       if (!controller.signal.aborted) {
-        setError(errorMessage(exportError));
+        setError(String(exportError));
       }
     } finally {
       if (preprocessingController.current === controller) {
