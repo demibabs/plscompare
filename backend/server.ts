@@ -18,7 +18,7 @@ app.use(
   }),
 );
 
-const jobId = randomUUID();
+
 
 const uploadDirectory = join(tmpdir(), jobId, "uploads");
 await mkdir(uploadDirectory, { recursive: true });
@@ -52,6 +52,7 @@ function isExportCanceled(job: ExportJob) {
 }
 
 app.post("/api/exports", upload.array("files"), async (req, res) => {
+  const jobId = randomUUID();
   const files = req.files as Express.Multer.File[];
   if (!files.length) {
     res.status(400).json({ error: "No videos uploaded" });

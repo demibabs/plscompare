@@ -37,7 +37,7 @@ export function PreviewVideo() {
   const mediaTimes = useRef<number[]>(videosData.map((vData) => vData.times.start ?? 0));
   const timerStartTimes = useRef<number[]>(Array(videosData.length).fill(-1));
   const longestVideoIndex = useRef(-1);
-  const { startExport, progress, error, cancelExport} = useVideoExport();
+  const { startExport, progress, error, cancelExport, phase} = useVideoExport();
   const [exportModal, setExportModal] = useState(false);
   const exportModalRef = useRef<HTMLDialogElement>(null);
   const [optionsModal, setOptionsModal] = useState(false);
@@ -471,7 +471,7 @@ export function PreviewVideo() {
               <div className="modal-box border-base-300 border-3">
                 <h1 className="pb-3 text-3xl">
                   <b>
-                    {progress === 100 ? (
+                    {progress === 100 && phase === "Exporting" ? (
                       "Video exported!"
                     ) : (
                       <span>
@@ -479,7 +479,7 @@ export function PreviewVideo() {
                           <>Something went wrong...</>
                         ) : (
                           <>
-                            Exporting video... <span className="ml-1 text-2xl">({Math.round(progress)}%)</span>
+                            {phase}... <span className="ml-1 text-2xl">({Math.round(progress)}%)</span>
                           </>
                         )}
                       </span>

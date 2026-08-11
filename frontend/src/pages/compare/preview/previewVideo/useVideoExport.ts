@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import type { ExportConfig } from "@plscompare/shared/types";
 import { shortenVideoForUpload } from "./shortenVideoForUpload";
+import axios, { type AxiosProgressEvent } from "axios";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -11,7 +12,7 @@ function errorMessage(error: unknown) {
 }
 
 export function useVideoExport() {
-  const [isExporting, setIsExporting] = useState(false);
+  const [phase, setPhase] = useState<"Uploading" | "Rendering" | null>(null);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const jobId = useRef<string | null>(null);
@@ -24,7 +25,7 @@ export function useVideoExport() {
 
     const controller = new AbortController();
     preprocessingController.current = controller;
-    setIsExporting(true);
+    setPhase("Uploading");
     setProgress(0);
     setError(null);
 
@@ -50,19 +51,29 @@ export function useVideoExport() {
         body.append("files", file);
       });
 
-      const response = await fetch(`${BACKEND_URL}/api/exports`, {
-        method: "POST",
-        body,
-        signal: controller.signal,
-      });
-      if (!response.ok) throw new Error("Export failed to start. Try again?");
+      let response;
+      try {
+        response = await axios(`${BACKEND_URL}/api/exports`, {
+          method: "POST",
+          data: body,
+          signal: controller.signal,
+          onUploadProgress: (progressEvent: AxiosProgressEvent) => {
+            const percentage = Math.round((progressEvent.progress ?? 0) * 100);
+            setProgress(percentage);
+          },
+        });
+      } catch (error) {
+        setError(String(error));
+        return;
+      }
 
-      const startPayload: unknown = await response.json();
+
+      const startPayload = response?.data
       if (!isRecord(startPayload) || typeof startPayload.jobId !== "string") {
         throw new Error("The export server returned an invalid response.");
       }
       jobId.current = startPayload.jobId;
-
+      setPhase("Rendering")
       const interval = window.setInterval(() => {
         void (async () => {
           const currentJobId = jobId.current;
@@ -81,14 +92,12 @@ export function useVideoExport() {
 
           if (job.status === "failed") {
             setError(typeof job.error === "string" ? job.error : "The export failed.");
-            setIsExporting(false);
             jobId.current = null;
             window.clearInterval(interval);
             return;
           }
 
           if (job.status === "canceled") {
-            setIsExporting(false);
             jobId.current = null;
             window.clearInterval(interval);
             return;
@@ -99,7 +108,6 @@ export function useVideoExport() {
             setProgress(100);
             window.location.assign(`${BACKEND_URL}${job.downloadUrl}`);
             jobId.current = null;
-            setIsExporting(false);
           }
         })().catch((pollError: unknown) => {
           console.error("Failed to check export status:", pollError);
@@ -108,7 +116,6 @@ export function useVideoExport() {
     } catch (exportError: unknown) {
       if (!controller.signal.aborted) {
         setError(errorMessage(exportError));
-        setIsExporting(false);
       }
     } finally {
       if (preprocessingController.current === controller) {
@@ -129,15 +136,11 @@ export function useVideoExport() {
       if (!response.ok) return;
       jobId.current = null;
     }
-
-    setProgress(0);
-    setError(null);
-    setIsExporting(false);
   }
 
   return {
     startExport,
-    isExporting,
+    phase,
     progress,
     cancelExport,
     error,
