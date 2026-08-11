@@ -37,7 +37,7 @@ export function PreviewVideo() {
   const mediaTimes = useRef<number[]>(videosData.map((vData) => vData.times.start ?? 0));
   const timerStartTimes = useRef<number[]>(Array(videosData.length).fill(-1));
   const longestVideoIndex = useRef(-1);
-  const { startExport, progress, error, cancelExport, phase} = useVideoExport();
+  const { startExport, progress, error, cancelExport, phase } = useVideoExport();
   const [exportModal, setExportModal] = useState(false);
   const exportModalRef = useRef<HTMLDialogElement>(null);
   const [optionsModal, setOptionsModal] = useState(false);
@@ -96,8 +96,8 @@ export function PreviewVideo() {
   async function handleExport() {
     setIsPlaying(false);
     if (videosData.every((vData) => hasTimes(vData))) {
-      const fs: { file: File, frameData: FrameData }[] = await get("user-files") ?? []
-      const files = fs.map(f => f.file)
+      const fs: { file: File; frameData: FrameData }[] = (await get("user-files")) ?? [];
+      const files = fs.map((f) => f.file);
       const videos = videosData.map((vData, index) => ({
         times: vData.times,
         label: vData.label,
@@ -471,7 +471,7 @@ export function PreviewVideo() {
               <div className="modal-box border-base-300 border-3">
                 <h1 className="pb-3 text-3xl">
                   <b>
-                    {progress === 100 && phase === "Exporting" ? (
+                    {progress === 100 && phase === "Rendering" ? (
                       "Video exported!"
                     ) : (
                       <span>
@@ -497,7 +497,9 @@ export function PreviewVideo() {
                       {progress === 100 || error ? "Close" : "Cancel"}
                     </button>
                     <button
-                      className={cn("btn btn-lg btn-soft btn-success", { "btn-disabled": progress !== 100 })}
+                      className={cn("btn btn-lg btn-soft btn-success", {
+                        "btn-disabled": progress !== 100 || phase === "Uploading",
+                      })}
                       onClick={() => {
                         void clear().then(() => navigate("/"));
                       }}

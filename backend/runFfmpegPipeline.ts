@@ -309,8 +309,6 @@ function numberForFilter(value: number) {
 function buildFilterGraph(
   config: ExportConfig,
   containers: RasterContainer[],
-  outputWidth: number,
-  outputHeight: number,
   fps: number,
   freezeFrameCount: number,
   totalFrames: number,
@@ -319,11 +317,6 @@ function buildFilterGraph(
   timerInputIndex: number | null,
 ) {
   const chains: string[] = [];
-  const outputDuration = totalFrames / fps;
-  chains.push(
-    `color=c=black:s=${String(outputWidth)}x${String(outputHeight)}:r=${String(fps)}:d=${numberForFilter(outputDuration)},format=rgb24[background]`,
-  );
-
   config.videos.forEach((video, index) => {
     const container = containers[index];
     const clipDuration = video.times.end - video.times.start + 0.005;
@@ -333,19 +326,19 @@ function buildFilterGraph(
         : `scale=w=${String(container.rasterWidth)}:h=${String(container.rasterHeight)}:force_original_aspect_ratio=decrease:flags=bilinear,pad=w=${String(container.rasterWidth)}:h=${String(container.rasterHeight)}:x=(ow-iw)/2:y=(oh-ih)/2:color=black`;
 
     chains.push(
-      `[${String(index)}:v:0]trim=start=0:end=${numberForFilter(clipDuration)},setpts=PTS-STARTPTS,fps=fps=${String(fps)}:start_time=0:round=near,${fitFilter},setsar=1,tpad=start=${String(freezeFrameCount)}:start_mode=clone:stop=-1:stop_mode=clone,trim=end_frame=${String(totalFrames)},setpts=N/(${String(fps)}*TB),format=rgb24[video${String(index)}]`,
+      `[${String(index)}:v:0]trim=start=0:end=${numberForFilter(clipDuration)},setpts=PTS-STARTPTS,fps=fps=${String(fps)}:start_time=0:round=near,${fitFilter},setsar=1,tpad=start=${String(freezeFrameCount)}:start_mode=clone:stop=-1:stop_mode=clone,trim=end_frame=${String(totalFrames)},setpts=N/(${String(fps)}*TB),format=yuv420p[video${String(index)}]`,
     );
   });
 
-  let currentOutput = "background";
-  config.videos.forEach((_, index) => {
-    const container = containers[index];
-    const nextOutput = `videoComposite${String(index)}`;
+  let currentOutput = "video0";
+  if (config.videos.length > 1) {
+    const videoInputs = config.videos.map((_, index) => `[video${String(index)}]`).join("");
+    const layout = containers.map((container) => `${String(container.rasterX)}_${String(container.rasterY)}`).join("|");
     chains.push(
-      `[${currentOutput}][video${String(index)}]overlay=x=${String(container.rasterX)}:y=${String(container.rasterY)}:eval=init:shortest=1:format=rgb[${nextOutput}]`,
+      `${videoInputs}xstack=inputs=${String(config.videos.length)}:layout=${layout}:fill=black:shortest=1[videoComposite]`,
     );
-    currentOutput = nextOutput;
-  });
+    currentOutput = "videoComposite";
+  }
 
   if (timerOverlay && timerInputIndex !== null) {
     chains.push(`[${String(timerInputIndex)}:v:0]setpts=N/(${String(fps)}*TB),format=rgba[timerSource]`);
@@ -363,7 +356,7 @@ function buildFilterGraph(
         `[${source}]crop=w=${String(segment.width)}:h=${String(segment.height)}:x=${String(segment.packedX)}:y=0[${croppedTimer}]`,
       );
       chains.push(
-        `[${currentOutput}][${croppedTimer}]overlay=x=${String(segment.originX)}:y=${String(segment.originY)}:eval=init:shortest=1:format=rgb:alpha=straight[${nextOutput}]`,
+        `[${currentOutput}][${croppedTimer}]overlay=x=${String(segment.originX)}:y=${String(segment.originY)}:eval=init:shortest=1:format=yuv420:alpha=straight[${nextOutput}]`,
       );
       currentOutput = nextOutput;
     });
@@ -374,7 +367,7 @@ function buildFilterGraph(
     const nextOutput = `labelComposite${String(index)}`;
     chains.push(`[${String(label.inputIndex)}:v:0]setpts=N/(${String(fps)}*TB),format=rgba[${labelSource}]`);
     chains.push(
-      `[${currentOutput}][${labelSource}]overlay=x=${String(label.x)}:y=${String(label.y)}:eval=init:shortest=1:format=rgb:alpha=straight[${nextOutput}]`,
+      `[${currentOutput}][${labelSource}]overlay=x=${String(label.x)}:y=${String(label.y)}:eval=init:shortest=1:format=yuv420:alpha=straight[${nextOutput}]`,
     );
     currentOutput = nextOutput;
   });
@@ -519,8 +512,6 @@ export async function runFfmpegPipeline(
   const filterGraph = buildFilterGraph(
     config,
     rasterContainers,
-    outputWidth,
-    outputHeight,
     fps,
     freezeFrameCount,
     totalFrames,
@@ -536,7 +527,7 @@ export async function runFfmpegPipeline(
     throw new Error("FFmpeg is unavailable on this platform. Set FFMPEG_PATH to an FFmpeg executable.");
   }
 
-  const args = ["-hide_banner", "-nostdin", "-y", "-loglevel", "warning", "-filter_complex_threads", "2"];
+  const args = ["-hide_banner", "-nostdin", "-y", "-loglevel", "warning", "-filter_complex_threads", "0"];
   config.videos.forEach((video, index) => {
     const inputStartTime = Math.max(0, video.times.start - (video.sourceTimeOffset ?? 0));
     args.push("-ss", numberForFilter(inputStartTime), "-i", filePaths[index]);
@@ -579,7 +570,7 @@ export async function runFfmpegPipeline(
     "-bufsize",
     "10000k",
     "-threads",
-    "4",
+    "0",
     "-pix_fmt",
     "yuv420p",
     "-r",
