@@ -1,16 +1,24 @@
 import e from "express";
 import { runFfmpegPipeline } from "./runFfmpegPipeline";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
-import { mkdir } from "node:fs/promises";
+import { join } from "node:path";
+import { mkdir, rm } from "node:fs/promises";
 import multer from "multer";
-import { randomUUID } from "node:crypto";
+import { randomUUID, type UUID } from "node:crypto";
 import { exportJobs, type ExportJob } from "./exportJobs";
-import { rm } from "node:fs";
 import cors from "cors";
 import type { ExportConfig } from "@plscompare/shared/types";
 
 const app = e();
+
+const jobsDirectory = join(tmpdir(), "plscompare", "jobs");
+
+await rm(jobsDirectory, { recursive: true, force: true });
+
+const port = Number(process.env.PORT) || 3000;
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Port ${String(port)} is listening :)`);
+});
 
 app.use(
   cors({
@@ -43,82 +51,101 @@ function isExportCanceled(job: ExportJob) {
   return job.status === "canceled";
 }
 
+function getDirectory(jobId: string) {
+  return join(jobsDirectory, jobId);
+}
+
+function removeJob(jobId: string) {
+  const timer = setTimeout(
+    () => {
+      const directory = getDirectory(jobId);
+      void rm(directory, { recursive: true, force: true }).catch((error: unknown) => {
+        console.error("Failed to delete folder", String(error));
+      });
+      exportJobs.delete(jobId);
+    },
+    1000 * 60 * 60,
+  );
+  timer.unref();
+}
+
 app.post("/api/exports", async (req, res, next) => {
   const jobId = randomUUID();
-
-  const uploadDirectory = join(tmpdir(), jobId, "uploads");
-  await mkdir(uploadDirectory, { recursive: true });
   res.locals.jobId = jobId;
+  const uploadDirectory = join(getDirectory(jobId), "uploads");
+
+  await mkdir(uploadDirectory, { recursive: true });
 
   multer({
     dest: uploadDirectory,
-  }).array("files")(req, res, next);
+  }).array("files")(req, res, (error) => {
+    if (error) {
+      removeJob(jobId);
+      next(error);
+      return;
+    }
+    next();
+  });
 });
 
 app.post("/api/exports", async (req, res) => {
-  const jobId = res.locals.jobId;
-
-  const files = req.files as Express.Multer.File[] | undefined;
-  if (!files?.length) {
-    res.status(400).json({ error: "No videos uploaded" });
-    return;
-  }
-  const body: unknown = req.body;
-  const rawConfig = isRecord(body) ? body.config : undefined;
-  if (typeof rawConfig !== "string") {
-    res.status(400).json({ error: "Missing export config" });
-    return;
-  }
-  const parsedConfig: unknown = JSON.parse(rawConfig);
-  if (!isExportConfig(parsedConfig)) {
-    res.status(400).json({ error: "Invalid export config" });
-    return;
-  }
-  const config = parsedConfig;
-  const fileName = config.fileName;
-  const filePaths = files.map((f) => f.path);
-
-  const job: ExportJob = {
-    id: jobId,
-    fileName,
-    status: "queued",
-    progress: 0,
-    createdAt: new Date(),
-  };
-
-  exportJobs.set(jobId, job);
-
-  res.status(202).json({ jobId });
-
-  job.status = "processing";
-
-  const exportDirectory = join(tmpdir(), "exports", job.id);
-  await mkdir(exportDirectory, { recursive: true });
-  job.outputPath = join(exportDirectory, `output.mp4`);
+  const jobId: UUID = res.locals.jobId;
+  const directory = getDirectory(jobId);
   try {
-    await runFfmpegPipeline(filePaths, config, job, (number) => {
-      job.progress = number;
-    });
-  } catch (error: unknown) {
-    job.error = String(error);
-    job.status = "failed";
-    rm(exportDirectory, { recursive: true, force: true }, (error) => {
-      if (error) {
-        console.error("Failed to delete folder:", error);
-      }
-    });
-    return;
+    const files = req.files as Express.Multer.File[] | undefined;
+    if (!files?.length) {
+      res.status(400).json({ error: "No videos uploaded" });
+      return;
+    }
+    const body: unknown = req.body;
+    const rawConfig = isRecord(body) ? body.config : undefined;
+    if (typeof rawConfig !== "string") {
+      res.status(400).json({ error: "Missing export config" });
+      return;
+    }
+    const parsedConfig: unknown = JSON.parse(rawConfig);
+    if (!isExportConfig(parsedConfig)) {
+      res.status(400).json({ error: "Invalid export config" });
+      return;
+    }
+    const config = parsedConfig;
+    const fileName = config.fileName;
+    const filePaths = files.map((f) => f.path);
+
+    const job: ExportJob = {
+      id: jobId,
+      fileName,
+      status: "queued",
+      progress: 0,
+      createdAt: new Date(),
+    };
+
+    exportJobs.set(jobId, job);
+
+    res.status(202).json({ jobId });
+
+    job.status = "processing";
+
+    const exportDirectory = join(directory, "exports");
+    await mkdir(exportDirectory, { recursive: true });
+    job.outputPath = join(exportDirectory, `output.mp4`);
+    try {
+      await runFfmpegPipeline(filePaths, config, job, (number) => {
+        job.progress = number;
+      });
+    } catch (error: unknown) {
+      job.error = String(error);
+      job.status = "failed";
+      return;
+    }
+    if (isExportCanceled(job)) {
+      return;
+    }
+    job.status = "complete";
+    job.progress = 100;
+  } finally {
+    removeJob(jobId);
   }
-  if (isExportCanceled(job)) {
-    rm(exportDirectory, { recursive: true, force: true }, (error) => {
-      if (error) {
-        console.error("Failed to delete folder:", error);
-      }
-    });
-    return;
-  }
-  job.status = "complete";
-  job.progress = 100;
 });
 
 app.get("/api/exports/:jobId", (req, res) => {
@@ -133,27 +160,30 @@ app.get("/api/exports/:jobId", (req, res) => {
     status: job.status,
     progress: job.progress,
     downloadUrl: job.status === "complete" ? `/api/exports/${job.id}/download` : undefined,
+    error: job.error,
   });
 });
 
-app.get("/api/exports/:jobId/download", (req, res) => {
-  const job = exportJobs.get(req.params.jobId);
+app.get("/api/exports/:jobId/download", async (req, res) => {
+  const jobId = req.params.jobId;
+  const job = exportJobs.get(jobId);
   if (job?.status !== "complete" || !job.outputPath) {
     res.sendStatus(404);
     return;
   }
-  const outputPath = job.outputPath;
-  res.download(outputPath, `${job.fileName}.mp4`, (error) => {
+  try {
+    const outputPath = job.outputPath;
+    await new Promise<void>((resolve, reject) => {
+      res.download(outputPath, `${job.fileName}.mp4`, (error) => {
+        if (error) reject(error);
+        else resolve();
+      });
+    });
+  } catch (error) {
     if (error && !res.headersSent) {
       return res.status(500).send("Download failed.");
     }
-
-    rm(dirname(outputPath), { recursive: true, force: true }, (error) => {
-      if (error) {
-        console.error("Failed to delete folder:", error);
-      }
-    });
-  });
+  }
 });
 
 app.delete("/api/exports/:jobId", (req, res) => {
@@ -164,9 +194,4 @@ app.delete("/api/exports/:jobId", (req, res) => {
   }
   job.status = "canceled";
   res.sendStatus(200);
-});
-
-const port = Number(process.env.PORT) || 3000;
-app.listen(port, "0.0.0.0", () => {
-  console.log(`Port ${String(port)} is listening :)`);
 });

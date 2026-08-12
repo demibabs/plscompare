@@ -67,13 +67,11 @@ export function useVideoExport() {
         return;
       }
 
-
-      const startPayload = response?.data
+      const startPayload: unknown = response.data;
       if (!isRecord(startPayload) || typeof startPayload.jobId !== "string") {
         throw new Error("The export server returned an invalid response.");
       }
       jobId.current = startPayload.jobId;
-      setPhase("Rendering")
       const interval = window.setInterval(() => {
         void (async () => {
           const currentJobId = jobId.current;
@@ -87,8 +85,8 @@ export function useVideoExport() {
 
           const job: unknown = await statusResponse.json();
           if (!isRecord(job) || typeof job.status !== "string") return;
-
           if (typeof job.progress === "number") setProgress(job.progress);
+          setPhase("Rendering");
 
           if (job.status === "failed") {
             setError(typeof job.error === "string" ? job.error : "The export failed.");
