@@ -13,6 +13,7 @@ const app = e();
 
 const jobsDirectory = join(tmpdir(), "plscompare", "jobs");
 
+// Clear jobs directory on startup (doesnt matter for deployed version)
 await rm(jobsDirectory, { recursive: true, force: true });
 
 const port = Number(process.env.PORT) || 3000;
@@ -20,6 +21,7 @@ app.listen(port, "0.0.0.0", () => {
   console.log(`Port ${String(port)} is listening :)`);
 });
 
+// Will fix lmao
 app.use(
   cors({
     origin: "*",
@@ -55,6 +57,7 @@ function getDirectory(jobId: string) {
   return join(jobsDirectory, jobId);
 }
 
+// Wait 1 hour, then delete both uploads and exports
 function removeJob(jobId: string) {
   const timer = setTimeout(
     () => {
@@ -69,7 +72,7 @@ function removeJob(jobId: string) {
   timer.unref();
 }
 
-app.post("/api/exports", async (req, res, next) => {
+app.post("/exports", async (req, res, next) => {
   const jobId = randomUUID();
   res.locals.jobId = jobId;
   const uploadDirectory = join(getDirectory(jobId), "uploads");
@@ -88,7 +91,7 @@ app.post("/api/exports", async (req, res, next) => {
   });
 });
 
-app.post("/api/exports", async (req, res) => {
+app.post("/exports", async (req, res) => {
   const jobId: UUID = res.locals.jobId;
   const directory = getDirectory(jobId);
   try {
@@ -148,7 +151,7 @@ app.post("/api/exports", async (req, res) => {
   }
 });
 
-app.get("/api/exports/:jobId", (req, res) => {
+app.get("/exports/:jobId", (req, res) => {
   const job = exportJobs.get(req.params.jobId);
 
   if (!job) {
@@ -159,12 +162,12 @@ app.get("/api/exports/:jobId", (req, res) => {
   res.json({
     status: job.status,
     progress: job.progress,
-    downloadUrl: job.status === "complete" ? `/api/exports/${job.id}/download` : undefined,
+    downloadUrl: job.status === "complete" ? `/exports/${job.id}/download` : undefined,
     error: job.error,
   });
 });
 
-app.get("/api/exports/:jobId/download", async (req, res) => {
+app.get("/exports/:jobId/download", async (req, res) => {
   const jobId = req.params.jobId;
   const job = exportJobs.get(jobId);
   if (job?.status !== "complete" || !job.outputPath) {
@@ -186,7 +189,7 @@ app.get("/api/exports/:jobId/download", async (req, res) => {
   }
 });
 
-app.delete("/api/exports/:jobId", (req, res) => {
+app.delete("/exports/:jobId", (req, res) => {
   const job = exportJobs.get(req.params.jobId);
   if (!job) {
     res.sendStatus(404);

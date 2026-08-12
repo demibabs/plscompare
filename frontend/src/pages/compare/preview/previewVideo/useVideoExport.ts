@@ -18,7 +18,7 @@ export function useVideoExport() {
   const jobId = useRef<string | null>(null);
   const preprocessingController = useRef<AbortController | null>(null);
 
-  const BACKEND_URL = String(import.meta.env.VITE_BACKEND_URL);
+  const BACKEND_URL = String(import.meta.env.VITE_BACKEND_URL ?? "");
 
   const startExport = async (files: File[], config: ExportConfig) => {
     if (jobId.current || preprocessingController.current) return;
@@ -53,7 +53,7 @@ export function useVideoExport() {
 
       let response;
       try {
-        response = await axios(`${BACKEND_URL}/api/exports`, {
+        response = await axios(`${BACKEND_URL}/exports`, {
           method: "POST",
           data: body,
           signal: controller.signal,
@@ -80,7 +80,7 @@ export function useVideoExport() {
             return;
           }
 
-          const statusResponse = await fetch(`${BACKEND_URL}/api/exports/${currentJobId}`);
+          const statusResponse = await fetch(`${BACKEND_URL}/exports/${currentJobId}`);
           if (!statusResponse.ok) return;
 
           const job: unknown = await statusResponse.json();
@@ -130,7 +130,7 @@ export function useVideoExport() {
 
     const currentJobId = jobId.current;
     if (currentJobId) {
-      const response = await fetch(`${BACKEND_URL}/api/exports/${currentJobId}`, { method: "DELETE" });
+      const response = await fetch(`${BACKEND_URL}/exports/${currentJobId}`, { method: "DELETE" });
       if (!response.ok) return;
       jobId.current = null;
     }
