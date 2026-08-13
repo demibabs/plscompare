@@ -33,16 +33,16 @@ export function Preview() {
           }
         ></CompareHeader>
         <PreviewVideo />
-        <section className="bg-error/10 border-error/10 text-error rounded-box indicator mb-8 w-2xl max-w-[calc(100%-5rem)] flex-col gap-3 border-3 p-4 text-lg md:text-xl">
-          <span className="badge badge-error indicator-item">
+        <section className="bg-success/10 border-success/10 text-success rounded-box indicator mb-8 w-2xl max-w-[calc(100%-5rem)] flex-col gap-3 border-3 p-4 text-lg md:text-xl">
+          <span className="badge badge-success indicator-item">
             <b>!</b>
           </span>
           <p>
-            Many users are having issues exporting videos. I am currently working on moving the exports to a server, so
-            that they work for everyone regardless of device or browser.
+            Exports have recently been moved to a server; they no longer happen on device. The migration is still new so
+            there may be some growing pains.
           </p>
           <p>
-            The migration should be complete in the next couple of days. Sorry to the people currently having isses!
+            If it doesn't work for you, or it feels slow, please let me know,
           </p>
         </section>
 
