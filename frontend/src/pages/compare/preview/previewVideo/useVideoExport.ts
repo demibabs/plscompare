@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ExportConfig } from "@plscompare/shared/types";
 import { shortenVideoForUpload } from "./shortenVideoForUpload";
 import axios, { type AxiosProgressEvent } from "axios";
@@ -16,6 +16,20 @@ export function useVideoExport() {
   const preprocessingController = useRef<AbortController | null>(null);
 
   const BACKEND_URL = String(import.meta.env.VITE_BACKEND_URL ?? "");
+
+  const cancelExport = useCallback(() => {
+    const currentJobId = jobId.current;
+    jobId.current = null;
+
+    if (preprocessingController.current) {
+      preprocessingController.current.abort();
+      preprocessingController.current = null;
+    }
+
+    if (currentJobId) {
+      void fetch(`${BACKEND_URL}/exports/${currentJobId}`, { method: "DELETE" }).catch(() => undefined);
+    }
+  }, [BACKEND_URL]);
 
   const startExport = async (files: File[], config: ExportConfig) => {
     if (jobId.current || preprocessingController.current) return;
@@ -134,6 +148,7 @@ export function useVideoExport() {
 
           if (job.status === "complete" && typeof job.downloadUrl === "string") {
             setProgress(100);
+            posthog.capture("export_completed")
             window.location.assign(`${BACKEND_URL}${job.downloadUrl}`);
             jobId.current = null;
           }
@@ -162,25 +177,11 @@ export function useVideoExport() {
     }
   };
 
-  function cancelExport() {
-    const currentJobId = jobId.current;
-    jobId.current = null;
-
-    if (preprocessingController.current) {
-      preprocessingController.current.abort();
-      preprocessingController.current = null;
-    }
-
-    if (currentJobId) {
-      void fetch(`${BACKEND_URL}/exports/${currentJobId}`, { method: "DELETE" }).catch(() => undefined);
-    }
-  }
-
   useEffect(() => {
     return () => {
-      cancelExport()
+      cancelExport();
     };
-  }, []);
+  }, [cancelExport]);
 
   return {
     startExport,
