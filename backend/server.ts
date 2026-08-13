@@ -58,7 +58,7 @@ function getDirectory(jobId: string) {
 }
 
 // Wait 1 hour, then delete both uploads and exports
-function removeJob(jobId: string) {
+function scheduleJobRemoval(jobId: string, time: number) {
   const timer = setTimeout(
     () => {
       const directory = getDirectory(jobId);
@@ -67,7 +67,7 @@ function removeJob(jobId: string) {
       });
       exportJobs.delete(jobId);
     },
-    1000 * 60 * 60,
+    time,
   );
   timer.unref();
 }
@@ -76,14 +76,17 @@ app.post("/exports", async (req, res, next) => {
   const jobId = randomUUID();
   res.locals.jobId = jobId;
   const uploadDirectory = join(getDirectory(jobId), "uploads");
+  scheduleJobRemoval(jobId, 1000 * 60 * 60)
 
   await mkdir(uploadDirectory, { recursive: true });
 
   multer({
     dest: uploadDirectory,
-  }).array("files")(req, res, (error) => {
+    limits: {
+      fileSize: 1024 * 1024 * 500
+    }
+  }).array("files", 10)(req, res, (error) => {
     if (error) {
-      removeJob(jobId);
       next(error);
       return;
     }
@@ -94,61 +97,63 @@ app.post("/exports", async (req, res, next) => {
 app.post("/exports", async (req, res) => {
   const jobId: UUID = res.locals.jobId;
   const directory = getDirectory(jobId);
-  try {
-    const files = req.files as Express.Multer.File[] | undefined;
-    if (!files?.length) {
-      res.status(400).json({ error: "No videos uploaded" });
-      return;
-    }
-    const body: unknown = req.body;
-    const rawConfig = isRecord(body) ? body.config : undefined;
-    if (typeof rawConfig !== "string") {
-      res.status(400).json({ error: "Missing export config" });
-      return;
-    }
-    const parsedConfig: unknown = JSON.parse(rawConfig);
-    if (!isExportConfig(parsedConfig)) {
-      res.status(400).json({ error: "Invalid export config" });
-      return;
-    }
-    const config = parsedConfig;
-    const fileName = config.fileName;
-    const filePaths = files.map((f) => f.path);
 
-    const job: ExportJob = {
-      id: jobId,
-      fileName,
-      status: "queued",
-      progress: 0,
-      createdAt: new Date(),
-    };
-
-    exportJobs.set(jobId, job);
-
-    res.status(202).json({ jobId });
-
-    job.status = "processing";
-
-    const exportDirectory = join(directory, "exports");
-    await mkdir(exportDirectory, { recursive: true });
-    job.outputPath = join(exportDirectory, `output.mp4`);
-    try {
-      await runFfmpegPipeline(filePaths, config, job, (number) => {
-        job.progress = number;
-      });
-    } catch (error: unknown) {
-      job.error = String(error);
-      job.status = "failed";
-      return;
-    }
-    if (isExportCanceled(job)) {
-      return;
-    }
-    job.status = "complete";
-    job.progress = 100;
-  } finally {
-    removeJob(jobId);
+  const files = req.files as Express.Multer.File[] | undefined;
+  if (!files?.length) {
+    res.status(400).json({ error: "No videos uploaded" });
+    return;
   }
+  if (files.reduce((acc, file) => acc + file.size, 0) > 501 * 1024 * 1024) {
+    res.status(413).json({ error: "Total file size too large" });
+    scheduleJobRemoval(jobId, 0)
+    return;
+  }
+  const body: unknown = req.body;
+  const rawConfig = isRecord(body) ? body.config : undefined;
+  if (typeof rawConfig !== "string") {
+    res.status(400).json({ error: "Missing export config" });
+    return;
+  }
+  const parsedConfig: unknown = JSON.parse(rawConfig);
+  if (!isExportConfig(parsedConfig)) {
+    res.status(400).json({ error: "Invalid export config" });
+    return;
+  }
+  const config = parsedConfig;
+  const fileName = config.fileName;
+  const filePaths = files.map((f) => f.path);
+
+  const job: ExportJob = {
+    id: jobId,
+    fileName,
+    status: "queued",
+    progress: 0,
+    createdAt: new Date(),
+  };
+
+  exportJobs.set(jobId, job);
+
+  res.status(202).json({ jobId });
+
+  job.status = "processing";
+
+  const exportDirectory = join(directory, "exports");
+  await mkdir(exportDirectory, { recursive: true });
+  job.outputPath = join(exportDirectory, `output.mp4`);
+  try {
+    await runFfmpegPipeline(filePaths, config, job, (number) => {
+      job.progress = number;
+    });
+  } catch (error: unknown) {
+    job.error = String(error);
+    job.status = "failed";
+    return;
+  }
+  if (isExportCanceled(job)) {
+    return;
+  }
+  job.status = "complete";
+  job.progress = 100;
 });
 
 app.get("/exports/:jobId", (req, res) => {

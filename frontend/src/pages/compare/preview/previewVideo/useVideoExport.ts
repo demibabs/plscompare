@@ -1,14 +1,11 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ExportConfig } from "@plscompare/shared/types";
 import { shortenVideoForUpload } from "./shortenVideoForUpload";
 import axios, { type AxiosProgressEvent } from "axios";
+import posthog from "posthog-js";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
-}
-
-function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : String(error);
 }
 
 export function useVideoExport() {
@@ -63,57 +60,100 @@ export function useVideoExport() {
           },
         });
       } catch (error) {
-        setError(String(error));
+        if (controller.signal.aborted) return;
+        setError("Couldn't upload videos.");
+        posthog.capture("export_failed", { reason: error });
         return;
       }
 
       const startPayload: unknown = response.data;
       if (!isRecord(startPayload) || typeof startPayload.jobId !== "string") {
-        throw new Error("The export server returned an invalid response.");
+        throw new Error("The server returned an invalid response.");
       }
       jobId.current = startPayload.jobId;
-      const interval = window.setInterval(() => {
-        void (async () => {
+      const pollingJobId = startPayload.jobId;
+      let failCount = 0;
+      await poll();
+      async function poll() {
+        if (jobId.current !== pollingJobId) return;
+
+        try {
           const currentJobId = jobId.current;
           if (!currentJobId) {
-            window.clearInterval(interval);
+            cancelExport();
             return;
           }
 
-          const statusResponse = await fetch(`${BACKEND_URL}/exports/${currentJobId}`);
-          if (!statusResponse.ok) return;
+          const statusResponse = await fetch(`${BACKEND_URL}/exports/${currentJobId}`).catch((error: unknown) => {
+            failCount++;
+            throw new Error(String(error));
+          });
 
-          const job: unknown = await statusResponse.json();
-          if (!isRecord(job) || typeof job.status !== "string") return;
+          if (jobId.current !== pollingJobId) {
+            return;
+          }
+
+          if (!statusResponse.ok) {
+            failCount++;
+            if (failCount >= 3) {
+              throw new Error("Could not reach server.");
+            }
+            return;
+          }
+
+          const job: unknown = await statusResponse.json().catch(() => {
+            failCount = 3;
+            throw new Error("Received malformed JSON from server.");
+          });
+
+          if (jobId.current !== pollingJobId) {
+            return;
+          }
+
+          if (!isRecord(job) || typeof job.status !== "string") {
+            failCount = 3;
+            throw new Error("Invalid response.");
+          }
           if (typeof job.progress === "number") setProgress(job.progress);
           setPhase("Rendering");
+          failCount = 0;
 
           if (job.status === "failed") {
-            setError(typeof job.error === "string" ? job.error : "The export failed.");
+            setError("The export failed.");
+            posthog.capture("export_failed", { reason: job.error });
             jobId.current = null;
-            window.clearInterval(interval);
+            cancelExport();
             return;
           }
 
           if (job.status === "canceled") {
             jobId.current = null;
-            window.clearInterval(interval);
+            cancelExport();
             return;
           }
 
           if (job.status === "complete" && typeof job.downloadUrl === "string") {
-            window.clearInterval(interval);
             setProgress(100);
             window.location.assign(`${BACKEND_URL}${job.downloadUrl}`);
             jobId.current = null;
           }
-        })().catch((pollError: unknown) => {
+        } catch (pollError: unknown) {
           console.error("Failed to check export status:", pollError);
-        });
-      }, 1000);
+          if (jobId.current !== pollingJobId) return;
+          if (failCount >= 3) {
+            setError("Export failed.");
+            posthog.capture("export_failed", { reason: pollError });
+            cancelExport();
+          }
+        } finally {
+          if (jobId.current === pollingJobId) setTimeout(poll, 1000);
+        }
+      }
     } catch (exportError: unknown) {
       if (!controller.signal.aborted) {
-        setError(String(exportError));
+        setError("Export failed.");
+        posthog.capture("export_failed", { reason: exportError });
+        cancelExport();
       }
     } finally {
       if (preprocessingController.current === controller) {
@@ -122,19 +162,25 @@ export function useVideoExport() {
     }
   };
 
-  async function cancelExport() {
+  function cancelExport() {
+    const currentJobId = jobId.current;
+    jobId.current = null;
+
     if (preprocessingController.current) {
       preprocessingController.current.abort();
       preprocessingController.current = null;
     }
 
-    const currentJobId = jobId.current;
     if (currentJobId) {
-      const response = await fetch(`${BACKEND_URL}/exports/${currentJobId}`, { method: "DELETE" });
-      if (!response.ok) return;
-      jobId.current = null;
+      void fetch(`${BACKEND_URL}/exports/${currentJobId}`, { method: "DELETE" }).catch(() => undefined);
     }
   }
+
+  useEffect(() => {
+    return () => {
+      cancelExport()
+    };
+  }, []);
 
   return {
     startExport,

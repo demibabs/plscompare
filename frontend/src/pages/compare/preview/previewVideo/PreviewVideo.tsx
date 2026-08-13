@@ -128,7 +128,7 @@ export function PreviewVideo() {
         exportModalRef.current.showModal();
       } else {
         exportModalRef.current.close();
-        void cancelExport();
+        cancelExport();
       }
     }
   }, [exportModal]);

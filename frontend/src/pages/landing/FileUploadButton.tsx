@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { cn } from "../../utils/cn";
-import { clear, get, update } from "idb-keyval";
+import { clear, get, set, update } from "idb-keyval";
 import { useNavigate } from "react-router-dom";
 import type { VideoData } from "../compare/sideBySideEditor/SideBySideEditor";
 import { getFrameData, type FrameData } from "../../utils/getFrameData";
@@ -49,23 +49,34 @@ export function FileUploadButton() {
       }
     }
 
+    const oldFiles: { file: File; frameData: FrameData }[] = (await get("user-files")) ?? [];
+    if (oldFiles.length + newFiles.length > 10) {
+      setStatusMessage("Max of 10 videos.");
+      posthog.capture("file_upload_error", { reason: "files_too_many", file_count: newFiles.length });
+      return;
+    }
+    const oldFileSizes = oldFiles.reduce((acc, oF) => acc + oF.file.size, 0);
+    const newFileSizes = newFiles.reduce((acc, nf) => acc + nf.size, 0);
+    if (oldFileSizes + newFileSizes > 1024 * 1024 * 500) {
+      setStatusMessage("Max total file size is 500mb.");
+      posthog.capture("file_upload_error", { reason: "files_too_big", file_count: newFiles.length });
+      return;
+    }
+    setProgress(0.01);
+
     const framesData: FrameData[] = [];
 
     for (const [index, file] of newFiles.entries()) {
       framesData.push(
         await getFrameData(file, (num) => {
-          setProgress((index + num) / newFiles.length);
+          setProgress(Math.max((index + num) / newFiles.length, 0.01));
         }),
       );
     }
 
     // Put data into { file, frameData } form
     const returnedData = newFiles.map((nF, index) => ({ file: nF, frameData: framesData[index] }));
-    await update("user-files", (uFiles: { file: File; frameData: FrameData }[] | undefined) => {
-      if (uFiles) {
-        return uFiles.concat(returnedData);
-      } else return returnedData;
-    });
+    await set("user-files", oldFiles.concat(returnedData));
     if (userFiles.length + newFiles.length === 1) setStatusMessage("Submit at least 1 more file to proceed.");
     else setStatusMessage("");
     posthog.capture("files_uploaded", {
@@ -136,7 +147,7 @@ export function FileUploadButton() {
           inputRef.current?.click();
           setStatusMessage("");
         }}
-        className="btn btn-lg md:btn-xl btn-warning indicator"
+        className={cn("btn btn-lg md:btn-xl btn-warning indicator", { "btn-disabled": progress !== 0 })}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -158,7 +169,7 @@ export function FileUploadButton() {
           <span className="indicator-item indicator-center indicator-middle flex w-[calc(100%-1rem)]">
             <progress
               value={progress}
-              className="progress progress-primary w-full [&::-moz-progress-bar]:transition-none [&::-webkit-progress-value]:transition-none"
+              className="progress progress-warning w-full [&::-moz-progress-bar]:transition-none [&::-webkit-progress-value]:transition-none"
             ></progress>
           </span>
         )}
