@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import { cn } from "../utils/cn";
-import { clear, get, update } from "idb-keyval";
+import { cn } from "../../utils/cn";
+import { clear, get, set, update } from "idb-keyval";
 import { useNavigate } from "react-router-dom";
-import type { VideoData } from "../pages/compare/sideBySideEditor/SideBySideEditor";
-import { getFrameData, type FrameData } from "../utils/getFrameData";
-import posthog from "../posthog";
-import { checkIsSupportedVideo } from "../utils/checkIsSupportedVideo";
+import type { VideoData } from "../compare/sideBySideEditor/SideBySideEditor";
+import { getFrameData, type FrameData } from "../../utils/getFrameData";
+import posthog from "../../posthog";
+import { checkIsSupportedVideo } from "../../utils/checkIsSupportedVideo";
 
 export function FileUploadButton() {
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const [userFiles, setUserFiles] = useState<{ file: File; frameData: FrameData }[]>([]);
   const [statusMessage, setStatusMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   // Makes sure button is initially synced with files user has submitted
   useEffect(() => {
@@ -40,14 +40,8 @@ export function FileUploadButton() {
       return;
     }
     for (const file of newFiles) {
-      let isSupported;
-      try {
-        isSupported = await checkIsSupportedVideo(file);
-      } catch (error) {
-        setStatusMessage(`${error}`);
-        posthog.capture("file_upload_error", { reason: `${error}`, file_count: newFiles.length });
-        return;
-      }
+      const isSupported = await checkIsSupportedVideo(file);
+
       if (!isSupported) {
         setStatusMessage("That file type is not supported.");
         posthog.capture("file_upload_error", { reason: "unsupported_file_type", file_count: newFiles.length });
@@ -55,23 +49,34 @@ export function FileUploadButton() {
       }
     }
 
-    let framesData: FrameData[];
-
-    try {
-      framesData = await Promise.all(newFiles.map(getFrameData));
-    } catch (error) {
-      setStatusMessage(`${error}`);
-      posthog.capture("file_upload_error", { reason: `${error}`, file_count: newFiles.length });
+    const oldFiles: { file: File; frameData: FrameData }[] = (await get("user-files")) ?? [];
+    if (oldFiles.length + newFiles.length > 10) {
+      setStatusMessage("Max of 10 videos.");
+      posthog.capture("file_upload_error", { reason: "files_too_many", file_count: newFiles.length });
       return;
+    }
+    const oldFileSizes = oldFiles.reduce((acc, oF) => acc + oF.file.size, 0);
+    const newFileSizes = newFiles.reduce((acc, nf) => acc + nf.size, 0);
+    if (oldFileSizes + newFileSizes > 1024 * 1024 * 500) {
+      setStatusMessage("Max total file size is 500mb.");
+      posthog.capture("file_upload_error", { reason: "files_too_big", file_count: newFiles.length });
+      return;
+    }
+    setProgress(0.01);
+
+    const framesData: FrameData[] = [];
+
+    for (const [index, file] of newFiles.entries()) {
+      framesData.push(
+        await getFrameData(file, (num) => {
+          setProgress(Math.max((index + num) / newFiles.length, 0.01));
+        }),
+      );
     }
 
     // Put data into { file, frameData } form
     const returnedData = newFiles.map((nF, index) => ({ file: nF, frameData: framesData[index] }));
-    await update("user-files", (uFiles: { file: File; frameData: FrameData }[] | undefined) => {
-      if (uFiles) {
-        return uFiles.concat(returnedData);
-      } else return returnedData;
-    });
+    await set("user-files", oldFiles.concat(returnedData));
     if (userFiles.length + newFiles.length === 1) setStatusMessage("Submit at least 1 more file to proceed.");
     else setStatusMessage("");
     posthog.capture("files_uploaded", {
@@ -102,14 +107,15 @@ export function FileUploadButton() {
       })}
       data-tip={statusMessage}
     >
-      {/* X button on left, file count icon on right */}
       {userFiles.length > 0 && (
         <>
-          <span className="indicator-item tooltip" data-tip={userFiles.map((uFile) => uFile.name).join(", ")}>
+          {/* X button */}
+          <span className="indicator-item tooltip" data-tip={userFiles.map((uFile) => uFile.file.name).join(", ")}>
             <span className="badge badge-error border-base-100 border-3">
               <b>{userFiles.length}</b>
             </span>
           </span>
+          {/* File count button */}
           <span className="indicator-item indicator-top indicator-start">
             <span
               className="badge badge-error border-base-100 border-3"
@@ -135,16 +141,13 @@ export function FileUploadButton() {
           </span>
         </>
       )}
-      {isLoading && (
-        <span className="indicator-item indicator-center indicator-middle loading loading-spinner text-main-text loading-xl"></span>
-      )}
       {/* The actual upload button */}
       <button
         onClick={() => {
           inputRef.current?.click();
           setStatusMessage("");
         }}
-        className="btn btn-lg md:btn-xl btn-warning"
+        className={cn("btn btn-lg md:btn-xl btn-warning indicator", { "btn-disabled": progress !== 0 })}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -152,7 +155,7 @@ export function FileUploadButton() {
           viewBox="0 0 24 24"
           strokeWidth={2}
           stroke="currentColor"
-          className="size-6"
+          className={cn("size-6", { "opacity-0": progress > 0 })}
         >
           <path
             strokeLinecap="round"
@@ -160,7 +163,16 @@ export function FileUploadButton() {
             d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12-3-3m0 0-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
           />
         </svg>
-        Upload clips
+        <span className={cn({ "opacity-0": progress > 0 })}>Upload clips</span>
+        {/* Progress bar */}
+        {progress > 0 && (
+          <span className="indicator-item indicator-center indicator-middle flex w-[calc(100%-1rem)]">
+            <progress
+              value={progress}
+              className="progress progress-warning w-full [&::-moz-progress-bar]:transition-none [&::-webkit-progress-value]:transition-none"
+            ></progress>
+          </span>
+        )}
       </button>
       {/* Invisible input that triggers the file popup */}
       <input
@@ -170,10 +182,14 @@ export function FileUploadButton() {
         ref={inputRef}
         className="hidden"
         onChange={(e) => {
-          setIsLoading(true);
-          void handleFileChange(e).then(() => {
-            setIsLoading(false);
-          });
+          void handleFileChange(e)
+            .catch((error: unknown) => {
+              setStatusMessage(String(error));
+              posthog.capture("file_upload_error", { reason: String(error) });
+            })
+            .finally(() => {
+              setProgress(0);
+            });
         }}
       ></input>
       {/* Go button */}

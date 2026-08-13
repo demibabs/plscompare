@@ -1,21 +1,21 @@
 import { FileUploadButton } from "./FileUploadButton";
 import { StepsShowcase } from "./StepsShowcase";
 import { VideoWithProgressBar } from "./VideoWithProgressBar";
-import normalRouteImage from "../assets/pages/landing/hero/normal_route.webp";
-import boxCutImage from "../assets/pages/landing/hero/box_cut.webp";
-import heroVideoThumbnail from "../assets/pages/landing/hero/hero_video_thumbnail.webp";
-import heroVideo from "../assets/pages/landing/hero/hero_video.mp4";
-import gridExampleImage from "../assets/pages/landing/layouts/grid_example.webp";
-import horizontalExampleImage from "../assets/pages/landing/layouts/horizontal_example.webp";
-import verticalExampleImage from "../assets/pages/landing/layouts/vertical_example.webp";
-import defaultExampleImage from "../assets/pages/landing/layouts/default_example.webp";
-import { GithHubIcon } from "../utils/GitHubIcon";
-import { DiscordIcon } from "../utils/DiscordIcon";
+import normalRouteImage from "../../assets/pages/landing/hero/normal_route.webp";
+import boxCutImage from "../../assets/pages/landing/hero/box_cut.webp";
+import heroVideoThumbnail from "../../assets/pages/landing/hero/hero_video_thumbnail.webp";
+import heroVideo from "../../assets/pages/landing/hero/hero_video.mp4";
+import gridExampleImage from "../../assets/pages/landing/layouts/grid_example.webp";
+import horizontalExampleImage from "../../assets/pages/landing/layouts/horizontal_example.webp";
+import verticalExampleImage from "../../assets/pages/landing/layouts/vertical_example.webp";
+import defaultExampleImage from "../../assets/pages/landing/layouts/default_example.webp";
+import { GithHubIcon } from "../../utils/GitHubIcon";
+import { DiscordIcon } from "../../utils/DiscordIcon";
 
 export function Landing() {
   return (
     <main className="w-full">
-    {/* Hero */}
+      {/* Hero */}
       <header className="flex w-full flex-col items-center">
         <div className="bgp-polkaDots-base-100/10 w-full">
           <h1 className="text-main-text mx-auto mt-10 mb-15 w-full max-w-5xl px-10 text-center text-3xl md:text-4xl lg:px-20 lg:text-5xl">
@@ -138,7 +138,7 @@ export function Landing() {
             <p className="text-xl md:text-2xl">Choose the layout style that best suits your comparison.</p>
           </div>
         </div>
-        <div className="bgp-fourPointStars-base-100/15 -mt-10 h-20 md:h-25 w-full bg-size-[0.75rem_auto] lg:bg-size-[1rem_auto]"></div>
+        <div className="bgp-fourPointStars-base-100/15 -mt-10 h-20 w-full bg-size-[0.75rem_auto] md:h-25 lg:bg-size-[1rem_auto]"></div>
       </section>
       {/* Feature cards */}
       <section className="bg-base-200 border-base-300 w-full grid-cols-3 grid-rows-2 flex-col gap-3 border-y-3 border-dashed px-5 py-10 not-md:gap-4 not-lg:flex md:px-10 lg:grid lg:px-20">

@@ -4,7 +4,8 @@
   "type": "module",
   "workspaces": [
     "frontend",
-    "backend"
+    "backend",
+    "shared"
   ],
   "scripts": {
     "dev": "concurrently --kill-others-on-fail --names frontend,backend --prefix-colors cyan,magenta \"npm run dev:frontend\" \"npm run dev:backend\"",
@@ -28,7 +29,7 @@
   "allowScripts": {
     "core-js@3.50.0": true,
     "esbuild@0.28.1": true,
-    "node-av@6.1.1": true,
+    "ffmpeg-static@5.3.0": true,
     "skia-canvas@3.0.8": true,
     "workerd@1.20260801.1": true
   }

@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { cn } from "../utils/cn";
-import step1WideImage from "../assets/pages/landing/steps_showcase/wide/step_1.webp";
-import step2WideImage from "../assets/pages/landing/steps_showcase/wide/step_2.webp";
-import step3WideImage from "../assets/pages/landing/steps_showcase/wide/step_3.webp";
-import step1MobileImage from "../assets/pages/landing/steps_showcase/mobile/step_1.webp";
-import step2MobileImage from "../assets/pages/landing/steps_showcase/mobile/step_2.webp";
-import step3MobileImage from "../assets/pages/landing/steps_showcase/mobile/step_3.webp";
+import { cn } from "../../utils/cn";
+import step1WideImage from "../../assets/pages/landing/steps_showcase/wide/step_1.webp";
+import step2WideImage from "../../assets/pages/landing/steps_showcase/wide/step_2.webp";
+import step3WideImage from "../../assets/pages/landing/steps_showcase/wide/step_3.webp";
+import step1MobileImage from "../../assets/pages/landing/steps_showcase/mobile/step_1.webp";
+import step2MobileImage from "../../assets/pages/landing/steps_showcase/mobile/step_2.webp";
+import step3MobileImage from "../../assets/pages/landing/steps_showcase/mobile/step_3.webp";
 
 const images: Record<string, Record<number, string>> = {
   wide: {

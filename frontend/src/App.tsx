@@ -1,5 +1,5 @@
 import { createBrowserRouter, redirect, RouterProvider } from "react-router-dom";
-import { Landing } from "./landing/Landing";
+import { Landing } from "./pages/landing/Landing";
 import { Compare } from "./pages/compare/Compare";
 import { StartFrame } from "./pages/compare/StartFrame";
 import { EndFrame } from "./pages/compare/EndFrame";
@@ -60,7 +60,7 @@ const router = createBrowserRouter([
           },
           {
             path: "/read-me/acknowledgements",
-            element: <Acknowledgements></Acknowledgements>
+            element: <Acknowledgements></Acknowledgements>,
           },
           {
             path: "*",
@@ -73,20 +73,5 @@ const router = createBrowserRouter([
 ]);
 
 export function App() {
-  const [isInitializing, setIsInitializing] = useState(true);
-
-  // reset indexeddb on new sesh (may change)
-  useEffect(() => {
-    async function checkSession() {
-      const isExistingSession = sessionStorage.getItem("videos_session");
-      if (!isExistingSession) {
-        void clear();
-        sessionStorage.setItem("videos_session", "true");
-      }
-      setIsInitializing(false);
-    }
-    void checkSession();
-  }, []);
-
-  return !isInitializing && <RouterProvider router={router}></RouterProvider>;
+  return <RouterProvider router={router}></RouterProvider>;
 }

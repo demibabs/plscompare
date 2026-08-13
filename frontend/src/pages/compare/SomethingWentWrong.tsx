@@ -1,13 +1,13 @@
 import { useNavigate } from "react-router-dom";
-import { FileUploadButton } from "../../landing/FileUploadButton";
+import { FileUploadButton } from "../landing/FileUploadButton";
 import type { Part } from "./sideBySideEditor/SideBySideEditor";
 import type { Dispatch, SetStateAction } from "react";
-import image3 from "../../assets/pages/something_went_wrong/3.webp"
-import image4 from "../../assets/pages/something_went_wrong/4.webp"
-import image5 from "../../assets/pages/something_went_wrong/5.webp"
-import image6 from "../../assets/pages/something_went_wrong/6.webp"
-import image7 from "../../assets/pages/something_went_wrong/7.webp"
-import image8 from "../../assets/pages/something_went_wrong/8.webp"
+import image3 from "../../assets/pages/something_went_wrong/3.webp";
+import image4 from "../../assets/pages/something_went_wrong/4.webp";
+import image5 from "../../assets/pages/something_went_wrong/5.webp";
+import image6 from "../../assets/pages/something_went_wrong/6.webp";
+import image7 from "../../assets/pages/something_went_wrong/7.webp";
+import image8 from "../../assets/pages/something_went_wrong/8.webp";
 
 export function SomethingWentWrong({
   data,
@@ -93,7 +93,7 @@ export function SomethingWentWrong({
     <div className="flex w-full grow items-center justify-center p-10">
       <main className="card lg:card-side card-xl bg-base-300 border-base-300 w-full max-w-xl border-3 lg:max-w-4xl">
         <figure className="w-full lg:w-lg">
-          <img src={images[data]} loading="lazy"/>
+          <img src={images[data]} loading="lazy" />
         </figure>
         <div className="card-body not-lg:items-center">
           <h1 className="card-title mb-3 text-3xl md:text-4xl lg:text-5xl">{titleTexts[data]}</h1>

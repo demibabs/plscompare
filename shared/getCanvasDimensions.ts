@@ -1,5 +1,5 @@
-import type { Dimensions, Layout } from "../pages/compare/preview/previewVideo/renderFrame";
-import { getGridDimensions } from "../pages/compare/preview/previewVideo/renderFrame";
+import type { Dimensions, Layout } from "./renderFrame";
+import { getGridDimensions } from "./renderFrame";
 
 export function getCanvasDimensions(layout: Layout, numVideos: number): Dimensions {
   let width;
@@ -8,16 +8,16 @@ export function getCanvasDimensions(layout: Layout, numVideos: number): Dimensio
     case "default": {
       width = 1920;
       height = 1080;
-      break
+      break;
     }
     case "vertical": {
       width = 3840 / numVideos;
       height = 2160;
-      break
+      break;
     }
     case "horizontal": {
-      width = 3840
-      height = 2160 / numVideos
+      width = 3840;
+      height = 2160 / numVideos;
       break;
     }
     case "grid": {
@@ -28,11 +28,10 @@ export function getCanvasDimensions(layout: Layout, numVideos: number): Dimensio
       } else {
         // cols > rows (rectangular): scale down the height axis
         width = 3840;
-        height = 2160 * rows / cols;
+        height = (2160 * rows) / cols;
       }
       break;
     }
   }
   return { width, height };
 }
-

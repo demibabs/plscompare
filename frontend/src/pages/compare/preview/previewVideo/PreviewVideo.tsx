@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import type { FileData, VideoData } from "../../sideBySideEditor/SideBySideEditor";
 import { cn } from "../../../../utils/cn";
-import { renderFrame, type Dimensions, type Layout } from "./renderFrame";
-import { formatSecondsToSSMS } from "../../../../utils/formatSecondsToSSMS";
+import { renderFrame, type Dimensions, type Layout } from "@plscompare/shared/renderFrame";
+import { formatSecondsToSSMS } from "@plscompare/shared/formatSecondsToSSMS";
 import { useVideoExport } from "./useVideoExport";
 import { hasTimes } from "../../../../utils/hasTimes";
-import { clear } from "idb-keyval";
+import { clear, get } from "idb-keyval";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import { getCanvasDimensions } from "../../../../utils/getCanvasDimensions";
+import { getCanvasDimensions } from "@plscompare/shared/getCanvasDimensions";
 import posthog from "../../../../posthog";
 import { useLatest } from "../../../../utils/useLatest";
+import type { FrameData } from "../../../../utils/getFrameData";
 
 export type Options = {
   layout: Layout;
@@ -36,7 +37,7 @@ export function PreviewVideo() {
   const mediaTimes = useRef<number[]>(videosData.map((vData) => vData.times.start ?? 0));
   const timerStartTimes = useRef<number[]>(Array(videosData.length).fill(-1));
   const longestVideoIndex = useRef(-1);
-  const { startExport, progress, error, cancelExport } = useVideoExport();
+  const { startExport, progress, error, cancelExport, phase } = useVideoExport();
   const [exportModal, setExportModal] = useState(false);
   const exportModalRef = useRef<HTMLDialogElement>(null);
   const [optionsModal, setOptionsModal] = useState(false);
@@ -92,11 +93,12 @@ export function PreviewVideo() {
     requestAnimationFrame(renderVideo);
   }
 
-  function handleExport() {
+  async function handleExport() {
     setIsPlaying(false);
     if (videosData.every((vData) => hasTimes(vData))) {
+      const fs: { file: File; frameData: FrameData }[] = (await get("user-files")) ?? [];
+      const files = fs.map((f) => f.file);
       const videos = videosData.map((vData, index) => ({
-        url: filesData[index].url,
         times: vData.times,
         label: vData.label,
         framerate: filesData[index].framerate,
@@ -106,7 +108,7 @@ export function PreviewVideo() {
         layout: optionsLatest.current.layout,
         freeze_frame_time: freezeFrameTime,
       });
-      startExport({
+      void startExport(files, {
         videos,
         fileName: fileName || "plscompare",
         freezeFrameTime,
@@ -455,7 +457,7 @@ export function PreviewVideo() {
               </form>
             </dialog>
             {/* Export button */}
-            <button className="btn btn-lg btn-warning border-base-300 border-3" onClick={handleExport}>
+            <button className="btn btn-lg btn-warning border-base-300 border-3" onClick={() => void handleExport()}>
               Export
             </button>
             {/* Export modal */}
@@ -469,7 +471,7 @@ export function PreviewVideo() {
               <div className="modal-box border-base-300 border-3">
                 <h1 className="pb-3 text-3xl">
                   <b>
-                    {progress === 100 ? (
+                    {progress === 100 && phase === "Rendering" ? (
                       "Video exported!"
                     ) : (
                       <span>
@@ -477,7 +479,7 @@ export function PreviewVideo() {
                           <>Something went wrong...</>
                         ) : (
                           <>
-                            Exporting video... <span className="ml-1 text-2xl">({Math.round(progress)}%)</span>
+                            {phase}... <span className="ml-1 text-2xl">({Math.round(progress)}%)</span>
                           </>
                         )}
                       </span>
@@ -495,7 +497,9 @@ export function PreviewVideo() {
                       {progress === 100 || error ? "Close" : "Cancel"}
                     </button>
                     <button
-                      className={cn("btn btn-lg btn-soft btn-success", { "btn-disabled": progress !== 100 })}
+                      className={cn("btn btn-lg btn-soft btn-success", {
+                        "btn-disabled": progress !== 100 || phase === "Uploading",
+                      })}
                       onClick={() => {
                         void clear().then(() => navigate("/"));
                       }}

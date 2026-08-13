@@ -7,24 +7,39 @@ import {
   Mp4OutputFormat,
   BufferTarget,
   CanvasSource,
+  type VideoSample,
 } from "mediabunny";
 
-import { renderFrame } from "./renderFrame";
-import type { ExportConfig } from "./useVideoExport";
-import { formatSecondsToSSMS } from "../../../../utils/formatSecondsToSSMS";
-import { getCanvasDimensions } from "../../../../utils/getCanvasDimensions";
+import { renderFrame } from "@plscompare/shared/renderFrame";
+import type { ExportConfig } from "@plscompare/shared/types";
+import { formatSecondsToSSMS } from "@plscompare/shared/formatSecondsToSSMS";
+import { getCanvasDimensions } from "@plscompare/shared/getCanvasDimensions";
 
 let isCanceled = false;
 
-self.onmessage = async (e: MessageEvent) => {
-  if (e.data.type === "START_EXPORT") {
+type ExportWorkerCommand = { type: "START_EXPORT"; payload: ExportConfig } | { type: "CANCEL" };
+
+type StreamState = {
+  iterator: AsyncIterator<VideoSample, void>;
+  currentSample: VideoSample | null;
+  nextSample: VideoSample | null;
+  isDone: boolean;
+};
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+self.onmessage = async (event: MessageEvent<ExportWorkerCommand>) => {
+  const message = event.data;
+  if (message.type === "START_EXPORT") {
     try {
-      await runMediabunnyPipeline(e.data.payload);
+      await runMediabunnyPipeline(message.payload);
     } catch (err) {
-      self.postMessage({ type: "ERROR", error: (err as Error).message });
+      self.postMessage({ type: "ERROR", error: getErrorMessage(err) });
     }
   }
-  if (e.data.type === "CANCEL") isCanceled = true;
+  if (message.type === "CANCEL") isCanceled = true;
 };
 
 async function runMediabunnyPipeline(config: ExportConfig) {
@@ -49,7 +64,7 @@ async function runMediabunnyPipeline(config: ExportConfig) {
   if (!ctx) throw new Error("Could not get 2D context");
 
   const inputs: Input[] = [];
-  let streams: any[] = [];
+  let streams: StreamState[] = [];
 
   try {
     // 1. Initialize Inputs & Sinks using UrlSource (Streams directly instead of downloading Blobs)
@@ -67,7 +82,6 @@ async function runMediabunnyPipeline(config: ExportConfig) {
         const decodable = await videoTrack.canDecode();
         if (!decodable) throw new Error("Video track cannot be decoded");
 
-        // Explicitly request hardware acceleration
         return new VideoSampleSink(videoTrack, { hardwareAcceleration: "no-preference" });
       }),
     );
@@ -83,7 +97,7 @@ async function runMediabunnyPipeline(config: ExportConfig) {
       bitrate: 5_000_000,
       bitrateMode: "constant",
       latencyMode: "quality",
-    } as any);
+    });
 
     output.addVideoTrack(outVideoSource, { frameRate: fps });
     await output.start();
@@ -105,18 +119,18 @@ async function runMediabunnyPipeline(config: ExportConfig) {
         const iterator = sink.samples(video.times.start)[Symbol.asyncIterator]();
 
         const firstRes = await iterator.next();
-        const state = {
+        const state: StreamState = {
           iterator,
-          currentSample: firstRes.value || null,
-          nextSample: null as any,
-          isDone: firstRes.done,
+          currentSample: firstRes.value ?? null,
+          nextSample: null,
+          isDone: firstRes.done ?? false,
         };
 
         // Peek at the second sample so we know exactly when to advance the frame
         if (!state.isDone) {
           const secondRes = await iterator.next();
-          state.nextSample = secondRes.value || null;
-          state.isDone = secondRes.done;
+          state.nextSample = secondRes.value ?? null;
+          state.isDone = secondRes.done ?? false;
         }
 
         return state;
@@ -128,7 +142,7 @@ async function runMediabunnyPipeline(config: ExportConfig) {
       if (isCanceled) break;
 
       const currentTimestampSec = frameIndex * frameDurationSec;
-      const timerTimes = [...Array(videos.length)];
+      const timerTimes: (number | undefined)[] = Array.from({ length: videos.length });
 
       // A. Advance iterators only when necessary
       for (let i = 0; i < streams.length; i++) {
@@ -156,8 +170,8 @@ async function runMediabunnyPipeline(config: ExportConfig) {
           state.currentSample = state.nextSample;
 
           const nextRes = await state.iterator.next();
-          state.nextSample = nextRes.value || null;
-          state.isDone = nextRes.done;
+          state.nextSample = nextRes.value ?? null;
+          state.isDone = nextRes.done ?? false;
         }
       }
 
@@ -186,7 +200,10 @@ async function runMediabunnyPipeline(config: ExportConfig) {
       const timersText = timerTimes.map((tTime) => (tTime !== undefined ? formatSecondsToSSMS(tTime) : ""));
 
       // C. Draw the layout
-      renderFrame(ctx, layout, sources, sourcesDimensions, labelsText, timersText);
+      const drawableSources = sources.filter((source): source is OffscreenCanvas => source !== null);
+      if (drawableSources.length === sources.length) {
+        renderFrame(ctx, layout, drawableSources, sourcesDimensions, labelsText, timersText);
+      }
 
       // D. Encode
       await outVideoSource.add(currentTimestampSec, frameDurationSec);
@@ -217,21 +234,21 @@ async function runMediabunnyPipeline(config: ExportConfig) {
       if (state.currentSample) {
         try {
           state.currentSample.close();
-        } catch (e) {
+        } catch {
           /* ignore */
         }
       }
       if (state.nextSample) {
         try {
           state.nextSample.close();
-        } catch (e) {
+        } catch {
           /* ignore */
         }
       }
-      if (state.iterator && typeof state.iterator.return === "function") {
+      if (typeof state.iterator.return === "function") {
         try {
           await state.iterator.return();
-        } catch (e) {
+        } catch {
           /* ignore */
         }
       }
@@ -241,7 +258,7 @@ async function runMediabunnyPipeline(config: ExportConfig) {
     for (const input of inputs) {
       try {
         input.dispose();
-      } catch (e) {
+      } catch {
         /* ignore */
       }
     }

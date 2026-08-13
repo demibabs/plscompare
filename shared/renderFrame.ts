@@ -1,4 +1,4 @@
-import { getCanvasDimensions } from "../../../../utils/getCanvasDimensions";
+import { getCanvasDimensions } from "./getCanvasDimensions";
 
 export type Layout = "default" | "vertical" | "horizontal" | "grid";
 export type Dimensions = { width: number; height: number };
@@ -22,9 +22,9 @@ export function getGridDimensions(numVideos: number): { rows: number; cols: numb
 }
 
 export function renderFrame(
-  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  ctx: CanvasRenderingContext2D,
   layout: Layout,
-  sources: (CanvasImageSource)[],
+  sources: CanvasImageSource[],
   sourcesDimensions: Dimensions[],
   labelsText: (string | null)[],
   timersText: string[],
@@ -38,7 +38,7 @@ export function renderFrame(
     let destY: number;
     let destWidth: number;
     let destHeight: number;
-    const canvasDimensions = getCanvasDimensions(layout, sources.length)
+    const canvasDimensions = getCanvasDimensions(layout, sources.length);
     const fontSize = 72;
     ctx.font = String(fontSize) + "px Outfit";
     ctx.textAlign = "center";
@@ -110,7 +110,8 @@ export function renderFrame(
           containerHeight = canvasDimensions.height / sourcesDimensions.length;
           containerX = 0;
           containerY = containerHeight * index;
-        } else { // horizontal
+        } else {
+          // horizontal
           containerWidth = canvasDimensions.width / sourcesDimensions.length;
           containerHeight = canvasDimensions.height;
           containerX = containerWidth * index;
@@ -138,17 +139,7 @@ export function renderFrame(
       }
 
       // 4. Draw to canvas
-      ctx.drawImage(
-        sources[index],
-        sourceX,
-        sourceY,
-        sourceWidth,
-        sourceHeight,
-        destX,
-        destY,
-        destWidth,
-        destHeight,
-      );
+      ctx.drawImage(sources[index], sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight);
 
       if (timersText[index].length > 0) {
         const timerText = timersText[index];
