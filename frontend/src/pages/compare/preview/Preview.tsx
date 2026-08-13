@@ -38,12 +38,10 @@ export function Preview() {
             <b>!</b>
           </span>
           <p>
-            Exports have recently been moved to a server; they no longer happen on device. The migration is still new so
-            there may be some growing pains.
+            Exports have recently been moved to a server. Hopefully they should feel more reliable, and maybe faster.
+            The migration is still new, though, so there may be some growing pains.
           </p>
-          <p>
-            If it doesn't work for you, or it feels slow, please let me know,
-          </p>
+          <p>If it doesn't work for you, or it feels slow, please let me know,</p>
         </section>
 
         {/* Info card */}
