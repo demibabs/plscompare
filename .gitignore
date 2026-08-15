@@ -36,3 +36,5 @@ originals/
 
 .tmp-output.css
 *.tsbuildinfo
+
+!frontend/.env.development
