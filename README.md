@@ -14,6 +14,8 @@ The UI allows for easy selection of starting and ending comparison frames. Once 
 
 Here's an example of what a comparison made on the site looks like:
 
+https://github.com/user-attachments/assets/053543cd-a46c-4291-be43-cecfdce73262
+
 ## Stack
 
 ### Frontend
