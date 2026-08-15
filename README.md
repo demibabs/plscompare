@@ -1,6 +1,6 @@
 # plscompare
 
-<https://plscompare.com>
+### <https://plscompare.com>
 
 A site for making precise speedrun comparisons for games like Mario Kart World.
 
