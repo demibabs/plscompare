@@ -34,7 +34,7 @@ The site is deployed as a [Cloudflare Worker](https://www.cloudflare.com/product
 
 ### Backend
 
-The backend is a [Node](https://nodejs.org/en) server, where I used [Express](https://expressjs.com/) to create a REST API for communication with the frontend. It also written in TypeScript.
+The backend is a [Node](https://nodejs.org/en) server, where I used [Express](https://expressjs.com/) to create a REST API for communication with the frontend. It is also written in TypeScript.
 
 The actual video processing and rendering pipeline uses [FFmpeg](https://www.ffmpeg.org/).
 
