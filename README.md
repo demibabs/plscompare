@@ -10,11 +10,15 @@ This tool is designed to facilitate the creation of comparison videos, which are
 
 The UI allows for easy selection of starting and ending comparison frames. Once that is completed, the compositing, freeze-frames and timer are all done automatically.
 
+Plscompare is designed around being easy to use and fast. It's comptible with both mobile and desktop browsers, and on average, making & exporting a comparison takes less than 2 minutes.
+
 ## Example
 
 Here's an example of what a comparison made on the site looks like:
 
 https://github.com/user-attachments/assets/af2034a3-f56e-4c28-bbc9-930a637067b4
+
+There are also a few different layout formats for comparisons. For example, you could choose to make each video fullscreen instead of cropped towards the middle, or stack the videos vertically rather than horizontally.
 
 ## Stack
 
@@ -51,4 +55,6 @@ npm run dev
 
 And that will run both the frontend and backend. By default, the frontend will be on <http://localhost:5173> and the backend will be on <http://localhost:3000>.
 
-If you export, uploaded and downloaded videos will be saved to ```/tmp (or whatever your computer's temporary directory is called) /plscompare/jobs```. The videos associated with a particular export will clear after an hour and the entire folder will be deleted on server restart.
+If you export, uploaded and downloaded videos will be saved to ```/tmp (or whatever your computer's temporary directory is called) /plscompare/jobs```. The videos associated with a particular export will clear after an hour and the entire folder will be deleted and re-initialized on server restart.
+
+I don't expect contributions as this is more of a personal project. But if you'd like to contribute, I'm totally open to it!
