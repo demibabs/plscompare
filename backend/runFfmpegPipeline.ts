@@ -66,7 +66,7 @@ type FfmpegResult = {
 };
 
 const outfitFontPath = fileURLToPath(
-  new URL("../frontend/src/assets/shared/fonts/Outfit-VariableFont_wght.woff2", import.meta.url),
+  import.meta.resolve("@plscompare/shared/assets/fonts/Outfit-VariableFont_wght.woff2"),
 );
 
 let isFontRegistered = false;

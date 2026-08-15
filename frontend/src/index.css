@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
 @plugin "daisyui" {
-  themes: coffee
+  themes: coffee;
 }
 
 @plugin "@danielfgray/tw-heropatterns";
 
 @font-face {
   font-family: "Outfit";
-  src: url("/src/assets/shared/fonts/Outfit-VariableFont_wght.woff2") format("woff2");
+  src: url("../../shared/assets/fonts/Outfit-VariableFont_wght.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -27,13 +27,14 @@ body {
 
 /* Hide scrollbar for Chrome, Safari and Opera */
 ::-webkit-scrollbar {
-    display: none;
+  display: none;
 }
 
 /* Hide scrollbar for IE, Edge and Firefox */
-html, body {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+html,
+body {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 @theme {

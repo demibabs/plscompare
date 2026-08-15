@@ -142,6 +142,7 @@ export function Landing() {
       </section>
       {/* Feature cards */}
       <section className="bg-base-200 border-base-300 w-full grid-cols-3 grid-rows-2 flex-col gap-3 border-y-3 border-dashed px-5 py-10 not-md:gap-4 not-lg:flex md:px-10 lg:grid lg:px-20">
+        {/* Video formats */}
         <div className="card not-md:card-md card-lg bg-base-100 border-base-300 col-span-1 col-start-1 row-span-1 row-start-1 border-3">
           <div className="card-body">
             <div className="card-title mb-3 text-2xl not-md:text-xl">Supports all major video formats</div>
@@ -157,6 +158,7 @@ export function Landing() {
             </div>
           </div>
         </div>
+        {/* Open source */}
         <div className="card card-lg not-md:card-md bg-base-100 border-base-300 col-span-1 col-start-2 row-span-1 row-start-1 border-3">
           <div className="card-body">
             <div className="card-title mb-3 text-2xl not-md:text-xl">Totally free and open source</div>
@@ -191,6 +193,7 @@ export function Landing() {
             </p>
           </div>
         </div>
+        {/* No watermarks */}
         <div className="card card-lg not-md:card-md bg-base-100 border-base-300 col-span-1 col-start-3 row-span-1 row-start-1 border-3">
           <div className="card-body">
             <div className="card-title mb-3 text-2xl not-md:text-xl">Nothing is watermarked</div>
@@ -215,7 +218,9 @@ export function Landing() {
             </div>
           </div>
         </div>
+        {/* Placeholder */}
         <div className="card card-lg bgp-diagonalStripes-[#261b25]/50 border-base-300/50 col-span-1 col-start-1 row-span-1 row-start-2 border-3 bg-size-[1.5rem_auto] not-lg:hidden"></div>
+        {/* Under construction */}
         <div className="card not-md:card-md card-lg bg-base-100 border-base-300 col-span-1 col-start-2 row-span-1 row-start-2 border-3">
           <div className="card-body">
             <div className="card-title mb-3 text-2xl not-md:text-xl">Still under construction!</div>
@@ -233,6 +238,7 @@ export function Landing() {
             </p>
           </div>
         </div>
+        {/* Placeholder */}
         <div className="card card-lg bgp-diagonalStripes-[#261b25]/50 border-base-300/50 col-span-1 col-start-3 row-span-1 row-start-2 border-3 bg-size-[1.5rem_auto] not-lg:hidden"></div>
       </section>
       {/* "Scroll to top" button section */}

@@ -1,6 +1,6 @@
 # plscompare
 
-### Site: <https://plscompare.com>
+### Hosted on <https://plscompare.com>
 
 A site for making precise speedrun comparisons for games like Mario Kart World.
 
@@ -33,8 +33,6 @@ The video exporting is primarily done on the backend. However, there is still so
 The site is deployed as a [Cloudflare Worker](https://www.cloudflare.com/products/workers/).
 
 ### Backend
-
-The original version of the site did exporting fully client-side. However, there were too many issues and inconsistencies, especially for mobile users.
 
 The backend is a [Node](https://nodejs.org/en) server, where I used [Express](https://expressjs.com/) to create a REST API for communication with the frontend. It also written in TypeScript.
 

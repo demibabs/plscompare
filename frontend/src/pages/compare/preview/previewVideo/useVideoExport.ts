@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { ExportConfig } from "@plscompare/shared/types";
 import { shortenVideoForUpload } from "./shortenVideoForUpload";
 import axios, { type AxiosProgressEvent } from "axios";
-import posthog from "posthog-js";
+import posthog from "../../../../posthog";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
