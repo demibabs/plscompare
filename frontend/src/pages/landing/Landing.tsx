@@ -84,7 +84,8 @@ export function Landing() {
       <section className="border-base-300 flex w-full flex-col items-center">
         <div className="lg:bgp-polkaDots-base-100/10 not-lg:bgp-polkaDots-base-100/5 flex w-full justify-center pt-7 pb-20 not-lg:bg-size-[0.75rem_auto]">
           <p className="text text-main-text mx-10 mt-3 text-center text-2xl md:text-3xl">
-            Compare <b className="decoration-nice-purple md:decoration-error underline">up to 10</b> clips at once.
+            Compare <b className="decoration-nice-purple md:decoration-error underline">up to 10</b> clips at once, in multiple different for
+ats.
           </p>
         </div>
         <div className="-mt-15 flex w-full flex-col items-center justify-center gap-5 px-5 md:px-10 lg:flex-row lg:gap-10 lg:px-20">
