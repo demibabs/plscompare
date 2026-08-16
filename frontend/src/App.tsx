@@ -73,5 +73,20 @@ const router = createBrowserRouter([
 ]);
 
 export function App() {
-  return <RouterProvider router={router}></RouterProvider>;
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  // reset indexeddb on new sesh (may change)
+  useEffect(() => {
+    async function checkSession() {
+      const isExistingSession = sessionStorage.getItem("videos_session");
+      if (!isExistingSession) {
+        void clear();
+        sessionStorage.setItem("videos_session", "true");
+      }
+      setIsInitializing(false);
+    }
+    void checkSession();
+  }, []);
+
+  return !isInitializing && <RouterProvider router={router}></RouterProvider>;
 }
