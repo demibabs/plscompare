@@ -19,7 +19,7 @@ export function Landing() {
       <header className="flex w-full flex-col items-center">
         <div className="bgp-polkaDots-base-100/10 w-full">
           <h1 className="text-main-text mx-auto mt-10 mb-15 w-full max-w-5xl px-10 text-center text-3xl md:text-4xl lg:px-20 lg:text-5xl">
-            Create a side-by-side comparison with a timer—
+            Create a side-by-side comparison with a timer,
             <b className="decoration-error underline">no editing knowledge needed.</b>
           </h1>
         </div>
@@ -84,8 +84,7 @@ export function Landing() {
       <section className="border-base-300 flex w-full flex-col items-center">
         <div className="lg:bgp-polkaDots-base-100/10 not-lg:bgp-polkaDots-base-100/5 flex w-full justify-center pt-7 pb-20 not-lg:bg-size-[0.75rem_auto]">
           <p className="text text-main-text mx-10 mt-3 text-center text-2xl md:text-3xl">
-            Compare <b className="decoration-nice-purple md:decoration-error underline">several</b> clips at once—you're
-            not limited to just two.
+            Compare <b className="decoration-nice-purple md:decoration-error underline">up to 10</b> clips at once.
           </p>
         </div>
         <div className="-mt-15 flex w-full flex-col items-center justify-center gap-5 px-5 md:px-10 lg:flex-row lg:gap-10 lg:px-20">
