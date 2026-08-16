@@ -20,7 +20,7 @@ export function Landing() {
         <div className="bgp-polkaDots-base-100/10 w-full">
           <h1 className="text-main-text mx-auto mt-10 mb-15 w-full max-w-5xl px-10 text-center text-3xl md:text-4xl lg:px-20 lg:text-5xl">
             Create a side-by-side comparison with a timer,
-            {" "}>b className="decoration-error underline">no editing knowledge needed.</b>
+            {" "}<b className="decoration-error underline">no editing knowledge needed.</b>
           </h1>
         </div>
         <div className="-mt-7">
