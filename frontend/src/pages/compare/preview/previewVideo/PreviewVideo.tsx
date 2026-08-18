@@ -251,6 +251,7 @@ export function PreviewVideo() {
                   vElement.currentTime = videosData[index].times.start + 0.005;
                   mediaTimes.current[index] = videosData[index].times.start;
                   timerStartTimes.current[index] = -1;
+                  if (isPlaying) void vElement.play()
                 });
               }}
               className="btn btn-lg border-base-300 btn-info border-3 px-3"

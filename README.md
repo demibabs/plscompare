@@ -12,9 +12,7 @@ The UI allows for easy selection of starting and ending comparison frames.
 
 <img width="2346" height="1406" alt="Screenshot From 2026-08-18 12-35-56" src="https://github.com/user-attachments/assets/2a899305-bc9b-406c-8fff-ba743ffdfe90" />
 
-Once that is completed, the compositing, freeze-frames and timer are all done automatically.
-
-<img width="2346" height="1208" alt="Screenshot From 2026-08-18 12-41-52" src="https://github.com/user-attachments/assets/f57179fb-a4b3-4fca-ac64-497ba122c1ef" />
+Once that is completed, the compositing, labeling, freeze-frames and timer are all done automatically.
 
 Plscompare is designed around being easy to use and fast. It's comptible with both mobile and desktop browsers, and on average, making & exporting a comparison takes less than 2 minutes.
 
