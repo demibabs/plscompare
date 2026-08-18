@@ -8,13 +8,17 @@ A site for making precise speedrun comparisons for games like Mario Kart World.
 
 This tool is designed to facilitate the creation of comparison videos, which are commonly used in speedrunning communities to determine if a strategy is viable.
 
-The UI allows for easy selection of starting and ending comparison frames. Once that is completed, the compositing, freeze-frames and timer are all done automatically.
+The UI allows for easy selection of starting and ending comparison frames.
+
+<img width="2346" height="1406" alt="Screenshot From 2026-08-18 12-35-56" src="https://github.com/user-attachments/assets/2a899305-bc9b-406c-8fff-ba743ffdfe90" />
+
+Once that is completed, the compositing, freeze-frames and timer are all done automatically.
+
+<img width="2346" height="1208" alt="Screenshot From 2026-08-18 12-41-52" src="https://github.com/user-attachments/assets/f57179fb-a4b3-4fca-ac64-497ba122c1ef" />
 
 Plscompare is designed around being easy to use and fast. It's comptible with both mobile and desktop browsers, and on average, making & exporting a comparison takes less than 2 minutes.
 
-## Example
-
-Here's an example of what a comparison made on the site looks like:
+Here's an example of what a full comparison made on the site looks like:
 
 https://github.com/user-attachments/assets/af2034a3-f56e-4c28-bbc9-930a637067b4
 
