@@ -51,8 +51,8 @@ npm install
 npm run dev
 ```
 
-And that will run both the frontend and backend. By default, the frontend will be on [localhost:5173](http://localhost:5173) and the backend will be on [localhost:3000](http://localhost:3000)
+And that will run both the frontend and backend. By default, the frontend will be on [localhost:5173](http://localhost:5173) and the backend will be on [localhost:3000](http://localhost:3000).
 
-If you export, uploaded and downloaded videos will be saved to ```/tmp``` (or whatever your computer's temporary directory is called)``` ```plscompare/jobs```. The videos associated with a particular export will clear after an hour and the entire folder will be deleted and re-initialized on server restart.
+If you export, uploaded and downloaded videos will be saved to ```/tmp``` (or whatever your computer's temporary directory is called) ```plscompare/jobs```. The videos associated with a particular export will clear after an hour and the entire folder will be deleted and re-initialized on server restart.
 
 I don't expect contributions as this is more of a personal project. But if you'd like to contribute, I'm totally open to it!
