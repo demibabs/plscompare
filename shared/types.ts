@@ -5,7 +5,7 @@ export type ExportConfig = {
     times: { start: number; end: number };
     label: string | null;
     framerate: number;
-    /** Original-source timestamp represented by timestamp zero in the uploaded clip. */
+    /** Original-source timestamp corresponding to FFmpeg seek time zero in the uploaded clip. */
     sourceTimeOffset?: number;
   }[];
   fileName: string;

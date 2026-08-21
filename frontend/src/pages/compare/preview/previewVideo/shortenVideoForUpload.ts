@@ -8,6 +8,7 @@ import {
   Mp4OutputFormat,
   Output,
 } from "mediabunny";
+import { getOpenGopSafeEndPacket, getShortenedVideoTimestampOffsets } from "./shortenVideoPacketRange";
 
 type TimeRange = {
   start: number;
@@ -16,6 +17,7 @@ type TimeRange = {
 
 export type ShortenedVideo = {
   file: File;
+  /** Original-source timestamp corresponding to FFmpeg seek time zero. */
   sourceTimeOffset: number;
 };
 
@@ -29,7 +31,7 @@ function shortenedFileName(fileName: string) {
 
 /**
  * Copies the selected GOPs into a new MP4 without decoding or encoding any frames.
- * The returned offset maps timestamps in the original file to the shortened file.
+ * The returned offset maps original timestamps to FFmpeg seek times in the shortened file.
  */
 export async function shortenVideoForUpload(
   file: File,
@@ -63,20 +65,24 @@ export async function shortenVideoForUpload(
     const endKeyPacket = await sink.getKeyPacket(times.end, keyPacketOptions);
     if (!endKeyPacket) throw new Error(`The selected range is outside ${file.name}.`);
 
-    // The end packet is exclusive, so selecting the following keyframe retains
-    // every dependency required to decode the requested final frame.
-    const endPacket = (await sink.getNextKeyPacket(endKeyPacket, keyPacketOptions)) ?? undefined;
+    const endPacket = await getOpenGopSafeEndPacket(endKeyPacket, (packet) =>
+      sink.getNextKeyPacket(packet, keyPacketOptions),
+    );
 
     // A GOP can begin with decode-order packets whose presentation timestamps
     // precede the keyframe (B-frames). Use the lowest retained PTS as timestamp 0.
-    let sourceTimeOffset = Infinity;
+    let minimumRetainedTimestamp = Infinity;
     for await (const packet of sink.packets(startPacket, endPacket, { metadataOnly: true })) {
       signal?.throwIfAborted();
-      sourceTimeOffset = Math.min(sourceTimeOffset, packet.timestamp);
+      minimumRetainedTimestamp = Math.min(minimumRetainedTimestamp, packet.timestamp);
     }
-    if (!Number.isFinite(sourceTimeOffset)) {
+    if (!Number.isFinite(minimumRetainedTimestamp)) {
       throw new Error(`The selected range in ${file.name} does not contain video frames.`);
     }
+    const { muxTimestampOffset, sourceTimeOffset } = getShortenedVideoTimestampOffsets(
+      startPacket.timestamp,
+      minimumRetainedTimestamp,
+    );
 
     const [decoderConfig, rotation] = await Promise.all([track.getDecoderConfig(), track.getRotation()]);
     const target = new BufferTarget();
@@ -94,7 +100,7 @@ export async function shortenVideoForUpload(
     for await (const packet of sink.packets(startPacket, endPacket, keyPacketOptions)) {
       signal?.throwIfAborted();
       await source.add(
-        packet.clone({ timestamp: packet.timestamp - sourceTimeOffset }),
+        packet.clone({ timestamp: packet.timestamp - muxTimestampOffset }),
         isFirstPacket ? { decoderConfig: decoderConfig ?? undefined } : undefined,
       );
       isFirstPacket = false;
